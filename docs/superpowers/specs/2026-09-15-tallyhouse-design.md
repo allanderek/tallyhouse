@@ -33,7 +33,7 @@ architecture: the platform must make index #2 cheap.
 | Site | Fully static | Once arbitrary-domain lookup is dropped, nothing needs a server. |
 | Collector | Python | Crawling 1000 flaky domains is exactly the wrong place to be adventurous. |
 | Generator | Elm, own HTML AST | A pure function of committed inputs — the cheapest-to-fail component, and therefore the right place for the one piece of novelty. |
-| Hosting | Public repo + Pages | No uptime burden, and it makes "reproducible" literally true. |
+| Hosting | Public GitHub repo + GitHub Pages | No uptime burden, and it makes "reproducible" literally true. |
 | Database | **None** | See Appendix A. |
 
 ### 2.1 Rejected: Acadia
@@ -191,9 +191,27 @@ Two things the embedding requires, both non-obvious:
 
 ### 5.4 publish
 
-Commit `data/`, push, and publish `site/` to a `gh-pages` branch. (`docs/` holds
-this spec and the methodology sources, so the Pages "docs folder" option is not
-used.)
+Commit `data/`, push, and publish `site/` to a `gh-pages` branch, served by
+**GitHub Pages**. (`docs/` holds this spec and the methodology sources, so the
+Pages "docs folder" option is not used.)
+
+Nothing in the design depends on GitHub specifically — the build output is a
+directory of static files, so GitLab/Codeberg/Cloudflare Pages or any static host
+is a one-line change to the publish step. GitHub is chosen because the repo lives
+there already.
+
+Notes on the deployment path:
+
+- Pushing from an unattended cron job needs a deploy key or scoped token on the
+  machine that runs it, scoped to this repo only.
+- Pages requires a **public** repo on free accounts. That suits this project,
+  whose evidence is meant to be public anyway, but it means the raw evidence and
+  print ledger are published by construction rather than by choice.
+- Collection must run from a machine with a stable, reputable IP and honest
+  identification, so it stays on a machine you control rather than in CI.
+  `derive` and `generate`, being pure functions of committed data, could
+  optionally also run in GitHub Actions — which would continuously prove the
+  "clone and re-derive" claim rather than merely asserting it.
 
 ## 6. The Agent Accessibility Index
 
