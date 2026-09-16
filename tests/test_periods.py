@@ -1,4 +1,4 @@
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 
 import pytest
 
@@ -53,3 +53,24 @@ def test_malformed_period_is_rejected():
 
 def test_window_closes_72_hours_after_monday_midnight_utc():
     assert window_end("2026-09-14") == datetime(2026, 9, 17, 0, 0, tzinfo=timezone.utc)
+
+
+def test_period_for_non_utc_aware_datetime_normalizes_to_utc():
+    # 2026-09-20 22:00-05:00 is 2026-09-21 03:00 UTC (a Monday)
+    dt = datetime(2026, 9, 20, 22, 0, tzinfo=timezone(timedelta(hours=-5)))
+    assert period_for(dt) == "2026-09-21"
+
+
+def test_period_for_rejects_naive_datetime():
+    with pytest.raises(InvalidPeriod):
+        period_for(datetime(2026, 9, 16, 13, 0))
+
+
+def test_parse_period_rejects_iso_week_notation():
+    with pytest.raises(InvalidPeriod):
+        parse_period("2026-W38")
+
+
+def test_parse_period_rejects_non_hyphenated_iso_format():
+    with pytest.raises(InvalidPeriod):
+        parse_period("20260914")
