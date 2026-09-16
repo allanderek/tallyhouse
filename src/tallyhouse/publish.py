@@ -123,8 +123,10 @@ def record_print(root: Path, period: str, built: dict, *, reason: str | None = N
         headline_with_provisional,
         reason=reason,
     )
-    # Broadcasting a single reason across all series rows is safe: append_row short-circuits
-    # rows whose value is unchanged, so the reason only lands on rows that actually moved.
+    # Broadcasting a single reason across all series rows is safe: append_row
+    # short-circuits any row unchanged on every compared field (value,
+    # denominator, coverage, provisional), so the reason only lands on rows that
+    # actually moved.
     for series_id, row in sorted(built["series"].items()):
         series_with_provisional = dict(row, provisional="true" if built["provisional"] else "false")
         append_row(

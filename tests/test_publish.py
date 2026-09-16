@@ -225,3 +225,43 @@ def test_both_headline_and_series_conflicts_mentioned_in_error(tmp_path):
     # The error message should reference both prints and series conflicts
     assert "prints" in error_msg or "prints.csv" in error_msg or "index_id" in error_msg
     assert "series" in error_msg or "coverage" in error_msg
+
+
+def test_recalibrating_the_provisional_threshold_demands_a_vintage(tmp_path, monkeypatch):
+    """A provisional -> final flip is a restatement, not a silent no-op.
+
+    provisional derives from coverage AND the threshold, and spec 6.5 calls that
+    threshold a placeholder to be calibrated from the first real run. If it were
+    not a compared field, recalibration would leave an already-published print
+    flagged provisional forever with no way to correct it.
+    """
+    import tallyhouse.publish as publish
+
+    # 48 of 50 panel domains observed: coverage 96.0, below the 97.0 threshold.
+    monkeypatch.setattr(publish, "PROVISIONAL_COVERAGE_THRESHOLD", 97.0)
+    built = build_print(simple(24, 48), None, panel_size=50, **META)
+    assert built["provisional"] is True
+    record_print(tmp_path, "2026-09-14", built)
+    assert read_rows(tmp_path / "prints.csv")[0]["provisional"] == "true"
+
+    # Recalibrate: the same evidence is now above the threshold.
+    monkeypatch.setattr(publish, "PROVISIONAL_COVERAGE_THRESHOLD", 95.0)
+    recalibrated = build_print(simple(24, 48), None, panel_size=50, **META)
+    assert recalibrated["provisional"] is False
+    # Every other compared field is identical, so provisional alone must conflict.
+    assert recalibrated["headline"]["value"] == built["headline"]["value"]
+    assert recalibrated["headline"]["denominator"] == built["headline"]["denominator"]
+    assert recalibrated["headline"]["coverage"] == built["headline"]["coverage"]
+
+    with pytest.raises(LedgerConflict):
+        record_print(tmp_path, "2026-09-14", recalibrated)
+    assert len(read_rows(tmp_path / "prints.csv")) == 1
+
+    record_print(tmp_path, "2026-09-14", recalibrated, reason="threshold calibrated to 95")
+    rows = read_rows(tmp_path / "prints.csv")
+    assert len(rows) == 2
+    assert rows[1]["vintage"] == "2"
+    assert rows[1]["provisional"] == "false"
+    assert rows[1]["reason"] == "threshold calibrated to 95"
+    # Vintage 1 is untouched.
+    assert rows[0]["provisional"] == "true"

@@ -36,11 +36,25 @@ PRINT_FIELDS = [
 # methodology_version and collector_version record the context under which
 # THIS vintage's value was first established, but do not trigger a new vintage
 # if a later methodology produces the same result.
-_COMPARED_FIELDS = ("value", "denominator", "coverage")
+#
+# provisional is compared even though it is derived from coverage, because it is
+# derived from coverage AND the provisional threshold, and spec 6.5 states that
+# threshold is a placeholder to be calibrated from the first real collection
+# run. Were it not compared, recalibrating the threshold would silently no-op
+# and a print already published as provisional would stay flagged forever. A
+# provisional -> final flip is a restatement of something the site displays, so
+# it demands a vintage and a reason like any other change.
+_COMPARED_FIELDS = ("value", "denominator", "coverage", "provisional")
 
 
 class LedgerConflict(Exception):
     """Raised when a published value would change without a stated reason."""
+
+
+def _unchanged(existing: dict, row: dict) -> bool:
+    return all(
+        (existing.get(f) or "") == str(row.get(f, "")) for f in _COMPARED_FIELDS
+    )
 
 
 def read_rows(path: Path) -> list[dict]:
@@ -86,8 +100,10 @@ def would_conflict(path: Path, key: dict, row: dict, *, reason: str | None = Non
     existing = latest(path, key)
     if existing is None:
         return False
-    # Row is unchanged on all compared fields
-    if all(existing[f] == str(row[f]) for f in _COMPARED_FIELDS):
+    # Row is unchanged on all compared fields. A field absent from either side
+    # reads as "", which is what append_row writes for an unset field, so a
+    # caller that never supplies one cannot be made to conflict with itself.
+    if _unchanged(existing, row):
         return False
     # Row differs and no reason supplied
     return not reason
@@ -116,7 +132,7 @@ def append_row(path: Path, key: dict, row: dict, *, reason: str | None = None) -
 
     existing = latest(path, key)
     if existing is not None:
-        if all(existing[f] == str(row[f]) for f in _COMPARED_FIELDS):
+        if _unchanged(existing, row):
             return None
         if would_conflict(path, key, row, reason=reason):
             raise LedgerConflict(
