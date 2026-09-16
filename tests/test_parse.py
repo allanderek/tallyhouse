@@ -137,3 +137,79 @@ def test_comment_after_user_agent_does_not_affect_following_disallows():
     assert len(groups) == 1
     assert groups[0][0] == ["GPTBot"]
     assert groups[0][1][0] == ("disallow", "/x")
+
+
+# Group boundaries: a User-agent line after ANY directive starts a new group.
+def test_named_group_of_only_non_rule_directives_does_not_absorb_the_next_group():
+    from tallyhouse.parse import _parse_groups
+    body = (
+        "User-agent: GPTBot\n"
+        "Crawl-delay: 10\n"
+        "User-agent: *\n"
+        "Disallow: /\n"
+    )
+    assert _parse_groups(body) == [
+        (["GPTBot"], []),
+        (["*"], [("disallow", "/")]),
+    ]
+    # GPTBot is named but the blocking rule belongs to the wildcard group, so
+    # the targeted headline must not count this domain (spec 6.4).
+    assert classify(body, "GPTBot") == "Allowed"
+    assert blanket_stance(body) == "FullBlock"
+
+
+def test_sitemap_between_groups_does_not_merge_them():
+    from tallyhouse.parse import _parse_groups
+    body = (
+        "User-agent: OtherBot\n"
+        "Sitemap: https://example.com/sitemap.xml\n"
+        "User-agent: GPTBot\n"
+        "Disallow: /x\n"
+    )
+    assert _parse_groups(body) == [
+        (["OtherBot"], []),
+        (["GPTBot"], [("disallow", "/x")]),
+    ]
+
+
+def test_host_directive_between_groups_does_not_merge_them():
+    from tallyhouse.parse import _parse_groups
+    body = (
+        "User-agent: GPTBot\n"
+        "Host: example.com\n"
+        "User-agent: CCBot\n"
+        "Disallow: /y\n"
+    )
+    assert _parse_groups(body) == [
+        (["GPTBot"], []),
+        (["CCBot"], [("disallow", "/y")]),
+    ]
+    assert classify(body, "GPTBot") == "Allowed"
+    assert classify(body, "CCBot") == "PartialBlock"
+
+
+def test_consecutive_user_agents_still_share_one_group():
+    from tallyhouse.parse import _parse_groups
+    body = "User-agent: GPTBot\nUser-agent: CCBot\nDisallow: /x\n"
+    assert _parse_groups(body) == [(["GPTBot", "CCBot"], [("disallow", "/x")])]
+
+
+def test_rules_before_any_user_agent_line_are_discarded():
+    from tallyhouse.parse import _parse_groups
+    body = "Disallow: /orphan\nUser-agent: GPTBot\nDisallow: /x\n"
+    assert _parse_groups(body) == [(["GPTBot"], [("disallow", "/x")])]
+
+
+def test_unsanitisable_pattern_is_not_a_block_without_protego_agreeing():
+    # "Disallow: $" sanitises to nothing testable. It must not be asserted as a
+    # block on the strength of that failure alone.
+    body = "User-agent: GPTBot\nCrawl-delay: 10\nUser-agent: *\nDisallow: $\n"
+    assert classify(body, "GPTBot") == "Allowed"
+    assert blanket_stance(body) == "Allowed"
+
+
+def test_wildcard_pattern_still_counts_when_protego_agrees():
+    # "*" sanitises to "/", which protego confirms is blocked, so the block
+    # stands: the fix skips only patterns nothing can confirm.
+    body = "User-agent: GPTBot\nDisallow: /private*/data\n"
+    assert classify(body, "GPTBot") == "PartialBlock"

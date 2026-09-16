@@ -72,13 +72,31 @@ def _agent_matches_token(agent: str, token: str) -> bool:
 def _parse_groups(body: str) -> list[tuple[list[str], list[tuple[str, str]]]]:
     """Parse robots.txt into (agent_tokens, rules) groups per RFC 9309.
 
-    Consecutive User-agent lines form one group; a new User-agent line after
-    rules starts a new group. Comments (# to EOL) are stripped per RFC 9309.
-    Returns list of (agent_list, rules_list) tuples.
+    Consecutive User-agent lines form one group; a User-agent line that follows
+    ANY directive starts a new group. Comments (# to EOL) are stripped per RFC
+    9309. Returns list of (agent_list, rules_list) tuples.
+
+    "Consecutive" is judged against every directive, not only Allow/Disallow.
+    Testing only for accumulated rules merged a named group whose body is
+    entirely non-rule directives (Crawl-delay, Sitemap, Host) into the group
+    that follows it, so
+
+        User-agent: GPTBot
+        Crawl-delay: 10
+        User-agent: *
+        Disallow: /
+
+    read as one group naming both GPTBot and *, handing GPTBot a rule that
+    belongs to the wildcard group and inviting the targeted headline to count a
+    merely blanket-affected domain (spec 6.4).
+
+    Rules appearing before any User-agent line belong to no group and are
+    discarded, per RFC 9309.
     """
     groups = []
     current_agents = []
     current_rules = []
+    seen_directive = False
 
     for line in body.splitlines():
         parsed = _parse_directive_line(line)
@@ -90,18 +108,22 @@ def _parse_groups(body: str) -> list[tuple[list[str], list[tuple[str, str]]]]:
         directive, value = parsed
 
         if directive == 'user-agent':
-            # Check if we're starting a new group (non-consecutive User-agent)
-            if current_rules:
-                # We've seen rules, so a new User-agent line starts a new group
-                groups.append((current_agents, current_rules))
+            if seen_directive:
+                # The current group has a body, so this line opens a new one.
+                if current_agents:
+                    groups.append((current_agents, current_rules))
                 current_agents = [value]
                 current_rules = []
+                seen_directive = False
             else:
                 # Accumulate consecutive User-agents
                 current_agents.append(value)
-        elif directive in ('allow', 'disallow'):
-            # Accumulate rules
-            current_rules.append((directive, value))
+        else:
+            # Crawl-delay, Sitemap, Host and friends are not rules, but they do
+            # close the run of User-agent lines that opened this group.
+            seen_directive = True
+            if directive in ('allow', 'disallow'):
+                current_rules.append((directive, value))
 
     # Close the last group
     if current_agents:
@@ -125,8 +147,11 @@ def _agent_has_effective_disallow(body: str, agent: str, parser: Protego) -> boo
     """Check if agent's groups contain at least one effective Disallow.
 
     An effective Disallow is one that protego confirms blocks the agent
-    (accounting for Allow overrides). If sanitisation makes the pattern
-    unusable, count it as partial block (safer for index accuracy).
+    (accounting for Allow overrides). Protego is the only thing allowed to
+    decide that a pattern blocks: a pattern this module cannot turn into a
+    testable path is skipped rather than assumed to block, because asserting a
+    block nobody confirmed puts a domain into the targeted headline numerator
+    on the strength of a sanitisation failure.
     """
     groups = _parse_groups(body)
 
@@ -141,8 +166,10 @@ def _agent_has_effective_disallow(body: str, agent: str, parser: Protego) -> boo
                 # Sanitize the pattern for testing
                 path = _sanitize_disallow_pattern(value)
                 if not path:
-                    # Sanitisation left it empty; count as partial block (safer)
-                    return True
+                    # Nothing testable survives sanitisation (e.g. "Disallow: $",
+                    # which matches only the empty path and so blocks nothing).
+                    # Skip it: only protego may declare a block.
+                    continue
                 # Ask protego: does it actually block this path?
                 if not parser.can_fetch(PROBE_BASE + path, agent):
                     return True
