@@ -69,8 +69,11 @@ docs/                 methodology sources, this spec
 ```
 
 Bodies are content-addressed globally rather than per period, so the ~90% of
-`robots.txt` files unchanged month to month cost nothing to retain. Expected
-growth is a few MB per year — comfortable in git for decades.
+`robots.txt` files unchanged between periods cost nothing to retain. Weekly
+collection barely changes this — files change *less* week to week than month to
+month, so the deduplication ratio improves. The growing part is the per-period
+manifests and ledgers, which are gzipped CSV/JSON at roughly 200KB per period.
+Expected growth is a few MB per year — comfortable in git for decades.
 
 ## 4. Data model
 
@@ -99,7 +102,10 @@ control series, coverage). **Append-only under the same vintage discipline as
 changed value appends a new vintage rather than overwriting.
 
 `data/derived/` by contrast is wholly regenerable scratch: delete it and re-run
-`derive` to reproduce it exactly.
+`derive` to reproduce it exactly. It is therefore **gitignored**. This matters
+more at weekly cadence — `verdicts.csv` alone is roughly 14,000 rows per period,
+so committing it would add tens of MB a year to no purpose. Anyone wanting the
+tables without running the pipeline downloads them from the site.
 
 ### 4.3 Observations — `data/derived/fetches.csv`
 
@@ -131,7 +137,8 @@ For each domain in the frozen panel, one request per period to
 
 - Identifies itself honestly and links to `/about/crawler/`.
 - Concurrency-capped, spread over hours, exponential backoff.
-- Retries across several days before declaring a non-conclusive outcome.
+- Retries with backoff inside the 72-hour collection window before declaring a
+  non-conclusive outcome.
 - Writes `raw/bodies/<sha256>.txt.gz` and `raw/<period>/manifest.json`.
 - Never writes to `derived/` or `prints.csv`.
 
@@ -217,8 +224,21 @@ Notes on the deployment path:
 
 ### 6.1 Cadence and period identifiers
 
-The index prints **monthly**. A `period` is written `YYYY-MM` and refers to the
-month in which collection began. Collection starts on the first of the month.
+The index prints **weekly**. AI-crawler blocking moves fast enough that monthly
+sampling would miss the response to events — a new crawler launching, a large
+publisher changing policy — which is where most of the interest lies. A weekly
+series can also be aggregated up to a monthly one at any time; the reverse is
+impossible, so weekly is the conservative choice.
+
+A `period` is the **ISO date of the Monday on which collection began**, written
+`YYYY-MM-DD`. Deliberately not ISO week notation (`2026-W38`): the ISO week-year
+diverges from the calendar year at year boundaries and some years have 53 weeks,
+which is a reliable source of off-by-one bugs. A Monday date sorts correctly,
+never ambiguates, and can be *displayed* as a week number wherever that reads
+better.
+
+Collection opens Monday 00:00 UTC. The window — including all retries — closes at
+72 hours, well clear of the next period, so runs can never overlap.
 
 ### 6.2 Panel
 
@@ -259,9 +279,16 @@ complete history behind it and no gap in the record.
 Sub-series published from day one: per-agent block rate; blanket-block rate;
 coverage.
 
+**Week-on-week change is published like-for-like**, computed only over domains
+conclusively observed in *both* the current and preceding period. At weekly
+frequency the true changes are small, so a wobbling denominator could otherwise
+manufacture movement that never happened — the headline level and the change
+figure would disagree, and the change is what gets quoted. The headline *level*
+remains computed over all conclusive observations in the period.
+
 ### 6.5 Integrity rules
 
-Fixed in advance and published, because deciding them after seeing a bad month is
+Fixed in advance and published, because deciding them after seeing a bad week is
 how indices lose credibility.
 
 - **Denominator** is conclusive observations only. `NoRobotsTxt` is conclusive —
@@ -270,7 +297,10 @@ how indices lose credibility.
 - **Coverage** — conclusive observations as a share of the panel — is published
   alongside every print.
 - A print with coverage below **97%** is marked **provisional** and the site
-  labels it as such.
+  labels it as such. This figure is a placeholder to be calibrated from the first
+  real collection run before anything is published — the 72-hour weekly window
+  allows less retry time than a monthly one would, so achievable coverage may
+  legitimately be lower.
 
 ## 7. Site structure
 
@@ -306,7 +336,7 @@ work without JS.
 
 ## 9. Operations
 
-Monthly cron: `collect` → `derive` → `generate` → commit → push. Stages are
+Weekly cron (Monday 00:00 UTC): `collect` → `derive` → `generate` → commit → push. Stages are
 separately runnable so a failed `collect` never corrupts published data, and
 `derive`/`generate` can be re-run freely at any time.
 
