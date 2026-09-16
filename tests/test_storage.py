@@ -1,4 +1,5 @@
 import gzip
+import pytest
 
 from tallyhouse.storage import (
     body_path,
@@ -49,3 +50,25 @@ def test_manifest_is_sorted_by_domain_for_stable_diffs(tmp_path):
         "aaa.com",
         "zzz.com",
     ]
+
+
+def test_read_manifest_raises_FileNotFoundError_for_missing_period(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        read_manifest(tmp_path, "2026-09-14")
+
+
+def test_store_body_no_leftover_tmp_files(tmp_path):
+    store_body(tmp_path, b"test data")
+    tmp_files = list(tmp_path.rglob("*.tmp-*"))
+    assert len(tmp_files) == 0
+
+
+def test_identical_bodies_deduplicate_to_one_file_explicit(tmp_path):
+    a = store_body(tmp_path, b"duplicate")
+    b = store_body(tmp_path, b"duplicate")
+    assert a == b
+    # Verify exactly one file exists, no temp files
+    gzip_files = list(tmp_path.rglob("*.txt.gz"))
+    tmp_files = list(tmp_path.rglob("*.tmp-*"))
+    assert len(gzip_files) == 1
+    assert len(tmp_files) == 0

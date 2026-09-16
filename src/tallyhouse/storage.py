@@ -7,6 +7,7 @@ majority of files that do not change between weeks cost nothing to retain.
 import gzip
 import hashlib
 import json
+import os
 from pathlib import Path
 
 
@@ -20,10 +21,19 @@ def store_body(root: Path, data: bytes) -> str:
     path = body_path(root, sha)
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        # mtime=0 keeps the gzip output byte-identical across runs.
-        with path.open("wb") as raw:
-            with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as handle:
-                handle.write(data)
+        # Write to temp file, then atomically rename to final path.
+        # This ensures we never leave a corrupt or partial body on disk.
+        tmp = path.with_name(f"{path.name}.tmp-{os.getpid()}")
+        try:
+            with tmp.open("wb") as raw:
+                # mtime=0 and filename="" keep gzip output byte-identical across runs.
+                with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as handle:
+                    handle.write(data)
+            os.replace(tmp, path)
+        finally:
+            # Clean up temp file if write failed.
+            if tmp.exists():
+                tmp.unlink()
     return sha
 
 
@@ -40,7 +50,16 @@ def write_manifest(root: Path, period: str, records: list[dict]) -> Path:
     path = manifest_path(root, period)
     path.parent.mkdir(parents=True, exist_ok=True)
     ordered = sorted(records, key=lambda r: r["domain"])
-    path.write_text(json.dumps(ordered, indent=2, sort_keys=True) + "\n")
+    # Write to temp file, then atomically rename to final path.
+    # This ensures we never leave invalid JSON on disk.
+    tmp = path.with_name(f"{path.name}.tmp-{os.getpid()}")
+    try:
+        tmp.write_text(json.dumps(ordered, indent=2, sort_keys=True) + "\n")
+        os.replace(tmp, path)
+    finally:
+        # Clean up temp file if write failed.
+        if tmp.exists():
+            tmp.unlink()
     return path
 
 
