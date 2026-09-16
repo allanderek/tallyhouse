@@ -1,0 +1,59 @@
+"""Derive classified tables from retained raw evidence.
+
+Pure with respect to the network and the clock: given the same raw/ tree and
+the same agent set, it produces identical output forever.
+"""
+
+import csv
+from pathlib import Path
+
+from tallyhouse.constants import CONCLUSIVE_OUTCOMES
+from tallyhouse.parse import blanket_stance, classify
+from tallyhouse.storage import load_body, read_manifest
+
+VERDICT_FIELDS = ["domain", "period", "agent", "stance"]
+FETCH_FIELDS = [
+    "domain", "period", "outcome", "http_status", "final_url",
+    "content_type", "bytes", "sha256", "fetched_at", "attempts",
+]
+
+
+def derive_period(root: Path, period: str, agents: list[str]) -> dict:
+    observations = sorted(read_manifest(root, period), key=lambda r: r["domain"])
+    verdicts: list[dict] = []
+    blanket: dict[str, str] = {}
+
+    for record in observations:
+        if record["outcome"] not in CONCLUSIVE_OUTCOMES:
+            continue
+        sha = record.get("sha256")
+        body = load_body(root, sha).decode("utf-8", errors="replace") if sha else ""
+        blanket[record["domain"]] = blanket_stance(body)
+        for agent in agents:
+            verdicts.append(
+                {
+                    "domain": record["domain"],
+                    "period": period,
+                    "agent": agent,
+                    "stance": classify(body, agent),
+                }
+            )
+
+    return {"observations": observations, "verdicts": verdicts, "blanket": blanket}
+
+
+def _write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def write_tables(out_dir: Path, period: str, tables: dict) -> None:
+    verdicts = sorted(tables["verdicts"], key=lambda r: (r["domain"], r["agent"]))
+    _write_csv(out_dir / "verdicts.csv", VERDICT_FIELDS, verdicts)
+
+    fetches = [dict(o, period=period) for o in tables["observations"]]
+    _write_csv(out_dir / "fetches.csv", FETCH_FIELDS, fetches)
