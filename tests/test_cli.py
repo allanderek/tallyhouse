@@ -1,0 +1,77 @@
+import json
+
+import pytest
+
+from tallyhouse.cli import main
+from tallyhouse.ledger import read_rows
+from tallyhouse.storage import store_body, write_manifest
+
+
+def seed_config(root):
+    (root / "agents").mkdir(parents=True, exist_ok=True)
+    (root / "agents" / "v1.json").write_text(
+        json.dumps({"version": 1, "agents": ["GPTBot"]})
+    )
+    (root / "panel").mkdir(parents=True, exist_ok=True)
+    (root / "panel" / "2026.json").write_text(
+        json.dumps({"year": 2026, "tranco_list_id": "TEST1",
+                    "captured": "2026-01-05T00:00:00Z",
+                    "domains": ["a.com", "b.com"]})
+    )
+
+
+def seed_raw(root):
+    records = []
+    for domain, body in [("a.com", "User-agent: GPTBot\nDisallow: /\n"),
+                         ("b.com", "User-agent: *\nAllow: /\n")]:
+        records.append({"domain": domain, "outcome": "Fetched",
+                        "sha256": store_body(root, body.encode()),
+                        "http_status": 200, "final_url": None,
+                        "content_type": "text/plain", "bytes": len(body),
+                        "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1})
+    write_manifest(root, "2026-09-14", records)
+
+
+def test_derive_writes_tables(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    assert main(["derive", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert (tmp_path / "derived" / "verdicts.csv").exists()
+
+
+def test_print_writes_a_ledger_row(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    rows = read_rows(tmp_path / "prints.csv")
+    assert rows[0]["value"] == "50.0"
+
+
+def test_reprinting_an_unchanged_period_succeeds_without_duplicating(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert len(read_rows(tmp_path / "prints.csv")) == 1
+
+
+def test_changed_result_without_a_reason_exits_nonzero(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+
+    # Change the evidence so the computed value differs.
+    write_manifest(tmp_path, "2026-09-14", [
+        {"domain": "a.com", "outcome": "Fetched",
+         "sha256": store_body(tmp_path, b"User-agent: *\nAllow: /\n"),
+         "http_status": 200, "final_url": None, "content_type": "text/plain",
+         "bytes": 24, "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1},
+    ])
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+    assert len(read_rows(tmp_path / "prints.csv")) == 1
+
+
+def test_invalid_period_is_rejected(tmp_path):
+    seed_config(tmp_path)
+    with pytest.raises(SystemExit):
+        main(["derive", "--root", str(tmp_path), "--period", "2026-09-16"])
