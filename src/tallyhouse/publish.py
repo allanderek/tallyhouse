@@ -33,36 +33,53 @@ def build_print(
 ) -> dict:
     conclusive = conclusive_domains(tables["observations"])
     cov = coverage(tables["observations"], panel_size)
-    meta = {
-        "denominator": len(conclusive),
+    context = {
         "coverage": cov,
         "methodology_version": methodology_version,
         "collector_version": collector_version,
         "computed_at": computed_at,
     }
 
-    headline = dict(meta, value=targeted_rate(tables["verdicts"], conclusive))
+    def row(value, denominator: int) -> dict:
+        """One published row.
+
+        `denominator` is the population the row's value was actually computed
+        over, and every series must carry its own. Sharing the headline's
+        conclusive count across all of them published a denominator a reader
+        could not reconcile the row against: `coverage` is a share of the panel,
+        and `change_wow` is computed like-for-like over the intersection of the
+        two periods' conclusive domains, which spec 6.4 makes the entire point
+        of the change figure. It also churned change_wow vintages whenever the
+        current period's conclusive count moved, even with the change unmoved.
+        """
+        return dict(context, value=value, denominator=denominator)
+
+    n_conclusive = len(conclusive)
+    headline = row(targeted_rate(tables["verdicts"], conclusive), n_conclusive)
 
     series = {
-        "effective": dict(
-            meta,
-            value=effective_rate(tables["verdicts"], tables["blanket"], conclusive),
+        # The per-agent, effective and blanket rates are all shares of the
+        # conclusively-observed domains, so the headline denominator is theirs.
+        "effective": row(
+            effective_rate(tables["verdicts"], tables["blanket"], conclusive),
+            n_conclusive,
         ),
-        "blanket": dict(meta, value=blanket_rate(tables["blanket"], conclusive)),
-        "coverage": dict(meta, value=cov),
+        "blanket": row(blanket_rate(tables["blanket"], conclusive), n_conclusive),
+        "coverage": row(cov, panel_size),
     }
     for agent, rate in per_agent_rates(tables["verdicts"], conclusive).items():
-        series[f"agent:{agent}"] = dict(meta, value=rate)
+        series[f"agent:{agent}"] = row(rate, n_conclusive)
 
     if prev_tables is not None:
+        prev_conclusive = conclusive_domains(prev_tables["observations"])
         change = like_for_like_change(
             prev_tables["verdicts"],
-            conclusive_domains(prev_tables["observations"]),
+            prev_conclusive,
             tables["verdicts"],
             conclusive,
         )
         if change is not None:
-            series["change_wow"] = dict(meta, value=change)
+            series["change_wow"] = row(change, len(prev_conclusive & conclusive))
 
     return {
         "headline": headline,

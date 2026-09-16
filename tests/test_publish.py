@@ -265,3 +265,64 @@ def test_recalibrating_the_provisional_threshold_demands_a_vintage(tmp_path, mon
     assert rows[1]["reason"] == "threshold calibrated to 95"
     # Vintage 1 is untouched.
     assert rows[0]["provisional"] == "true"
+
+
+def _tables_for(domains, blocking):
+    obs = [{"domain": d, "outcome": "Fetched"} for d in domains]
+    verdicts = [
+        {"domain": d, "agent": "GPTBot",
+         "stance": "FullBlock" if d in blocking else "Unmentioned"}
+        for d in domains
+    ]
+    return tables(obs, verdicts, {d: "Allowed" for d in domains})
+
+
+def test_every_series_publishes_its_own_true_denominator():
+    """Each row's denominator must be the population its value was computed over.
+
+    The three differ here on purpose: the headline and the agent/effective/
+    blanket series are shares of the 3 conclusive domains, coverage is a share
+    of the 10-domain panel, and change_wow is computed like-for-like over the
+    2 domains conclusive in both periods (spec 6.4).
+    """
+    current = _tables_for(["d0.com", "d1.com", "d2.com"], {"d0.com"})
+    previous = _tables_for(["d1.com", "d2.com", "d3.com"], {"d1.com"})
+
+    built = build_print(current, previous, panel_size=10, **META)
+
+    assert built["headline"]["denominator"] == 3
+    assert built["series"]["effective"]["denominator"] == 3
+    assert built["series"]["blanket"]["denominator"] == 3
+    assert built["series"]["agent:GPTBot"]["denominator"] == 3
+    assert built["series"]["coverage"]["denominator"] == 10
+    assert built["series"]["change_wow"]["denominator"] == 2
+
+    # And the published values reconcile against those denominators.
+    assert built["series"]["coverage"]["value"] == 30.0
+    # Like-for-like over {d1, d2}: 0% blocking now against 50% last week.
+    assert built["series"]["change_wow"]["value"] == -50.0
+
+
+def test_change_wow_does_not_churn_when_only_the_level_denominator_moves():
+    """A change figure that did not move must not append a vintage.
+
+    The like-for-like intersection is unchanged here; only the current period's
+    conclusive count grew. Publishing the headline denominator on change_wow
+    would have made the row differ and demanded a reason for a figure that is
+    the same number computed over the same domains.
+
+    The `coverage` column is deliberately excluded from the comparison: it is
+    the print's coverage carried on every row as provenance (spec 4.1, 6.5), not
+    the series' own denominator, and it does move when the conclusive count
+    does.
+    """
+    previous = _tables_for(["d1.com", "d2.com"], {"d1.com"})
+    week_one = _tables_for(["d1.com", "d2.com"], {"d1.com"})
+    week_two = _tables_for(["d1.com", "d2.com", "d9.com"], {"d1.com"})
+
+    first = build_print(week_one, previous, panel_size=10, **META)
+    second = build_print(week_two, previous, panel_size=10, **META)
+
+    for field in ("value", "denominator"):
+        assert first["series"]["change_wow"][field] == second["series"]["change_wow"][field]
+    assert first["headline"]["denominator"] != second["headline"]["denominator"]
