@@ -72,10 +72,24 @@ def build_print(
 
 
 def record_print(root: Path, period: str, built: dict, *, reason: str | None = None) -> None:
-    """Record print to both ledgers, validating all before writing any.
+    """Record print to both prints.csv and series.csv with atomicity and idempotency.
 
-    This two-phase contract prevents partial writes: if any row would conflict,
-    LedgerConflict is raised before a single row is written to either ledger.
+    Args:
+        root: Directory containing the ledger CSV files
+        period: Period identifier (e.g., "2026-09-14")
+        built: Dict from build_print() with headline, series, and provisional flag
+        reason: Optional explanation if any value has changed. Required if any row
+                (headline or series) would change from its last published value.
+
+    Raises:
+        LedgerConflict: If any intended row would change without a reason being supplied.
+                       This is raised before any row is written to either ledger,
+                       ensuring the two-phase validate-then-write contract.
+
+    Two-phase contract: All rows (headline plus every series entry) are first validated
+    against their current ledger state. Only if all checks pass are any rows written.
+    If any conflict is detected, LedgerConflict is raised before the first write,
+    preventing partial ledger corruption across the two files.
     """
     root.mkdir(parents=True, exist_ok=True)
 
@@ -113,6 +127,8 @@ def record_print(root: Path, period: str, built: dict, *, reason: str | None = N
         headline_with_provisional,
         reason=reason,
     )
+    # Broadcasting a single reason across all series rows is safe: append_row short-circuits
+    # rows whose value is unchanged, so the reason only lands on rows that actually moved.
     for series_id, row in sorted(built["series"].items()):
         series_with_provisional = dict(row, provisional="true" if built["provisional"] else "false")
         append_row(
