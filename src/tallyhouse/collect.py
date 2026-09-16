@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from tallyhouse.constants import MAX_BODY_BYTES, USER_AGENT
+from tallyhouse.constants import CONCLUSIVE_OUTCOMES, MAX_BODY_BYTES, USER_AGENT
 
 _PLAIN_TEXT_PREFIXES = ("text/plain",)
 
@@ -50,19 +50,50 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-async def fetch_domain(
+def url_variants(domain: str) -> list[str]:
+    """The robots.txt URLs to try for a domain, in order.
+
+    Spec 5.1: the canonical request is https://<domain>/robots.txt, falling back
+    to http:// and to the www. host. Without the fallbacks, coverage is
+    suppressed for every panel domain that serves robots.txt only on www. or
+    only over http — and coverage is what decides whether a print is
+    provisional.
+
+    A domain already spelled with a www. prefix yields no www. variant, so
+    nobody is asked for www.www.example.com.
+    """
+    hosts = [domain]
+    if not domain.startswith("www."):
+        hosts.append(f"www.{domain}")
+    return [
+        f"{scheme}://{host}/robots.txt"
+        for scheme in ("https", "http")
+        for host in hosts
+    ]
+
+
+# A 5xx or a 429 is a transient server condition, not a statement about crawler
+# policy, so it is retried exactly like a transport failure. Without this a
+# single 503 recorded a non-conclusive ServerError having made one request.
+def _is_transient_status(status: int) -> bool:
+    return status >= 500 or status == 429
+
+
+async def _fetch_url(
     client: httpx.AsyncClient,
     domain: str,
+    url: str,
     *,
-    attempts: int = 3,
-    sleep=asyncio.sleep,
+    attempts: int,
+    sleep,
 ) -> dict:
-    """Fetch one domain's robots.txt, retrying transient failures."""
+    """Fetch one URL, retrying transient failures."""
     last_outcome = "Timeout"
+    last_record: dict | None = None
     for attempt in range(1, attempts + 1):
         try:
             response = await client.get(
-                f"https://{domain}/robots.txt",
+                url,
                 headers={"user-agent": USER_AGENT},
                 follow_redirects=True,
             )
@@ -88,7 +119,7 @@ async def fetch_domain(
                 response.headers.get("content-type"),
                 len(body),
             )
-            return {
+            record = {
                 "domain": domain,
                 "outcome": outcome,
                 "http_status": response.status_code,
@@ -99,8 +130,21 @@ async def fetch_domain(
                 "fetched_at": _now(),
                 "attempts": attempt,
             }
+            if not _is_transient_status(response.status_code):
+                return record
+            last_record = record
+            last_outcome = outcome
         if attempt < attempts:
+            # The backoff is deliberately short. The 72-hour collection window of
+            # spec 5.1/6.1 is spanned by cron re-running `collect`, which merges
+            # into the period's existing manifest and re-attempts only the
+            # domains still inconclusive — not by one process sleeping for three
+            # days holding a thousand sockets open.
             await sleep(min(2 ** attempt, 30))
+
+    if last_record is not None:
+        last_record["attempts"] = attempts
+        return last_record
 
     return {
         "domain": domain,
@@ -113,3 +157,38 @@ async def fetch_domain(
         "fetched_at": _now(),
         "attempts": attempts,
     }
+
+
+async def fetch_domain(
+    client: httpx.AsyncClient,
+    domain: str,
+    *,
+    attempts: int = 3,
+    sleep=asyncio.sleep,
+) -> dict:
+    """Fetch one domain's robots.txt, falling back across URL variants.
+
+    Variants are tried in the order of `url_variants` and the first conclusive
+    outcome wins; a 404 on the canonical URL is itself conclusive (spec 6.5:
+    no robots.txt means not blocking), so the fallbacks exist for domains that
+    do not answer there at all.
+
+    Request ceiling per domain per run: `attempts` for the canonical
+    https://<domain> URL plus one for each remaining variant — six requests with
+    the default attempts=3, three for a www.-prefixed domain. The fallbacks get a
+    single try each rather than the full retry budget, because multiplying the
+    budget by the variant count is how a polite crawler stops being one.
+
+    When nothing is conclusive, the canonical URL's outcome is what gets
+    recorded: it is the one the index asked about.
+    """
+    first: dict | None = None
+    for index, url in enumerate(url_variants(domain)):
+        record = await _fetch_url(
+            client, domain, url, attempts=attempts if index == 0 else 1, sleep=sleep
+        )
+        if record["outcome"] in CONCLUSIVE_OUTCOMES:
+            return record
+        if first is None:
+            first = record
+    return first

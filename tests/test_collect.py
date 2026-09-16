@@ -68,10 +68,12 @@ async def test_sends_the_identifying_user_agent():
 
 @pytest.mark.asyncio
 async def test_timeout_is_retried_then_recorded_as_timeout():
-    calls = {"n": 0}
+    calls = {"n": 0, "canonical": 0}
 
     def handler(request):
         calls["n"] += 1
+        if str(request.url) == "https://slow.example/robots.txt":
+            calls["canonical"] += 1
         raise httpx.ConnectTimeout("too slow")
 
     async with client_returning(handler) as client:
@@ -79,7 +81,11 @@ async def test_timeout_is_retried_then_recorded_as_timeout():
 
     assert record["outcome"] == "Timeout"
     assert record["attempts"] == 3
-    assert calls["n"] == 3
+    # The canonical URL gets the full retry budget...
+    assert calls["canonical"] == 3
+    # ...and each of the three fallback variants gets exactly one try, which is
+    # the documented per-domain request ceiling.
+    assert calls["n"] == 6
 
 
 @pytest.mark.asyncio
@@ -217,3 +223,189 @@ async def test_html_served_with_200_has_no_body_retained():
 
     assert record["outcome"] == "NotPlainText"
     assert record["body"] is None
+
+
+# Spec 5.1 fallbacks: https://<domain>, then https://www.<domain>, then http://
+# for each, stopping at the first conclusive outcome.
+def test_url_variants_are_tried_in_spec_order():
+    from tallyhouse.collect import url_variants
+
+    assert url_variants("example.com") == [
+        "https://example.com/robots.txt",
+        "https://www.example.com/robots.txt",
+        "http://example.com/robots.txt",
+        "http://www.example.com/robots.txt",
+    ]
+
+
+def test_a_www_domain_is_not_prefixed_again():
+    from tallyhouse.collect import url_variants
+
+    assert url_variants("www.example.com") == [
+        "https://www.example.com/robots.txt",
+        "http://www.example.com/robots.txt",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_robots_txt_served_only_on_www_is_fetched():
+    def handler(request):
+        if request.url.host == "www.example.com":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /x\n",
+                                  headers={"content-type": "text/plain"})
+        exc = httpx.ConnectError("refused")
+        exc.__cause__ = OSError("refused")
+        raise exc
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "example.com", attempts=1)
+
+    assert record["outcome"] == "Fetched"
+    assert record["final_url"] == "https://www.example.com/robots.txt"
+    assert record["body"] == b"User-agent: *\nDisallow: /x\n"
+
+
+@pytest.mark.asyncio
+async def test_robots_txt_served_only_over_http_is_fetched():
+    def handler(request):
+        if request.url.scheme == "http" and request.url.host == "example.com":
+            return httpx.Response(200, text="User-agent: *\nDisallow:\n",
+                                  headers={"content-type": "text/plain"})
+        exc = httpx.ConnectError("no tls")
+        exc.__cause__ = OSError("no tls")
+        raise exc
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "example.com", attempts=1)
+
+    assert record["outcome"] == "Fetched"
+    assert record["final_url"] == "http://example.com/robots.txt"
+
+
+@pytest.mark.asyncio
+async def test_a_domain_answering_on_the_first_variant_issues_no_further_requests():
+    seen = []
+
+    def handler(request):
+        seen.append(str(request.url))
+        return httpx.Response(200, text="", headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "example.com")
+
+    assert record["outcome"] == "Fetched"
+    assert seen == ["https://example.com/robots.txt"]
+
+
+@pytest.mark.asyncio
+async def test_a_404_on_the_canonical_url_stops_the_fallbacks():
+    # NoRobotsTxt is conclusive (spec 6.5), so there is nothing left to learn.
+    seen = []
+
+    def handler(request):
+        seen.append(str(request.url))
+        return httpx.Response(404, text="", headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "example.com")
+
+    assert record["outcome"] == "NoRobotsTxt"
+    assert seen == ["https://example.com/robots.txt"]
+
+
+@pytest.mark.asyncio
+async def test_a_domain_down_everywhere_records_the_canonical_urls_outcome():
+    def handler(request):
+        raise httpx.ConnectTimeout("down")
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "example.com", attempts=2, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "Timeout"
+    assert record["attempts"] == 2
+
+
+@pytest.mark.asyncio
+async def test_a_transient_503_is_retried_up_to_the_attempt_limit():
+    calls = {"canonical": 0}
+
+    def handler(request):
+        if str(request.url) == "https://flaky.example/robots.txt":
+            calls["canonical"] += 1
+        return httpx.Response(503, text="", headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "flaky.example", attempts=3, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "ServerError"
+    assert calls["canonical"] == 3
+    assert record["attempts"] == 3
+
+
+@pytest.mark.asyncio
+async def test_a_503_that_recovers_is_recorded_as_fetched():
+    calls = {"n": 0}
+
+    def handler(request):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            return httpx.Response(503, text="", headers={"content-type": "text/html"})
+        return httpx.Response(200, text="User-agent: *\nDisallow:\n",
+                              headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "flaky.example", attempts=3, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "Fetched"
+    assert record["attempts"] == 3
+
+
+@pytest.mark.asyncio
+async def test_a_429_is_retried_like_a_transient_failure():
+    calls = {"canonical": 0}
+
+    def handler(request):
+        if str(request.url) == "https://busy.example/robots.txt":
+            calls["canonical"] += 1
+        return httpx.Response(429, text="", headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "busy.example", attempts=3, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "ServerError"
+    assert calls["canonical"] == 3
+
+
+@pytest.mark.asyncio
+async def test_a_403_is_not_retried():
+    # A refusal is a settled answer, not a transient condition.
+    calls = {"canonical": 0}
+
+    def handler(request):
+        if str(request.url) == "https://walled.example/robots.txt":
+            calls["canonical"] += 1
+        return httpx.Response(403, text="", headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "walled.example", attempts=3, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "ServerError"
+    assert calls["canonical"] == 1
+
+
+@pytest.mark.asyncio
+async def test_retry_backoff_is_bounded():
+    delays = []
+
+    async def recording_sleep(delay):
+        delays.append(delay)
+
+    def handler(request):
+        raise httpx.ConnectTimeout("down")
+
+    async with client_returning(handler) as client:
+        await fetch_domain(client, "slow.example", attempts=4, sleep=recording_sleep)
+
+    # Exponential, capped at 30s: the collection window is spanned by cron
+    # re-running collect, not by one process sleeping.
+    assert delays == [2, 4, 8]
