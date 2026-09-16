@@ -29,7 +29,7 @@ def seed_raw(root):
                         "http_status": 200, "final_url": None,
                         "content_type": "text/plain", "bytes": len(body),
                         "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1})
-    write_manifest(root, "2026-09-14", records)
+    write_manifest(root, "2026-09-14", records, collector_version="abc1234")
 
 
 def test_derive_writes_tables(tmp_path):
@@ -66,7 +66,7 @@ def test_changed_result_without_a_reason_exits_nonzero(tmp_path):
          "sha256": store_body(tmp_path, b"User-agent: *\nAllow: /\n"),
          "http_status": 200, "final_url": None, "content_type": "text/plain",
          "bytes": 24, "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1},
-    ])
+    ], collector_version="abc1234")
     assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
     assert len(read_rows(tmp_path / "prints.csv")) == 1
 
@@ -132,7 +132,7 @@ def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
                             "content_type": "text/plain",
                             "bytes": len(prev_body_text),
                             "fetched_at": "2026-09-07T00:00:00Z", "attempts": 1})
-    write_manifest(tmp_path, "2026-09-07", prev_records)
+    write_manifest(tmp_path, "2026-09-07", prev_records, collector_version="abc1234")
 
     # Seed current period (2026-09-14) with DIFFERENT content
     curr_body_text = "User-agent: *\nAllow: /\n"
@@ -145,7 +145,7 @@ def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
                             "content_type": "text/plain",
                             "bytes": len(curr_body_text),
                             "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1})
-    write_manifest(tmp_path, "2026-09-14", curr_records)
+    write_manifest(tmp_path, "2026-09-14", curr_records, collector_version="abc1234")
 
     # Precondition: verify SHAs are different (not deduplicated)
     assert prev_sha != curr_sha, "Test requires different body content for each period"
@@ -187,7 +187,7 @@ def test_valid_previous_period_produces_change_wow_series(tmp_path):
                         "http_status": 200, "final_url": None,
                         "content_type": "text/plain", "bytes": len(body),
                         "fetched_at": "2026-09-21T00:00:00Z", "attempts": 1})
-    write_manifest(tmp_path, "2026-09-21", records)
+    write_manifest(tmp_path, "2026-09-21", records, collector_version="abc1234")
 
     assert main(["print", "--root", str(tmp_path), "--period", "2026-09-21"]) == 0
 
@@ -195,3 +195,173 @@ def test_valid_previous_period_produces_change_wow_series(tmp_path):
     series_rows = read_rows(tmp_path / "series.csv")
     change_wow_rows = [r for r in series_rows if r.get("series_id", "").startswith("change_wow")]
     assert len(change_wow_rows) > 0, "change_wow series should appear when previous period exists"
+
+
+def seed_published(root, period="2026-09-14"):
+    seed_config(root)
+    seed_raw(root)
+    assert main(["print", "--root", str(root), "--period", period]) == 0
+
+
+def test_collect_refuses_a_period_that_is_already_published(tmp_path, monkeypatch, capsys):
+    """Published evidence is not rewritten by accident.
+
+    The ledger would still refuse to change the number, but the number would no
+    longer be re-derivable from the raw tree, which is the promise the tree is
+    there to keep.
+    """
+    import tallyhouse.cli as cli
+
+    seed_published(tmp_path)
+    manifest_before = (tmp_path / "raw" / "2026-09-14" / "manifest.json").read_bytes()
+
+    called = []
+
+    async def fake_collect(*args, **kwargs):
+        called.append(kwargs)
+        return []
+
+    monkeypatch.setattr(cli, "collect_panel", fake_collect)
+
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+    assert called == []
+    assert (tmp_path / "raw" / "2026-09-14" / "manifest.json").read_bytes() == manifest_before
+    assert "already published" in capsys.readouterr().err
+
+
+def test_collect_force_overrides_the_refusal(tmp_path, monkeypatch):
+    import tallyhouse.cli as cli
+
+    seed_published(tmp_path)
+
+    called = []
+
+    async def fake_collect(*args, **kwargs):
+        called.append(kwargs)
+        return []
+
+    monkeypatch.setattr(cli, "collect_panel", fake_collect)
+
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14",
+                 "--force"]) == 0
+    assert len(called) == 1
+
+
+def test_collect_on_an_unpublished_period_proceeds(tmp_path, monkeypatch):
+    import tallyhouse.cli as cli
+
+    seed_config(tmp_path)
+    called = []
+
+    async def fake_collect(*args, **kwargs):
+        called.append(kwargs)
+        return []
+
+    monkeypatch.setattr(cli, "collect_panel", fake_collect)
+
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert len(called) == 1
+    assert called[0]["collector_version"]
+
+
+def test_collector_version_failure_is_fatal(tmp_path, monkeypatch, capsys):
+    """Refuse to collect rather than record unattributable evidence.
+
+    The old code caught every exception and returned "unknown", so the one field
+    that makes evidence attributable degraded silently in exactly the unattended
+    cron path it exists for.
+    """
+    import tallyhouse.cli as cli
+
+    seed_config(tmp_path)
+    not_a_repo = tmp_path / "elsewhere"
+    not_a_repo.mkdir()
+    monkeypatch.setattr(cli, "REPO_DIR", not_a_repo)
+
+    called = []
+
+    async def fake_collect(*args, **kwargs):
+        called.append(kwargs)
+        return []
+
+    monkeypatch.setattr(cli, "collect_panel", fake_collect)
+
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+    assert called == []
+    assert "CollectorVersionUnavailable" in capsys.readouterr().err
+
+
+def test_collector_version_is_read_from_the_repository_not_the_cwd(tmp_path, monkeypatch):
+    """Under cron the process cwd is not the repository."""
+    import tallyhouse.cli as cli
+
+    monkeypatch.chdir(tmp_path)
+    assert cli.collector_version() == cli.collector_version(cli.REPO_DIR)
+    assert len(cli.collector_version()) >= 7
+
+
+def test_print_uses_the_collector_version_stamped_at_collect_time(tmp_path):
+    """Evidence collected at commit A and printed at commit B is from A."""
+    import tallyhouse.cli as cli
+
+    seed_config(tmp_path)
+    seed_raw(tmp_path)  # stamps "abc1234"
+
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    row = read_rows(tmp_path / "prints.csv")[0]
+    assert row["collector_version"] == "abc1234"
+    assert row["collector_version"] != cli.collector_version()
+
+
+def test_print_refuses_a_manifest_with_no_collector_version(tmp_path, capsys):
+    import json as _json
+
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    path = tmp_path / "raw" / "2026-09-14" / "manifest.json"
+    document = _json.loads(path.read_text())
+    del document["collector_version"]
+    path.write_text(_json.dumps(document))
+
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+    assert "collector_version" in capsys.readouterr().err
+
+
+def test_methodology_version_records_the_agent_set_and_the_parser(tmp_path):
+    from importlib.metadata import version
+
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    row = read_rows(tmp_path / "prints.csv")[0]
+    assert row["methodology_version"] == f"agents=1;protego={version('protego')}"
+
+
+def test_agents_flag_selects_a_different_agent_set_and_bumps_methodology(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    # v2 tracks an agent that a.com does not name, so the value differs too.
+    (tmp_path / "agents" / "v2.json").write_text(
+        json.dumps({"version": 2, "agents": ["ClaudeBot"]})
+    )
+
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    v1_row = read_rows(tmp_path / "prints.csv")[0]
+    assert v1_row["value"] == "50.0"
+
+    # Changing the agent set makes the series non-comparable, so it is a
+    # restatement: a new vintage with a reason (spec 6.3).
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14",
+                 "--agents", "2", "--reason", "agent set v2"]) == 0
+    rows = read_rows(tmp_path / "prints.csv")
+    assert len(rows) == 2
+    assert rows[1]["value"] == "0.0"
+    assert rows[1]["methodology_version"].startswith("agents=2;")
+    assert v1_row["methodology_version"].startswith("agents=1;")
+
+    # And the derive stage reads the selected file too.
+    assert main(["derive", "--root", str(tmp_path), "--period", "2026-09-14",
+                 "--agents", "2"]) == 0
+    verdicts = (tmp_path / "derived" / "verdicts.csv").read_text()
+    assert "ClaudeBot" in verdicts
+    assert "GPTBot" not in verdicts

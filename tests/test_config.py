@@ -48,3 +48,23 @@ def test_load_agents_returns_the_tracked_set(tmp_path):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"version": 1, "agents": ["GPTBot", "ClaudeBot"]}))
     assert load_agents(tmp_path, 1) == ["GPTBot", "ClaudeBot"]
+
+
+def test_panel_filed_under_the_wrong_year_is_rejected(tmp_path):
+    # A 2025 panel served for 2026 periods would be the wrong basket, and a
+    # panel of the wrong size lets coverage exceed 100%.
+    write_panel(tmp_path, 2025, ["a.com"])
+    (tmp_path / "panel" / "2026.json").write_text(
+        (tmp_path / "panel" / "2025.json").read_text()
+    )
+    with pytest.raises(ValueError):
+        load_panel(tmp_path, 2026)
+
+
+def test_methodology_version_combines_the_agent_set_and_the_parser():
+    from importlib.metadata import version
+
+    from tallyhouse.config import methodology_version
+
+    assert methodology_version(1) == f"agents=1;protego={version('protego')}"
+    assert methodology_version(2) != methodology_version(1)

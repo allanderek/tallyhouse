@@ -28,7 +28,7 @@ def seed(root):
     records.append({"domain": "down.com", "outcome": "Timeout", "sha256": None,
                     "http_status": None, "final_url": None, "content_type": None,
                     "bytes": None, "fetched_at": "2026-09-14T00:00:00Z", "attempts": 3})
-    write_manifest(root, PERIOD, records)
+    write_manifest(root, PERIOD, records, collector_version="test")
 
 
 def test_pipeline_produces_a_print_matching_hand_computation(tmp_path):

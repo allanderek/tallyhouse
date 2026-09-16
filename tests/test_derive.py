@@ -14,7 +14,7 @@ def seed(root, period, entries):
                         "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1,
                         "final_url": None, "content_type": None,
                         "bytes": len(body) if body is not None else None})
-    write_manifest(root, period, records)
+    write_manifest(root, period, records, collector_version="test")
 
 
 def test_verdicts_are_produced_for_every_agent_on_conclusive_domains(tmp_path):
@@ -74,7 +74,7 @@ def test_404_with_a_directive_bearing_body_is_never_parsed(tmp_path):
         {"domain": "gone.com", "outcome": "NoRobotsTxt", "sha256": sha,
          "http_status": 404, "final_url": None, "content_type": "text/plain",
          "bytes": 31, "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1},
-    ])
+    ], collector_version="test")
 
     tables = derive_period(tmp_path, "2026-09-14", AGENTS)
     stances = {v["agent"]: v["stance"] for v in tables["verdicts"]}
