@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 import pytest
 
@@ -61,9 +63,10 @@ async def test_identical_bodies_across_domains_share_one_stored_file(tmp_path):
 async def test_concurrency_is_capped(tmp_path):
     state = {"now": 0, "peak": 0}
 
-    def handler(request):
+    async def handler(request):
         state["now"] += 1
         state["peak"] = max(state["peak"], state["now"])
+        await asyncio.sleep(0.01)
         state["now"] -= 1
         return httpx.Response(200, text="x", headers={"content-type": "text/plain"})
 
@@ -72,6 +75,15 @@ async def test_concurrency_is_capped(tmp_path):
         await collect_panel(tmp_path, "2026-09-14", domains, client=client, concurrency=4)
 
     assert state["peak"] <= 4
+    assert state["peak"] == 4
+
+    # Verify the test is discriminating: a different cap should yield different peak
+    state = {"now": 0, "peak": 0}
+    async with client_returning(handler) as client:
+        await collect_panel(tmp_path, "2026-09-14", domains, client=client, concurrency=8)
+
+    assert state["peak"] <= 8
+    assert state["peak"] == 8
 
 
 async def test_unexpected_exception_becomes_transport_error_outcome(tmp_path):
