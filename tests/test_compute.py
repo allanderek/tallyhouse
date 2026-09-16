@@ -110,3 +110,28 @@ def test_like_for_like_change_is_none_without_a_previous_period():
 def test_rates_with_no_conclusive_domains_raise_rather_than_divide_by_zero():
     with pytest.raises(ValueError):
         targeted_rate([], set())
+
+
+def test_blanket_partial_block_is_not_counted_as_blanket_blocking():
+    # A blanket partial block (e.g. Disallow: /wp-admin/ under User-agent: *)
+    # is ordinary site hygiene, not a stance toward AI crawlers, so it does
+    # not count toward blanket_rate.
+    blanket = {"a.com": "PartialBlock"}
+    assert blanket_rate(blanket, {"a.com"}) == 0.0
+
+
+def test_blanket_partial_block_is_not_counted_in_effective_rate():
+    # The same domain with blanket PartialBlock is excluded from effective_rate
+    # when it has no targeted (named-agent) blocking verdict.
+    blanket = {"a.com": "PartialBlock"}
+    verdicts = []
+    assert effective_rate(verdicts, blanket, {"a.com"}) == 0.0
+
+
+def test_blanket_partial_block_with_targeted_verdict_is_counted_in_effective_rate():
+    # When a blanket-partial domain ALSO has a targeted (named-agent) blocking
+    # verdict, it is counted in effective_rate. This proves the exclusion is
+    # specific to blanket partials, not a general issue with PartialBlock.
+    blanket = {"a.com": "PartialBlock"}
+    verdicts = [{"domain": "a.com", "agent": "GPTBot", "stance": "PartialBlock"}]
+    assert effective_rate(verdicts, blanket, {"a.com"}) == 100.0

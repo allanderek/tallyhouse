@@ -37,6 +37,13 @@ def targeted_rate(verdicts: list[dict], conclusive: set[str]) -> float:
 
 
 def blanket_blocked(blanket: dict[str, str], conclusive: set[str]) -> set[str]:
+    """Return domains blanket-blocked to all crawlers (User-agent: *).
+
+    Only FullBlock counts, not PartialBlock. For named agents, any disallow
+    signals intent toward that crawler. For the wildcard group, only total
+    closure counts as a stance toward AI; partial rules are ordinary site
+    hygiene (e.g. Disallow: /wp-admin/) and not evidence of intent.
+    """
     return {d for d, stance in blanket.items() if d in conclusive and stance == "FullBlock"}
 
 
