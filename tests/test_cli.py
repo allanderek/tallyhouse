@@ -117,43 +117,59 @@ def test_malformed_agents_json_exits_nonzero(tmp_path, capsys):
 
 
 def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
-    from tallyhouse.storage import manifest_path
-    import os
+    from tallyhouse.storage import body_path
 
     seed_config(tmp_path)
-    seed_raw(tmp_path)
-    # Do a first print
-    main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
 
-    # Now print a second period with different content
-    # This ensures the second period can fully derive, but the first period
-    # will need its original bodies
-    records = []
-    for domain, body in [("a.com", "Different body for a.com\n"),
-                         ("b.com", "Different body for b.com\n")]:
-        records.append({"domain": domain, "outcome": "Fetched",
-                        "sha256": store_body(tmp_path, body.encode()),
-                        "http_status": 200, "final_url": None,
-                        "content_type": "text/plain", "bytes": len(body),
-                        "fetched_at": "2026-09-21T00:00:00Z", "attempts": 1})
-    write_manifest(tmp_path, "2026-09-21", records)
+    # Seed previous period (2026-09-07) with distinctive content
+    prev_body_text = "User-agent: GPTBot\nDisallow: /\n"
+    prev_records = []
+    for domain in ["a.com", "b.com"]:
+        prev_sha = store_body(tmp_path, prev_body_text.encode())
+        prev_records.append({"domain": domain, "outcome": "Fetched",
+                            "sha256": prev_sha,
+                            "http_status": 200, "final_url": None,
+                            "content_type": "text/plain",
+                            "bytes": len(prev_body_text),
+                            "fetched_at": "2026-09-07T00:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-07", prev_records)
 
-    # Now delete ONLY the body directory to simulate corruption
-    # This makes both periods underiable, testing that the code properly
-    # fails when accessing previous period
-    import shutil
-    bodies_dir = tmp_path / "raw" / "bodies"
-    if bodies_dir.exists():
-        shutil.rmtree(bodies_dir)
+    # Seed current period (2026-09-14) with DIFFERENT content
+    curr_body_text = "User-agent: *\nAllow: /\n"
+    curr_records = []
+    for domain in ["a.com", "b.com"]:
+        curr_sha = store_body(tmp_path, curr_body_text.encode())
+        curr_records.append({"domain": domain, "outcome": "Fetched",
+                            "sha256": curr_sha,
+                            "http_status": 200, "final_url": None,
+                            "content_type": "text/plain",
+                            "bytes": len(curr_body_text),
+                            "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-14", curr_records)
 
-    # Printing the second period should fail when deriving it
-    # (because its bodies are also missing)
-    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-21"])
-    assert exit_code != 0
+    # Precondition: verify SHAs are different (not deduplicated)
+    assert prev_sha != curr_sha, "Test requires different body content for each period"
+
+    # Precondition: verify both blob files exist
+    prev_blob = body_path(tmp_path, prev_sha)
+    curr_blob = body_path(tmp_path, curr_sha)
+    assert prev_blob.exists(), f"Previous period blob should exist: {prev_blob}"
+    assert curr_blob.exists(), f"Current period blob should exist: {curr_blob}"
+
+    # First: verify print succeeds when previous period blob is present
+    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert exit_code == 0, "Print should succeed with previous period blob intact"
+
+    # Now delete ONLY the previous period's blob file
+    prev_blob.unlink()
+    assert not prev_blob.exists(), "Previous blob should be deleted"
+    assert curr_blob.exists(), "Current blob should still exist (guard against test degradation)"
+
+    # Second: verify print now fails because previous period blob is missing
+    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert exit_code != 0, "Print should fail when previous period blob is missing"
     captured = capsys.readouterr()
-    # Should fail with a FileNotFoundError about blob, not "never collected"
-    assert "error:" in captured.err
-    assert "was never collected" not in captured.err
+    assert "error:" in captured.err, "Should print error message"
 
 
 def test_valid_previous_period_produces_change_wow_series(tmp_path):
