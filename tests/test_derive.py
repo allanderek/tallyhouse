@@ -80,3 +80,29 @@ def test_404_with_a_directive_bearing_body_is_never_parsed(tmp_path):
     stances = {v["agent"]: v["stance"] for v in tables["verdicts"]}
     assert stances == {"GPTBot": "Unmentioned", "CCBot": "Unmentioned"}
     assert tables["blanket"]["gone.com"] == "Allowed"
+
+
+def test_invalid_utf8_in_a_body_decodes_without_raising(tmp_path):
+    """Pins the errors="replace" decoding choice in derive.
+
+    A robots.txt is not required to be valid UTF-8 — Latin-1 accented text in a
+    comment is common — and one mojibake file must not fail a whole period's
+    derivation. Undecodable bytes become U+FFFD, which is ordinary text and can
+    never form a directive.
+    """
+    body = b"# Interdit aux robots d'ind\xe9xation\nUser-agent: GPTBot\nDisallow: /\n"
+    with __import__("pytest").raises(UnicodeDecodeError):
+        body.decode("utf-8")  # precondition: genuinely invalid UTF-8
+
+    write_manifest(tmp_path, "2026-09-14", [
+        {"domain": "fr.com", "outcome": "Fetched",
+         "sha256": store_body(tmp_path, body),
+         "http_status": 200, "final_url": None, "content_type": "text/plain",
+         "bytes": len(body), "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1},
+    ], collector_version="test")
+
+    tables = derive_period(tmp_path, "2026-09-14", AGENTS)
+    stances = {v["agent"]: v["stance"] for v in tables["verdicts"]}
+    # Decoding did not raise, and the directives after the mojibake comment
+    # still parse.
+    assert stances == {"GPTBot": "FullBlock", "CCBot": "Unmentioned"}

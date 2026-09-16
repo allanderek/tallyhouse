@@ -100,10 +100,11 @@ def test_truncated_ledger_line_raises_on_latest(tmp_path):
     path = tmp_path / "prints.csv"
     append_row(path, KEY, row("21.4"))
 
-    # Simulate a mid-write crash: incomplete final line where vintage field has bad data
+    # Simulate a mid-write crash: the row is genuinely short, cut off before the
+    # vintage column was written. csv fills the missing columns with None, so
+    # this exercises the missing-vintage branch rather than the non-integer one.
     with path.open("a") as handle:
-        # Missing critical fields after the incomplete vintage-like value
-        handle.write("agent-accessibility,2026-09-14,2_badtrunc,21.9")
+        handle.write("agent-accessibility,2026-09-14")
 
     # latest() should raise, not silently skip or misread the corrupted row
     with pytest.raises(LedgerConflict) as exc_info:
