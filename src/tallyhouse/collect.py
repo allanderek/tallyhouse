@@ -7,6 +7,7 @@ absence (404) from an inconclusive one (timeout).
 """
 
 import asyncio
+import socket
 from datetime import datetime, timezone
 
 import httpx
@@ -37,7 +38,13 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-async def fetch_domain(client: httpx.AsyncClient, domain: str, *, attempts: int = 3) -> dict:
+async def fetch_domain(
+    client: httpx.AsyncClient,
+    domain: str,
+    *,
+    attempts: int = 3,
+    sleep=asyncio.sleep,
+) -> dict:
     """Fetch one domain's robots.txt, retrying transient failures."""
     last_outcome = "Timeout"
     for attempt in range(1, attempts + 1):
@@ -47,10 +54,21 @@ async def fetch_domain(client: httpx.AsyncClient, domain: str, *, attempts: int 
                 headers={"user-agent": USER_AGENT},
                 follow_redirects=True,
             )
-        except httpx.ConnectError:
-            last_outcome = "DnsFailure"
-        except (httpx.TimeoutException, httpx.NetworkError):
+        except httpx.TimeoutException:
             last_outcome = "Timeout"
+        except httpx.ConnectError as exc:
+            # Distinguish DNS failures from other connection errors.
+            if isinstance(exc.__cause__, socket.gaierror):
+                last_outcome = "DnsFailure"
+            else:
+                last_outcome = "ConnectFailure"
+        except httpx.NetworkError:
+            # ReadError, WriteError, CloseError are terminal network problems.
+            last_outcome = "ConnectFailure"
+        except httpx.RequestError:
+            # TooManyRedirects, ProtocolError, ProxyError, UnsupportedProtocol
+            # are terminal: retrying won't help.
+            last_outcome = "TransportError"
         else:
             body = response.content
             outcome = classify_response(
@@ -70,7 +88,7 @@ async def fetch_domain(client: httpx.AsyncClient, domain: str, *, attempts: int 
                 "attempts": attempt,
             }
         if attempt < attempts:
-            await asyncio.sleep(min(2 ** attempt, 30))
+            await sleep(min(2 ** attempt, 30))
 
     return {
         "domain": domain,

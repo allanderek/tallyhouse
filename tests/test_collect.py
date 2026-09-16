@@ -1,3 +1,5 @@
+import socket
+
 import httpx
 import pytest
 
@@ -6,6 +8,11 @@ from tallyhouse.collect import classify_response, fetch_domain
 
 def client_returning(handler):
     return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+async def _no_op_sleep(delay):
+    """No-op sleep for testing retries without real delays."""
+    pass
 
 
 def test_200_plain_text_is_fetched():
@@ -68,7 +75,7 @@ async def test_timeout_is_retried_then_recorded_as_timeout():
         raise httpx.ConnectTimeout("too slow")
 
     async with client_returning(handler) as client:
-        record = await fetch_domain(client, "slow.example", attempts=3)
+        record = await fetch_domain(client, "slow.example", attempts=3, sleep=_no_op_sleep)
 
     assert record["outcome"] == "Timeout"
     assert record["attempts"] == 3
@@ -86,7 +93,7 @@ async def test_transient_failure_then_success_is_recorded_as_fetched():
         return httpx.Response(200, text="ok", headers={"content-type": "text/plain"})
 
     async with client_returning(handler) as client:
-        record = await fetch_domain(client, "flaky.example", attempts=3)
+        record = await fetch_domain(client, "flaky.example", attempts=3, sleep=_no_op_sleep)
 
     assert record["outcome"] == "Fetched"
     assert record["attempts"] == 2
@@ -95,9 +102,71 @@ async def test_transient_failure_then_success_is_recorded_as_fetched():
 @pytest.mark.asyncio
 async def test_dns_failure_is_recorded_as_dns_failure():
     def handler(request):
-        raise httpx.ConnectError("Name or service not known")
+        exc = httpx.ConnectError("Name or service not known")
+        exc.__cause__ = socket.gaierror("Name or service not known")
+        raise exc
 
     async with client_returning(handler) as client:
         record = await fetch_domain(client, "nope.invalid", attempts=1)
 
     assert record["outcome"] == "DnsFailure"
+
+
+@pytest.mark.asyncio
+async def test_too_many_redirects_is_recorded_as_transport_error():
+    def handler(request):
+        raise httpx.TooManyRedirects("Too many redirects", request=request)
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "redirect-loop.example", attempts=1)
+
+    assert record["outcome"] == "TransportError"
+    assert record["attempts"] == 1
+
+
+@pytest.mark.asyncio
+async def test_remote_protocol_error_is_recorded_as_transport_error():
+    def handler(request):
+        raise httpx.RemoteProtocolError("Bad response")
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "bad-proto.example", attempts=1)
+
+    assert record["outcome"] == "TransportError"
+
+
+@pytest.mark.asyncio
+async def test_connect_error_with_gaierror_cause_is_dns_failure():
+    def handler(request):
+        exc = httpx.ConnectError("Connection failed")
+        exc.__cause__ = socket.gaierror("Name or service not known")
+        raise exc
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "dns.example", attempts=1)
+
+    assert record["outcome"] == "DnsFailure"
+
+
+@pytest.mark.asyncio
+async def test_connect_error_without_gaierror_cause_is_connect_failure():
+    def handler(request):
+        exc = httpx.ConnectError("Connection refused")
+        exc.__cause__ = OSError("Connection refused")
+        raise exc
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "refused.example", attempts=1)
+
+    assert record["outcome"] == "ConnectFailure"
+
+
+@pytest.mark.asyncio
+async def test_read_error_is_connect_failure_not_timeout():
+    def handler(request):
+        raise httpx.ReadError("Connection reset by peer")
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "reset.example", attempts=1)
+
+    assert record["outcome"] == "ConnectFailure"
