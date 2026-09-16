@@ -170,3 +170,50 @@ async def test_read_error_is_connect_failure_not_timeout():
         record = await fetch_domain(client, "reset.example", attempts=1)
 
     assert record["outcome"] == "ConnectFailure"
+
+
+@pytest.mark.asyncio
+async def test_404_error_page_body_is_not_retained():
+    # Some 404 pages contain text that would parse as robots directives. The
+    # outcome is a conclusive absence of policy, so the payload is evidence of
+    # nothing and must not be carried forward as this domain's robots.txt.
+    def handler(request):
+        return httpx.Response(
+            404,
+            text="User-agent: GPTBot\nDisallow: /\n",
+            headers={"content-type": "text/plain"},
+        )
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "gone.example", attempts=1)
+
+    assert record["outcome"] == "NoRobotsTxt"
+    assert record["body"] is None
+    # The observed size is still recorded: it is evidence about the response.
+    assert record["bytes"] == len(b"User-agent: GPTBot\nDisallow: /\n")
+
+
+@pytest.mark.asyncio
+async def test_5xx_error_page_body_is_not_retained():
+    def handler(request):
+        return httpx.Response(503, text="<html>maintenance id=abc123</html>",
+                              headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "down.example", attempts=1, sleep=_no_op_sleep)
+
+    assert record["outcome"] == "ServerError"
+    assert record["body"] is None
+
+
+@pytest.mark.asyncio
+async def test_html_served_with_200_has_no_body_retained():
+    def handler(request):
+        return httpx.Response(200, text="<html>not robots</html>",
+                              headers={"content-type": "text/html"})
+
+    async with client_returning(handler) as client:
+        record = await fetch_domain(client, "html.example", attempts=1)
+
+    assert record["outcome"] == "NotPlainText"
+    assert record["body"] is None

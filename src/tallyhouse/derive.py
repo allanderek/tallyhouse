@@ -19,6 +19,12 @@ FETCH_FIELDS = [
 
 
 def derive_period(root: Path, period: str, agents: list[str]) -> dict:
+    # Invariant: the manifest holds exactly one record per domain per period.
+    # collect enforces it by keying its merge on domain, and everything
+    # downstream depends on it -- `blanket` is a dict keyed by domain, so a
+    # duplicate would silently overwrite rather than double-count, while
+    # `verdicts` is a list, so the same duplicate WOULD double-count there. The
+    # two tables would then disagree about the same domain.
     observations = sorted(read_manifest(root, period), key=lambda r: r["domain"])
     verdicts: list[dict] = []
     blanket: dict[str, str] = {}
@@ -26,7 +32,19 @@ def derive_period(root: Path, period: str, agents: list[str]) -> dict:
     for record in observations:
         if record["outcome"] not in CONCLUSIVE_OUTCOMES:
             continue
-        sha = record.get("sha256")
+        # Only a Fetched outcome has a body that is this domain's robots.txt.
+        # A NoRobotsTxt (404/410) outcome is a conclusive *absence* of policy, so
+        # it is parsed as the empty file no matter what bytes the server sent
+        # back with the error -- some serve a full HTML page, and a few of those
+        # contain text that would otherwise parse as directives. collect already
+        # declines to store those bodies; this is the second of two locks on the
+        # same door, because the consequence of getting it wrong is a domain
+        # entering the targeted headline numerator for having no robots.txt.
+        sha = record.get("sha256") if record["outcome"] == "Fetched" else None
+        # errors="replace" rather than "strict": a robots.txt is not required to
+        # be valid UTF-8, and a mojibake comment must not fail a whole period's
+        # derivation. Undecodable bytes become U+FFFD, which parses as ordinary
+        # text and can never form a directive.
         body = load_body(root, sha).decode("utf-8", errors="replace") if sha else ""
         blanket[record["domain"]] = blanket_stance(body)
         for agent in agents:

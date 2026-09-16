@@ -64,3 +64,19 @@ def test_write_tables_produces_sorted_csv(tmp_path):
     write_tables(tmp_path / "derived", "2026-09-14", tables)
     text = (tmp_path / "derived" / "verdicts.csv").read_text()
     assert text.index("a.com") < text.index("b.com")
+
+
+def test_404_with_a_directive_bearing_body_is_never_parsed(tmp_path):
+    # Belt and braces: even if a body somehow reaches the manifest alongside a
+    # NoRobotsTxt outcome, derive must treat the domain as having no policy.
+    sha = store_body(tmp_path, b"User-agent: GPTBot\nDisallow: /\n")
+    write_manifest(tmp_path, "2026-09-14", [
+        {"domain": "gone.com", "outcome": "NoRobotsTxt", "sha256": sha,
+         "http_status": 404, "final_url": None, "content_type": "text/plain",
+         "bytes": 31, "fetched_at": "2026-09-14T00:00:00Z", "attempts": 1},
+    ])
+
+    tables = derive_period(tmp_path, "2026-09-14", AGENTS)
+    stances = {v["agent"]: v["stance"] for v in tables["verdicts"]}
+    assert stances == {"GPTBot": "Unmentioned", "CCBot": "Unmentioned"}
+    assert tables["blanket"]["gone.com"] == "Allowed"

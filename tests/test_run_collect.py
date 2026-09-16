@@ -112,3 +112,33 @@ async def test_unexpected_exception_becomes_transport_error_outcome(tmp_path):
     good_record = next(r for r in manifest if r["domain"] == "good.com")
     assert good_record["outcome"] == "Fetched"
     assert good_record["sha256"] is not None
+
+
+async def test_404_body_is_not_stored_as_a_blob(tmp_path):
+    def handler(request):
+        return httpx.Response(404, text="User-agent: GPTBot\nDisallow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        await collect_panel(tmp_path, "2026-09-14", ["gone.com"], client=client,
+                            attempts=1)
+
+    record = read_manifest(tmp_path, "2026-09-14")[0]
+    assert record["outcome"] == "NoRobotsTxt"
+    assert record["sha256"] is None
+    assert list(tmp_path.rglob("*.txt.gz")) == []
+
+
+async def test_5xx_body_is_not_stored_as_a_blob(tmp_path):
+    def handler(request):
+        return httpx.Response(500, text="error page id=deadbeef",
+                              headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        await collect_panel(tmp_path, "2026-09-14", ["boom.com"], client=client,
+                            attempts=1)
+
+    record = read_manifest(tmp_path, "2026-09-14")[0]
+    assert record["outcome"] == "ServerError"
+    assert record["sha256"] is None
+    assert list(tmp_path.rglob("*.txt.gz")) == []

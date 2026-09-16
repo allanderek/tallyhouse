@@ -16,6 +16,18 @@ from tallyhouse.constants import MAX_BODY_BYTES, USER_AGENT
 
 _PLAIN_TEXT_PREFIXES = ("text/plain",)
 
+# Outcomes whose payload is genuinely this domain's robots.txt and is therefore
+# worth retaining. Everything else -- a 404/410 error page, a 5xx error page, an
+# HTML page served at /robots.txt -- is a body ABOUT the absence of a policy,
+# not a statement of one. Retaining it would publish a sha256 for a domain that
+# has no robots.txt and invite a later stage to parse a stranger's error page as
+# crawler policy; CDN error pages also carry per-request ids, so they never
+# deduplicate and would accumulate forever as blobs referenced by nothing.
+#
+# TooLarge is retained because spec 5.1 requires it: the body is kept so that
+# the size cap can be revisited later without re-collecting.
+_BODY_BEARING_OUTCOMES = frozenset({"Fetched", "TooLarge"})
+
 
 def classify_response(status: int, content_type: str | None, size: int) -> str:
     if status == 404 or status == 410:
@@ -83,7 +95,7 @@ async def fetch_domain(
                 "final_url": str(response.url),
                 "content_type": response.headers.get("content-type"),
                 "bytes": len(body),
-                "body": body,
+                "body": body if outcome in _BODY_BEARING_OUTCOMES else None,
                 "fetched_at": _now(),
                 "attempts": attempt,
             }
