@@ -40,57 +40,88 @@ def _load(root: Path, period: str):
 
 
 def _cmd_collect(args) -> int:
-    root = Path(args.root)
-    panel, _ = _load(root, args.period)
+    try:
+        root = Path(args.root)
+        panel, _ = _load(root, args.period)
 
-    async def run():
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            await collect_panel(root, args.period, panel.domains, client=client)
+        async def run():
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                await collect_panel(root, args.period, panel.domains, client=client)
 
-    asyncio.run(run())
-    return 0
+        asyncio.run(run())
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
 
 
 def _cmd_derive(args) -> int:
-    root = Path(args.root)
-    _, agents = _load(root, args.period)
-    tables = derive_period(root, args.period, agents)
-    write_tables(root / "derived", args.period, tables)
-    return 0
+    try:
+        root = Path(args.root)
+        _, agents = _load(root, args.period)
+        tables = derive_period(root, args.period, agents)
+        write_tables(root / "derived", args.period, tables)
+        return 0
+    except FileNotFoundError as exc:
+        # Check if this is a "period never collected" error
+        root = Path(args.root)
+        manifest_path = root / "raw" / f"{args.period}.json"
+        if not manifest_path.exists():
+            print(f"error: period {args.period} was never collected", file=sys.stderr)
+        else:
+            print(f"error: FileNotFoundError: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
 
 
 def _cmd_print(args) -> int:
-    root = Path(args.root)
-    panel, agents = _load(root, args.period)
-    tables = derive_period(root, args.period, agents)
-
-    previous = previous_period(args.period)
     try:
-        prev_tables = derive_period(root, previous, agents)
-    except FileNotFoundError:
+        root = Path(args.root)
+        panel, agents = _load(root, args.period)
+        tables = derive_period(root, args.period, agents)
+
+        previous = previous_period(args.period)
+        # Explicitly check if previous period's manifest exists before deriving
+        prev_manifest_path = root / "raw" / f"{previous}.json"
         prev_tables = None
+        if prev_manifest_path.exists():
+            # Manifest exists, so derive it (may fail if blob is corrupt)
+            prev_tables = derive_period(root, previous, agents)
 
-    built = build_print(
-        tables,
-        prev_tables,
-        panel_size=len(panel.domains),
-        methodology_version=METHODOLOGY_VERSION,
-        collector_version=_collector_version(),
-        computed_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    )
-    try:
-        record_print(root, args.period, built, reason=args.reason)
-    except LedgerConflict as exc:
-        print(f"refusing to change a published number: {exc}", file=sys.stderr)
+        built = build_print(
+            tables,
+            prev_tables,
+            panel_size=len(panel.domains),
+            methodology_version=METHODOLOGY_VERSION,
+            collector_version=_collector_version(),
+            computed_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+        try:
+            record_print(root, args.period, built, reason=args.reason)
+        except LedgerConflict as exc:
+            print(f"refusing to change a published number: {exc}", file=sys.stderr)
+            return 1
+        if built["provisional"]:
+            print("warning: coverage below threshold, print marked provisional", file=sys.stderr)
+        return 0
+    except FileNotFoundError as exc:
+        # Check if this is a "period never collected" error
+        root = Path(args.root)
+        manifest_path = root / "raw" / f"{args.period}.json"
+        if not manifest_path.exists():
+            print(f"error: period {args.period} was never collected", file=sys.stderr)
+        else:
+            print(f"error: FileNotFoundError: {exc}", file=sys.stderr)
         return 1
-    if built["provisional"]:
-        print("warning: coverage below threshold, print marked provisional", file=sys.stderr)
-    return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="tallyhouse")
-    parser.add_argument("--root", default="data")
     sub = parser.add_subparsers(dest="command", required=True)
 
     for name in ("collect", "derive", "print"):

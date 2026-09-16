@@ -75,3 +75,72 @@ def test_invalid_period_is_rejected(tmp_path):
     seed_config(tmp_path)
     with pytest.raises(SystemExit):
         main(["derive", "--root", str(tmp_path), "--period", "2026-09-16"])
+
+
+def test_root_before_subcommand_is_rejected(tmp_path):
+    seed_config(tmp_path)
+    # --root before the subcommand should be rejected by argparse
+    with pytest.raises(SystemExit):
+        main(["--root", str(tmp_path), "derive", "--period", "2026-09-14"])
+
+
+def test_derive_for_never_collected_period_exits_nonzero(tmp_path, capsys):
+    seed_config(tmp_path)
+    # No manifest written for this period
+    exit_code = main(["derive", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    assert "error:" in captured.err
+    assert "2026-09-14" in captured.err
+
+
+def test_print_for_never_collected_period_exits_nonzero(tmp_path, capsys):
+    seed_config(tmp_path)
+    # No manifest written for this period
+    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    assert "error:" in captured.err
+    assert "2026-09-14" in captured.err
+
+
+def test_malformed_agents_json_exits_nonzero(tmp_path, capsys):
+    seed_config(tmp_path)
+    # Write malformed agents JSON
+    (tmp_path / "agents" / "v1.json").write_text("{invalid json")
+    seed_raw(tmp_path)
+
+    exit_code = main(["derive", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    assert "error:" in captured.err
+
+
+def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    # Do a first print
+    main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+
+    # Now try to print a second period with same bodies
+    records = []
+    for domain, body in [("a.com", "User-agent: GPTBot\nDisallow: /\n"),
+                         ("b.com", "User-agent: *\nAllow: /\n")]:
+        records.append({"domain": domain, "outcome": "Fetched",
+                        "sha256": store_body(tmp_path, body.encode()),
+                        "http_status": 200, "final_url": None,
+                        "content_type": "text/plain", "bytes": len(body),
+                        "fetched_at": "2026-09-21T00:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-21", records)
+
+    # Delete all body files to simulate blob store corruption
+    import shutil
+    bodies_dir = tmp_path / "raw" / "bodies"
+    if bodies_dir.exists():
+        shutil.rmtree(bodies_dir)
+
+    # Printing the second period should fail when deriving the first for comparison
+    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-21"])
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    assert "error:" in captured.err
