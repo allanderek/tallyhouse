@@ -16,7 +16,7 @@ from tallyhouse.compute import (
     per_agent_rates,
     targeted_rate,
 )
-from tallyhouse.ledger import LedgerConflict, append_row, latest
+from tallyhouse.ledger import LedgerConflict, append_row, would_conflict
 
 INDEX_ID = "agent-accessibility"
 PROVISIONAL_COVERAGE_THRESHOLD = 97.0
@@ -94,30 +94,26 @@ def record_print(root: Path, period: str, built: dict, *, reason: str | None = N
     root.mkdir(parents=True, exist_ok=True)
 
     # Phase 1: validate all rows before writing any
+    # Collect all conflicts across headline and series, then raise once with the complete list.
+    conflicts = []
+
     # Check headline
     headline_key = {"index_id": INDEX_ID, "period": period}
     headline_with_provisional = dict(built["headline"], provisional="true" if built["provisional"] else "false")
-    existing_headline = latest(root / "prints.csv", headline_key)
-    if existing_headline is not None:
-        if existing_headline["value"] != str(headline_with_provisional["value"]) and not reason:
-            raise LedgerConflict(
-                f"{headline_key} is published as {existing_headline['value']} and would become "
-                f"{headline_with_provisional['value']}. Supply a reason to append a new vintage."
-            )
+    if would_conflict(root / "prints.csv", headline_key, headline_with_provisional, reason=reason):
+        conflicts.append(("prints", headline_key))
 
     # Check all series
-    conflicts = []
     for series_id, row in sorted(built["series"].items()):
         series_key = {"index_id": INDEX_ID, "period": period, "series_id": series_id}
         series_with_provisional = dict(row, provisional="true" if built["provisional"] else "false")
-        existing_series = latest(root / "series.csv", series_key)
-        if existing_series is not None:
-            if existing_series["value"] != str(series_with_provisional["value"]) and not reason:
-                conflicts.append(series_key)
+        if would_conflict(root / "series.csv", series_key, series_with_provisional, reason=reason):
+            conflicts.append(("series", series_key))
 
     if conflicts:
+        conflict_list = ", ".join(f"{ledger}:{key}" for ledger, key in conflicts)
         raise LedgerConflict(
-            f"The following series rows would change without a reason: {conflicts}"
+            f"The following rows would change without a reason: {conflict_list}"
         )
 
     # Phase 2: write all rows

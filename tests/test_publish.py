@@ -80,7 +80,7 @@ def test_recording_the_same_print_twice_is_a_no_op(tmp_path):
     assert len(read_rows(tmp_path / "prints.csv")) == 1
 
 
-def test_provisional_flag_round_trips_in_prints_csv(tmp_path):
+def test_provisional_flag_true_in_prints_csv(tmp_path):
     # Low coverage: provisional should be "true"
     low_coverage_built = build_print(simple(1, 2), None, panel_size=100, **META)
     record_print(tmp_path, "2026-09-14", low_coverage_built)
@@ -88,7 +88,23 @@ def test_provisional_flag_round_trips_in_prints_csv(tmp_path):
     assert prints[0]["provisional"] == "true"
 
 
-def test_provisional_flag_round_trips_in_series_csv(tmp_path):
+def test_provisional_flag_false_in_prints_csv(tmp_path):
+    # Full coverage: provisional should be "false"
+    full_coverage_built = build_print(simple(1, 2), None, panel_size=2, **META)
+    record_print(tmp_path, "2026-09-14", full_coverage_built)
+    prints = read_rows(tmp_path / "prints.csv")
+    assert prints[0]["provisional"] == "false"
+
+
+def test_provisional_flag_true_in_series_csv(tmp_path):
+    # Low coverage: provisional should be "true" in all series rows
+    low_coverage_built = build_print(simple(1, 2), None, panel_size=100, **META)
+    record_print(tmp_path, "2026-09-14", low_coverage_built)
+    series = read_rows(tmp_path / "series.csv")
+    assert all(r["provisional"] == "true" for r in series)
+
+
+def test_provisional_flag_false_in_series_csv(tmp_path):
     # Full coverage: provisional should be "false"
     full_coverage_built = build_print(simple(1, 2), None, panel_size=2, **META)
     record_print(tmp_path, "2026-09-14", full_coverage_built)
@@ -147,29 +163,65 @@ def test_changed_series_value_with_no_reason_raises_before_prints_touched(tmp_pa
     built1 = build_print(simple(1, 2), None, panel_size=2, **META)
     record_print(tmp_path, "2026-09-14", built1)
 
-    # Get file contents
     prints_content_before = (tmp_path / "prints.csv").read_bytes()
+    series_content_before = (tmp_path / "series.csv").read_bytes()
 
-    # Build a print that would have a different series value
-    # This is tricky—we need the same headline but different series
-    # We'll use a different methodology_version to trigger a change without making headline different
-    # Actually, the series values are computed, so let's use a different approach:
-    # Record a print, then try to change just the series by modifying the observer data
-    # in a way that changes agent consensus but not overall blocking
+    # Create a modified print with different coverage series value
+    built2 = build_print(simple(1, 2), None, panel_size=1, **META)
+    with pytest.raises(LedgerConflict):
+        record_print(tmp_path, "2026-09-14", built2)
 
-    # For now, let's test by recording with different verdicts for a different agent
-    # Record initial with one agent
+    # Verify both files were not touched (validation happened before any write)
+    assert (tmp_path / "prints.csv").read_bytes() == prints_content_before
+    assert (tmp_path / "series.csv").read_bytes() == series_content_before
+
+
+def test_denominator_only_change_detected_in_phase_1(tmp_path):
+    """Test Finding A: would_conflict catches denominator-only changes (not just value).
+
+    A row with unchanged value and coverage but different denominator should still
+    be caught as a conflict if no reason is supplied. This verifies that the
+    would_conflict helper uses all of _COMPARED_FIELDS, not just value.
+    """
+    # Record initial print with 2 conclusive domains
     built1 = build_print(simple(1, 2), None, panel_size=2, **META)
     record_print(tmp_path, "2026-09-14", built1)
 
     prints_content_before = (tmp_path / "prints.csv").read_bytes()
     series_content_before = (tmp_path / "series.csv").read_bytes()
 
-    # Create a modified print with same value but different series
-    # by changing coverage (which changes the coverage series value)
-    built2 = build_print(simple(1, 2), None, panel_size=1, **META)
+    # Create a print with different denominator but same value (50% stays 50%)
+    # This requires different observation counts but same proportions
+    built2 = build_print(simple(2, 4), None, panel_size=4, **META)
+    # Verify the value is unchanged (both 50%) but denominator differs
+    assert float(built2["headline"]["value"]) == float(built1["headline"]["value"])
+    assert int(built2["headline"]["denominator"]) != int(built1["headline"]["denominator"])
+
+    # Should raise even without reason, and write nothing
     with pytest.raises(LedgerConflict):
         record_print(tmp_path, "2026-09-14", built2)
 
-    # Verify prints.csv was not touched (validation happened before any write)
     assert (tmp_path / "prints.csv").read_bytes() == prints_content_before
+    assert (tmp_path / "series.csv").read_bytes() == series_content_before
+
+
+def test_both_headline_and_series_conflicts_mentioned_in_error(tmp_path):
+    """Test Finding B: conflict error message names all conflicting keys (headline + series).
+
+    When both the headline and at least one series conflict, the raised LedgerConflict
+    should mention both so the operator sees the full scope of the restatement.
+    """
+    # Record initial print
+    built1 = build_print(simple(1, 2), None, panel_size=2, **META)
+    record_print(tmp_path, "2026-09-14", built1)
+
+    # Try to record with a different value (both headline and coverage series will differ)
+    built2 = build_print(simple(2, 2), None, panel_size=2, **META)
+
+    with pytest.raises(LedgerConflict) as exc_info:
+        record_print(tmp_path, "2026-09-14", built2)
+
+    error_msg = str(exc_info.value)
+    # The error message should reference both prints and series conflicts
+    assert "prints" in error_msg or "prints.csv" in error_msg or "index_id" in error_msg
+    assert "series" in error_msg or "coverage" in error_msg

@@ -77,6 +77,22 @@ def latest(path: Path, key: dict) -> dict | None:
     return max(matches, key=lambda r: int(r["vintage"]))
 
 
+def would_conflict(path: Path, key: dict, row: dict, *, reason: str | None = None) -> bool:
+    """Check if appending this row would conflict with an existing published value.
+
+    Returns True if an existing row exists for the key, differs on any _COMPARED_FIELDS,
+    and no reason was supplied. This is the single authoritative definition of conflict.
+    """
+    existing = latest(path, key)
+    if existing is None:
+        return False
+    # Row is unchanged on all compared fields
+    if all(existing[f] == str(row[f]) for f in _COMPARED_FIELDS):
+        return False
+    # Row differs and no reason supplied
+    return not reason
+
+
 def append_row(path: Path, key: dict, row: dict, *, reason: str | None = None) -> dict | None:
     """Append a row, enforcing the vintage rules.
 
@@ -102,7 +118,7 @@ def append_row(path: Path, key: dict, row: dict, *, reason: str | None = None) -
     if existing is not None:
         if all(existing[f] == str(row[f]) for f in _COMPARED_FIELDS):
             return None
-        if not reason:
+        if would_conflict(path, key, row, reason=reason):
             raise LedgerConflict(
                 f"{key} is published as {existing['value']} and would become "
                 f"{row['value']}. Supply a reason to append a new vintage."
