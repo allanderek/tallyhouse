@@ -25,6 +25,7 @@ PRINT_FIELDS = [
     "value",
     "denominator",
     "coverage",
+    "provisional",
     "methodology_version",
     "collector_version",
     "computed_at",
