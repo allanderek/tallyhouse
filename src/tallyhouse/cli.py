@@ -19,6 +19,7 @@ from tallyhouse.ledger import LedgerConflict
 from tallyhouse.periods import InvalidPeriod, parse_period, period_for, previous_period
 from tallyhouse.publish import build_print, record_print
 from tallyhouse.run_collect import collect_panel
+from tallyhouse.storage import manifest_path
 
 METHODOLOGY_VERSION = "1"
 
@@ -65,8 +66,8 @@ def _cmd_derive(args) -> int:
     except FileNotFoundError as exc:
         # Check if this is a "period never collected" error
         root = Path(args.root)
-        manifest_path = root / "raw" / f"{args.period}.json"
-        if not manifest_path.exists():
+        mfst_path = manifest_path(root, args.period)
+        if not mfst_path.exists():
             print(f"error: period {args.period} was never collected", file=sys.stderr)
         else:
             print(f"error: FileNotFoundError: {exc}", file=sys.stderr)
@@ -84,9 +85,9 @@ def _cmd_print(args) -> int:
 
         previous = previous_period(args.period)
         # Explicitly check if previous period's manifest exists before deriving
-        prev_manifest_path = root / "raw" / f"{previous}.json"
+        prev_mfst_path = manifest_path(root, previous)
         prev_tables = None
-        if prev_manifest_path.exists():
+        if prev_mfst_path.exists():
             # Manifest exists, so derive it (may fail if blob is corrupt)
             prev_tables = derive_period(root, previous, agents)
 
@@ -109,8 +110,8 @@ def _cmd_print(args) -> int:
     except FileNotFoundError as exc:
         # Check if this is a "period never collected" error
         root = Path(args.root)
-        manifest_path = root / "raw" / f"{args.period}.json"
-        if not manifest_path.exists():
+        mfst_path = manifest_path(root, args.period)
+        if not mfst_path.exists():
             print(f"error: period {args.period} was never collected", file=sys.stderr)
         else:
             print(f"error: FileNotFoundError: {exc}", file=sys.stderr)

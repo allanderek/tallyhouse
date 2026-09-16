@@ -117,12 +117,52 @@ def test_malformed_agents_json_exits_nonzero(tmp_path, capsys):
 
 
 def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
+    from tallyhouse.storage import manifest_path
+    import os
+
     seed_config(tmp_path)
     seed_raw(tmp_path)
     # Do a first print
     main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
 
-    # Now try to print a second period with same bodies
+    # Now print a second period with different content
+    # This ensures the second period can fully derive, but the first period
+    # will need its original bodies
+    records = []
+    for domain, body in [("a.com", "Different body for a.com\n"),
+                         ("b.com", "Different body for b.com\n")]:
+        records.append({"domain": domain, "outcome": "Fetched",
+                        "sha256": store_body(tmp_path, body.encode()),
+                        "http_status": 200, "final_url": None,
+                        "content_type": "text/plain", "bytes": len(body),
+                        "fetched_at": "2026-09-21T00:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-21", records)
+
+    # Now delete ONLY the body directory to simulate corruption
+    # This makes both periods underiable, testing that the code properly
+    # fails when accessing previous period
+    import shutil
+    bodies_dir = tmp_path / "raw" / "bodies"
+    if bodies_dir.exists():
+        shutil.rmtree(bodies_dir)
+
+    # Printing the second period should fail when deriving it
+    # (because its bodies are also missing)
+    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-21"])
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    # Should fail with a FileNotFoundError about blob, not "never collected"
+    assert "error:" in captured.err
+    assert "was never collected" not in captured.err
+
+
+def test_valid_previous_period_produces_change_wow_series(tmp_path):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    # Print first period
+    main(["print", "--root", str(tmp_path), "--period", "2026-09-14"])
+
+    # Print second period - should have change_wow series since previous period exists
     records = []
     for domain, body in [("a.com", "User-agent: GPTBot\nDisallow: /\n"),
                          ("b.com", "User-agent: *\nAllow: /\n")]:
@@ -133,14 +173,9 @@ def test_missing_body_file_in_previous_period_exits_nonzero(tmp_path, capsys):
                         "fetched_at": "2026-09-21T00:00:00Z", "attempts": 1})
     write_manifest(tmp_path, "2026-09-21", records)
 
-    # Delete all body files to simulate blob store corruption
-    import shutil
-    bodies_dir = tmp_path / "raw" / "bodies"
-    if bodies_dir.exists():
-        shutil.rmtree(bodies_dir)
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-21"]) == 0
 
-    # Printing the second period should fail when deriving the first for comparison
-    exit_code = main(["print", "--root", str(tmp_path), "--period", "2026-09-21"])
-    assert exit_code != 0
-    captured = capsys.readouterr()
-    assert "error:" in captured.err
+    # Verify change_wow series appears
+    series_rows = read_rows(tmp_path / "series.csv")
+    change_wow_rows = [r for r in series_rows if r.get("series_id", "").startswith("change_wow")]
+    assert len(change_wow_rows) > 0, "change_wow series should appear when previous period exists"
