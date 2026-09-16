@@ -365,3 +365,45 @@ def test_agents_flag_selects_a_different_agent_set_and_bumps_methodology(tmp_pat
     verdicts = (tmp_path / "derived" / "verdicts.csv").read_text()
     assert "ClaudeBot" in verdicts
     assert "GPTBot" not in verdicts
+
+
+def test_collect_derive_print_end_to_end(tmp_path, monkeypatch):
+    """The real collect wiring, not a stubbed collect_panel.
+
+    Exercises the whole chain a cron run takes: fetch, store, derive, print.
+    """
+    import httpx
+
+    import tallyhouse.cli as cli
+
+    seed_config(tmp_path)
+
+    def handler(request):
+        if request.url.host == "a.com":
+            return httpx.Response(200, text="User-agent: GPTBot\nDisallow: /\n",
+                                  headers={"content-type": "text/plain"})
+        return httpx.Response(404, text="", headers={"content-type": "text/html"})
+
+    class MockClient(httpx.AsyncClient):
+        def __init__(self, **kwargs):
+            super().__init__(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(cli.httpx, "AsyncClient", MockClient)
+
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert main(["derive", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+
+    row = read_rows(tmp_path / "prints.csv")[0]
+    # a.com blocks GPTBot; b.com has no robots.txt, which is conclusively not
+    # blocking. Both are conclusive, so coverage is 100%.
+    assert row["value"] == "50.0"
+    assert row["denominator"] == "2"
+    assert row["coverage"] == "100.0"
+    assert row["collector_version"] == cli.collector_version()
+
+    # b.com's 404 stored no blob, and only a.com's body is on disk.
+    assert len(list(tmp_path.rglob("*.txt.gz"))) == 1
+
+    # Collecting again now refuses: the period is published.
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
