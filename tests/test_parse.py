@@ -99,3 +99,41 @@ def test_unmentioned_precedence_unchanged():
     # Blanket block does not make an unmentioned agent anything but Unmentioned
     body = "User-agent: *\nDisallow: /\nUser-agent: OtherBot\nDisallow: /api\n"
     assert classify(body, "GPTBot") == "Unmentioned"
+
+
+# Tests for RFC 9309 comment handling (# to EOL)
+def test_agent_mention_with_inline_comment():
+    body = "User-agent: GPTBot  # block the AI scrapers\nDisallow: /\n"
+    assert is_mentioned(body, "GPTBot")
+    assert classify(body, "GPTBot") == "FullBlock"
+
+
+def test_disallow_with_inline_comment_value_extracted_correctly():
+    body = "User-agent: GPTBot\nDisallow: /articles/  # paywalled\n"
+    assert classify(body, "GPTBot") == "PartialBlock"
+    # Test the shared extraction helper directly so the value is pinned
+    from tallyhouse.parse import _parse_directive_line
+    parsed = _parse_directive_line("Disallow: /articles/  # paywalled")
+    assert parsed == ("disallow", "/articles/")
+
+
+def test_full_line_comment_between_directives_does_not_break_parsing():
+    body = "User-agent: GPTBot\nDisallow: /x\n# just a comment\nDisallow: /y\n"
+    # Both /x and /y should be disallowed for GPTBot
+    from tallyhouse.parse import _parse_groups
+    groups = _parse_groups(body)
+    assert len(groups) == 1
+    assert groups[0][0] == ["GPTBot"]
+    # Both disallows should be in the group
+    assert len(groups[0][1]) == 2
+    assert groups[0][1][0] == ("disallow", "/x")
+    assert groups[0][1][1] == ("disallow", "/y")
+
+
+def test_comment_after_user_agent_does_not_affect_following_disallows():
+    body = "User-agent: GPTBot  # test agent\nDisallow: /x\n"
+    from tallyhouse.parse import _parse_groups
+    groups = _parse_groups(body)
+    assert len(groups) == 1
+    assert groups[0][0] == ["GPTBot"]
+    assert groups[0][1][0] == ("disallow", "/x")

@@ -11,8 +11,6 @@ This hybrid approach uses probes for FullBlock/Allowed decisions (robust and
 reproducible) and directives for PartialBlock (detects targeting at any path).
 """
 
-import re
-
 from protego import Protego
 
 from tallyhouse.constants import PROBE_BASE, PROBE_PATHS
@@ -20,20 +18,49 @@ from tallyhouse.constants import PROBE_BASE, PROBE_PATHS
 # An agent token no real site will name, used to observe the "*" group.
 _BLANKET_PROBE_AGENT = "TallyhouseBlanketProbe"
 
-_USER_AGENT_LINE = re.compile(r"^\s*user-agent\s*:\s*(.+?)\s*$", re.IGNORECASE)
+
+def _strip_comment(line: str) -> str:
+    """Strip comment (everything from # onwards) from a line per RFC 9309.
+
+    Comments begin at the first unquoted # and extend to end of line.
+    After removing the comment, strip surrounding whitespace.
+    """
+    # Find the first # (RFC 9309 doesn't use quoted strings)
+    idx = line.find('#')
+    if idx >= 0:
+        line = line[:idx]
+    return line.strip()
+
+
+def _parse_directive_line(line: str) -> tuple[str, str] | None:
+    """Parse a directive line: strip comment, extract directive and value.
+
+    Returns (directive_lowercase, value_stripped) or None if line is empty
+    or invalid. This is the single source of truth for directive extraction,
+    used by both is_mentioned() and _parse_groups() so they cannot drift
+    in their interpretation of comments.
+    """
+    line = _strip_comment(line)
+
+    if not line or ':' not in line:
+        return None
+
+    directive, value = line.split(':', 1)
+    return (directive.strip().lower(), value.strip())
 
 
 def is_mentioned(body: str, agent: str) -> bool:
     """True if the agent is named in a User-agent line.
 
     Matching is exact and case-insensitive on the whole token, so that
-    "Applebot-Extended" does not imply "Applebot".
+    "Applebot-Extended" does not imply "Applebot". Comments (# to EOL)
+    are stripped per RFC 9309 before matching.
     """
-    wanted = agent.lower()
     for line in body.splitlines():
-        match = _USER_AGENT_LINE.match(line)
-        if match and match.group(1).lower() == wanted:
-            return True
+        parsed = _parse_directive_line(line)
+        if parsed and parsed[0] == 'user-agent':
+            if _agent_matches_token(agent, parsed[1]):
+                return True
     return False
 
 
@@ -46,26 +73,21 @@ def _parse_groups(body: str) -> list[tuple[list[str], list[tuple[str, str]]]]:
     """Parse robots.txt into (agent_tokens, rules) groups per RFC 9309.
 
     Consecutive User-agent lines form one group; a new User-agent line after
-    rules starts a new group. Returns list of (agent_list, rules_list) tuples.
+    rules starts a new group. Comments (# to EOL) are stripped per RFC 9309.
+    Returns list of (agent_list, rules_list) tuples.
     """
     groups = []
     current_agents = []
     current_rules = []
 
     for line in body.splitlines():
-        line = line.strip()
+        parsed = _parse_directive_line(line)
 
-        # Skip empty lines and comments
-        if not line or line.startswith('#'):
+        if not parsed:
+            # Empty, comment-only, or malformed line; skip
             continue
 
-        # Parse the line
-        if ':' not in line:
-            continue
-
-        directive, value = line.split(':', 1)
-        directive = directive.strip().lower()
-        value = value.strip()
+        directive, value = parsed
 
         if directive == 'user-agent':
             # Check if we're starting a new group (non-consecutive User-agent)
