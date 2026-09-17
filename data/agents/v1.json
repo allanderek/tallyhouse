@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "note": "Adding or removing an agent changes the series and requires a methodology version bump plus recomputation of all history as new vintages.",
+  "agents": [
+    "GPTBot",
+    "ChatGPT-User",
+    "OAI-SearchBot",
+    "ClaudeBot",
+    "anthropic-ai",
+    "CCBot",
+    "Google-Extended",
+    "PerplexityBot",
+    "Perplexity-User",
+    "Bytespider",
+    "Amazonbot",
+    "Applebot-Extended",
+    "meta-externalagent",
+    "Diffbot",
+    "ImagesiftBot",
+    "cohere-ai"
+  ]
+}

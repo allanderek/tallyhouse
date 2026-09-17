@@ -115,7 +115,14 @@ bytes, sha256, fetched_at, attempts
 ```
 
 `outcome` is one of `Fetched | NoRobotsTxt | ServerError | Timeout | DnsFailure |
-NotPlainText | TooLarge`.
+ConnectFailure | TransportError | NotPlainText | TooLarge`.
+
+Only `Fetched` and `NoRobotsTxt` are conclusive; the rest are recorded so that
+*why* a domain was unobservable is itself evidence. `ConnectFailure` and
+`TransportError` were added during implementation: the original list forced
+connection-refused and TLS failures to be recorded as `DnsFailure`, connection
+resets as `Timeout`, and left redirect loops and protocol errors with no bucket
+at all — which crashed the collector rather than recording an outcome.
 
 ### 4.4 Verdicts — `data/derived/verdicts.csv`
 

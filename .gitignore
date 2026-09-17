@@ -3,3 +3,4 @@ __pycache__/
 elm-stuff/
 *.pyc
 data/derived/
+.superpowers/

@@ -14,7 +14,7 @@
 
 - Period identifier is the **ISO date of the Monday** collection began, `YYYY-MM-DD`. Never ISO week notation.
 - Stance values are exactly: `FullBlock`, `PartialBlock`, `Allowed`, `Unmentioned`.
-- Outcome values are exactly: `Fetched`, `NoRobotsTxt`, `ServerError`, `Timeout`, `DnsFailure`, `NotPlainText`, `TooLarge`.
+- Outcome values are exactly: `Fetched`, `NoRobotsTxt`, `ServerError`, `Timeout`, `DnsFailure`, `ConnectFailure`, `TransportError`, `NotPlainText`, `TooLarge`.
 - Conclusive outcomes are exactly `Fetched` and `NoRobotsTxt`. All others are excluded from both numerator and denominator.
 - Published ledger rows are immutable. A changed value appends a new vintage with a mandatory reason; it never overwrites.
 - `derive` and `compute` must never open a socket.
