@@ -1,0 +1,2 @@
+index_id,period,vintage,value,denominator,coverage,provisional,methodology_version,collector_version,computed_at,reason
+agent-accessibility,2026-09-14,1,23.4704,997,99.7,false,agents=1;protego=0.6.2,f5c2b39,2026-09-17T15:56:22Z,

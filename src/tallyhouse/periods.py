@@ -56,6 +56,25 @@ def next_period(period: str) -> str:
     return (parse_period(period) + timedelta(days=7)).isoformat()
 
 
+def window_start(period: str) -> datetime:
+    """The instant the collection window opens: the period's Monday, 00:00 UTC."""
+    return datetime.combine(
+        parse_period(period), datetime.min.time(), tzinfo=timezone.utc
+    )
+
+
+def is_within_window(period: str, when: datetime) -> bool:
+    """Whether an instant falls inside the period's collection window.
+
+    The window exists so that a print labelled with a given week contains
+    observations gathered during that week. Collecting outside it does not fail
+    loudly on its own — it quietly mislabels evidence, which is worse.
+    """
+    if when.tzinfo is None:
+        raise InvalidPeriod("window checks require a timezone-aware datetime")
+    return window_start(period) <= when.astimezone(timezone.utc) < window_end(period)
+
+
 def window_end(period: str) -> datetime:
     """The instant the collection window closes, including all retries."""
     start = datetime.combine(

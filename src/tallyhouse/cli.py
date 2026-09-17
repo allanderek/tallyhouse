@@ -16,7 +16,15 @@ import httpx
 from tallyhouse.config import load_agents, load_panel, methodology_version
 from tallyhouse.derive import derive_period, write_tables
 from tallyhouse.ledger import LedgerConflict, latest
-from tallyhouse.periods import InvalidPeriod, parse_period, period_for, previous_period
+from tallyhouse.periods import (
+    InvalidPeriod,
+    is_within_window,
+    parse_period,
+    period_for,
+    previous_period,
+    window_end,
+    window_start,
+)
 from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
 from tallyhouse.qualify import qualify, read_tranco, write_panel
@@ -31,6 +39,15 @@ REPO_DIR = Path(__file__).resolve().parents[2]
 
 class CollectorVersionUnavailable(Exception):
     """Raised when the collector's own commit cannot be determined."""
+
+
+def _utcnow() -> datetime:
+    """The current instant, as a seam so tests need not depend on the real clock.
+
+    Without this, any test that collects for a fixed period silently starts
+    failing once that period's collection window closes in real time.
+    """
+    return datetime.now(timezone.utc)
 
 
 def collector_version(repo_dir: Path | None = None) -> str:
@@ -82,6 +99,19 @@ def _cmd_collect(args) -> int:
             )
             return 1
         panel, _ = _load(root, args.period, args.agents)
+        now = _utcnow()
+        if not is_within_window(args.period, now) and not args.ignore_window:
+            print(
+                f"error: the collection window for {args.period} ran "
+                f"{window_start(args.period):%Y-%m-%dT%H:%M:%SZ} to "
+                f"{window_end(args.period):%Y-%m-%dT%H:%M:%SZ}; it is now "
+                f"{now:%Y-%m-%dT%H:%M:%SZ}. Collecting outside the window labels "
+                f"observations with a week they were not gathered in. Pass "
+                f"--ignore-window if that is genuinely what you want.",
+                file=sys.stderr,
+            )
+            return 1
+
         version = collector_version()
 
         async def run():
@@ -152,6 +182,25 @@ def _cmd_print(args) -> int:
         except LedgerConflict as exc:
             print(f"refusing to change a published number: {exc}", file=sys.stderr)
             return 1
+        # fetched_at already records when each observation was gathered, so
+        # lateness is derivable from the evidence rather than needing its own
+        # field. A forced late collection must not yield a clean-looking print.
+        stale = [
+            o["domain"]
+            for o in tables["observations"]
+            if o.get("fetched_at")
+            and not is_within_window(
+                args.period, datetime.strptime(o["fetched_at"], "%Y-%m-%dT%H:%M:%SZ")
+                .replace(tzinfo=timezone.utc)
+            )
+        ]
+        if stale:
+            print(
+                f"warning: {len(stale)} of {len(tables['observations'])} observations "
+                f"were gathered outside the {args.period} collection window",
+                file=sys.stderr,
+            )
+
         if built["provisional"]:
             print("warning: coverage below threshold, print marked provisional", file=sys.stderr)
         return 0
@@ -233,7 +282,7 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("collect", "derive", "print"):
         child = sub.add_parser(name)
         child.add_argument("--root", default="data")
-        child.add_argument("--period", default=period_for(datetime.now(timezone.utc)))
+        child.add_argument("--period", default=period_for(_utcnow()))
         child.add_argument(
             "--agents",
             type=int,
@@ -247,6 +296,12 @@ def main(argv: list[str] | None = None) -> int:
                 "--force",
                 action="store_true",
                 help="collect even though this period is already published",
+            )
+            child.add_argument(
+                "--ignore-window",
+                action="store_true",
+                dest="ignore_window",
+                help="collect outside this period's 72-hour collection window",
             )
 
     args = parser.parse_args(argv)

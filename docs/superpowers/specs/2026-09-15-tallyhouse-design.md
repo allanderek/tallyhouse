@@ -247,6 +247,18 @@ better.
 Collection opens Monday 00:00 UTC. The window — including all retries — closes at
 72 hours, well clear of the next period, so runs can never overlap.
 
+**The window is enforced.** `collect` refuses to run outside it, in either
+direction: you cannot observe a week that has not begun, and collecting after it
+closes labels observations with a week they were not gathered in. That failure is
+quiet rather than loud — the data looks fine, it is merely mis-dated — which is
+why it is a guard rather than a convention. `--ignore-window` overrides it
+deliberately.
+
+An override cannot hide, because `fetched_at` already records when each
+observation was gathered: `print` compares those timestamps against the window
+and warns when any fall outside it, so a forced late collection cannot produce a
+clean-looking print. No extra field is needed; the evidence already says.
+
 ### 6.2 Panel
 
 Tranco top 1000, **qualified at construction and frozen annually**.

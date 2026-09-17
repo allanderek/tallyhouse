@@ -74,3 +74,38 @@ def test_parse_period_rejects_iso_week_notation():
 def test_parse_period_rejects_non_hyphenated_iso_format():
     with pytest.raises(InvalidPeriod):
         parse_period("20260914")
+
+
+def test_window_opens_at_the_periods_monday_midnight_utc():
+    from tallyhouse.periods import window_start
+    assert window_start("2026-09-14") == datetime(2026, 9, 14, 0, 0, tzinfo=timezone.utc)
+
+
+def test_an_instant_inside_the_window_is_within():
+    from tallyhouse.periods import is_within_window
+    assert is_within_window("2026-09-14", datetime(2026, 9, 16, 23, 59, tzinfo=timezone.utc))
+
+
+def test_the_window_opens_inclusively_and_closes_exclusively():
+    from tallyhouse.periods import is_within_window
+    assert is_within_window("2026-09-14", datetime(2026, 9, 14, 0, 0, tzinfo=timezone.utc))
+    # 72 hours exactly is the close, and is outside.
+    assert not is_within_window("2026-09-14", datetime(2026, 9, 17, 0, 0, tzinfo=timezone.utc))
+
+
+def test_collecting_before_the_period_opens_is_outside():
+    from tallyhouse.periods import is_within_window
+    assert not is_within_window("2026-09-14", datetime(2026, 9, 13, 23, 59, tzinfo=timezone.utc))
+
+
+def test_window_check_normalises_other_timezones():
+    from tallyhouse.periods import is_within_window
+    # 2026-09-16T20:00-05:00 is 2026-09-17T01:00Z — past the close.
+    late = datetime(2026, 9, 16, 20, 0, tzinfo=timezone(timedelta(hours=-5)))
+    assert not is_within_window("2026-09-14", late)
+
+
+def test_window_check_rejects_a_naive_datetime():
+    from tallyhouse.periods import is_within_window
+    with pytest.raises(InvalidPeriod):
+        is_within_window("2026-09-14", datetime(2026, 9, 15, 12, 0))

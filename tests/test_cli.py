@@ -7,6 +7,18 @@ from tallyhouse.ledger import read_rows
 from tallyhouse.storage import store_body, write_manifest
 
 
+def in_window(monkeypatch, period="2026-09-14"):
+    """Pin the clock inside `period`'s collection window.
+
+    These tests are about collection, not about the calendar; without pinning,
+    they would pass when written and fail once the window closed in real time.
+    """
+    from datetime import datetime, timezone
+    from tallyhouse import cli as _cli
+    from tallyhouse.periods import window_start
+    monkeypatch.setattr(_cli, "_utcnow", lambda: window_start(period))
+
+
 def seed_config(root):
     (root / "agents").mkdir(parents=True, exist_ok=True)
     (root / "agents" / "v1.json").write_text(
@@ -204,6 +216,7 @@ def seed_published(root, period="2026-09-14"):
 
 
 def test_collect_refuses_a_period_that_is_already_published(tmp_path, monkeypatch, capsys):
+    in_window(monkeypatch)
     """Published evidence is not rewritten by accident.
 
     The ledger would still refuse to change the number, but the number would no
@@ -230,6 +243,7 @@ def test_collect_refuses_a_period_that_is_already_published(tmp_path, monkeypatc
 
 
 def test_collect_force_overrides_the_refusal(tmp_path, monkeypatch):
+    in_window(monkeypatch)
     import tallyhouse.cli as cli
 
     seed_published(tmp_path)
@@ -248,6 +262,7 @@ def test_collect_force_overrides_the_refusal(tmp_path, monkeypatch):
 
 
 def test_collect_on_an_unpublished_period_proceeds(tmp_path, monkeypatch):
+    in_window(monkeypatch)
     import tallyhouse.cli as cli
 
     seed_config(tmp_path)
@@ -265,6 +280,7 @@ def test_collect_on_an_unpublished_period_proceeds(tmp_path, monkeypatch):
 
 
 def test_collector_version_failure_is_fatal(tmp_path, monkeypatch, capsys):
+    in_window(monkeypatch)
     """Refuse to collect rather than record unattributable evidence.
 
     The old code caught every exception and returned "unknown", so the one field
@@ -372,6 +388,7 @@ def test_agents_flag_selects_a_different_agent_set_and_bumps_methodology(tmp_pat
 
 
 def test_collect_derive_print_end_to_end(tmp_path, monkeypatch):
+    in_window(monkeypatch)
     """The real collect wiring, not a stubbed collect_panel.
 
     Exercises the whole chain a cron run takes: fetch, store, derive, print.
@@ -489,3 +506,80 @@ def test_qualify_reports_exclusions_not_the_shortfall(tmp_path, monkeypatch, cap
     # candidates did not make the panel. Reporting the shortfall as exclusions
     # would overstate the blind spot.
     assert "0 excluded" in capsys.readouterr().out
+
+
+def _clock_at(monkeypatch, when):
+    from tallyhouse import cli as _cli
+    monkeypatch.setattr(_cli, "_utcnow", lambda: when)
+
+
+def test_collect_refuses_outside_the_collection_window(tmp_path, monkeypatch, capsys):
+    from datetime import datetime, timezone
+    seed_config(tmp_path)
+    # One second after the 72-hour window closed.
+    _clock_at(monkeypatch, datetime(2026, 9, 17, 0, 0, 1, tzinfo=timezone.utc))
+
+    rc = main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"])
+    assert rc != 0
+    err = capsys.readouterr().err
+    assert "collection window" in err
+    # The message must name the window, so an operator can see why.
+    assert "2026-09-17T00:00:00Z" in err
+    assert not (tmp_path / "raw" / "2026-09-14").exists()
+
+
+def test_collect_refuses_before_the_period_opens(tmp_path, monkeypatch, capsys):
+    from datetime import datetime, timezone
+    seed_config(tmp_path)
+    _clock_at(monkeypatch, datetime(2026, 9, 13, 12, 0, tzinfo=timezone.utc))
+
+    # You cannot observe a week that has not begun.
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+    assert "collection window" in capsys.readouterr().err
+
+
+def test_ignore_window_allows_a_late_collection(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    import httpx
+    from tallyhouse import cli
+
+    seed_config(tmp_path)
+    _clock_at(monkeypatch, datetime(2026, 9, 20, 12, 0, tzinfo=timezone.utc))
+
+    def handler(request):
+        return httpx.Response(200, text="User-agent: *\nAllow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    class FakeClient(httpx.AsyncClient):
+        def __init__(self, *a, **kw):
+            super().__init__(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(cli.httpx, "AsyncClient", FakeClient)
+    assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14",
+                 "--ignore-window"]) == 0
+    assert (tmp_path / "raw" / "2026-09-14" / "manifest.json").exists()
+
+
+def test_print_warns_when_evidence_was_gathered_outside_the_window(tmp_path, capsys):
+    seed_config(tmp_path)
+    records = []
+    for domain, body in [("a.com", "User-agent: GPTBot\nDisallow: /\n"),
+                         ("b.com", "User-agent: *\nAllow: /\n")]:
+        records.append({"domain": domain, "outcome": "Fetched",
+                        "sha256": store_body(tmp_path, body.encode()),
+                        "http_status": 200, "final_url": None,
+                        "content_type": "text/plain", "bytes": len(body),
+                        # Saturday: three days after the window closed.
+                        "fetched_at": "2026-09-20T12:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-14", records, collector_version="abc1234")
+
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    # A forced late collection must not produce a clean-looking print.
+    assert "outside the 2026-09-14 collection window" in capsys.readouterr().err
+
+
+def test_print_is_quiet_when_evidence_is_in_window(tmp_path, capsys):
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    assert "outside" not in capsys.readouterr().err
