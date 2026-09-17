@@ -29,14 +29,37 @@ _PLAIN_TEXT_PREFIXES = ("text/plain",)
 _BODY_BEARING_OUTCOMES = frozenset({"Fetched", "TooLarge"})
 
 
-def classify_response(status: int, content_type: str | None, size: int) -> str:
+def is_challenge(headers) -> bool:
+    """True if the response is an anti-automation challenge rather than an answer.
+
+    Cloudflare labels these itself with `cf-mitigated: challenge`; others are
+    recognisable by the challenge platform's content-security-policy. Reading
+    the label a provider publishes is not evasion — it is the difference
+    between recording "we were challenged" and recording "we were refused".
+    """
+    if (headers.get("cf-mitigated") or "").lower() == "challenge":
+        return True
+    return "cf-chl" in (headers.get("content-security-policy") or "")
+
+
+def classify_response(
+    status: int, content_type: str | None, size: int, *, headers=None
+) -> str:
+    if headers is not None and is_challenge(headers):
+        return "Challenged"
     if status == 404 or status == 410:
         return "NoRobotsTxt"
     if status >= 500:
         return "ServerError"
     if status != 200:
-        # 401/403 and friends: the file exists but we were refused, which is
-        # not evidence about crawler policy.
+        # RFC 9309 2.3.1.3 says a crawler MAY access anything when robots.txt is
+        # unavailable. That rule governs what a CRAWLER may do; it does not say
+        # what the site's policy IS, and this index reports policy. Measured
+        # against the real top 1000, the files behind these responses are
+        # heterogeneous — ietf.org is permissive, yelp.com names seven AI
+        # crawlers and disallows them all — so inferring "no restrictions"
+        # would publish a falsehood about sites like Yelp. We learned nothing:
+        # inconclusive.
         return "ServerError"
     if size > MAX_BODY_BYTES:
         return "TooLarge"
@@ -118,6 +141,7 @@ async def _fetch_url(
                 response.status_code,
                 response.headers.get("content-type"),
                 len(body),
+                headers=response.headers,
             )
             record = {
                 "domain": domain,

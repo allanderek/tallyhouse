@@ -1,7 +1,7 @@
 """Index computation. A pure function of classified tables — no I/O, no
 network, no clock."""
 
-from tallyhouse.constants import CONCLUSIVE_OUTCOMES
+from tallyhouse.constants import CONCLUSIVE_OUTCOMES, UNREADABLE_OUTCOMES
 
 _BLOCKING_STANCES = frozenset({"FullBlock", "PartialBlock"})
 
@@ -10,6 +10,20 @@ def conclusive_domains(observations: list[dict]) -> set[str]:
     return {
         o["domain"] for o in observations if o["outcome"] in CONCLUSIVE_OUTCOMES
     }
+
+
+def unreadable_rate(observations: list[dict], panel_size: int) -> float:
+    """Share of the panel whose server answered but withheld the policy.
+
+    Distinct from plain coverage loss: a timeout is an absence, whereas a
+    challenge or a refusal is a site that exists, has a policy, and did not let
+    us read it. Published so that the index's blind spot is visible and its
+    growth measurable, rather than discovered by a critic.
+    """
+    if panel_size == 0:
+        raise ValueError("panel_size must be positive")
+    blocked = {o["domain"] for o in observations if o["outcome"] in UNREADABLE_OUTCOMES}
+    return _pct(len(blocked), panel_size)
 
 
 def coverage(observations: list[dict], panel_size: int) -> float:

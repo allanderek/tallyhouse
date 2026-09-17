@@ -48,12 +48,20 @@ async def qualify(
     size: int,
     concurrency: int = 8,
     attempts: int = 2,
-) -> tuple[list[dict], int]:
+) -> tuple[list[dict], int, list[dict]]:
     """Sweep candidates in rank order until `size` of them are conclusive.
 
-    Returns the qualified entries and how many candidates were examined. A
-    domain qualifies on a conclusive outcome — including NoRobotsTxt, which is
-    a site that exists and permits everything, not a site that is missing.
+    Returns the qualified entries, how many candidates were examined, and every
+    excluded candidate with the outcome that excluded it. A domain qualifies on
+    a conclusive outcome — including NoRobotsTxt, which is a site that exists
+    and permits everything, not a site that is missing.
+
+    The exclusions are retained and published because they are not neutral.
+    Sites behind anti-automation challenges are excluded, and such sites are
+    plausibly more likely than average to be hostile to AI crawlers — yelp.com,
+    which names seven AI crawlers and disallows them all, is excluded on exactly
+    these grounds. The panel therefore probably under-represents AI-hostile
+    sites, and the excluded list is how a reader sizes that for themselves.
     """
     semaphore = asyncio.Semaphore(concurrency)
 
@@ -67,6 +75,7 @@ async def qualify(
                 return rank, domain, "TransportError"
 
     qualified: list[dict] = []
+    excluded: list[dict] = []
     examined = 0
     for start in range(0, len(candidates), CHUNK):
         chunk = candidates[start : start + CHUNK]
@@ -75,10 +84,19 @@ async def qualify(
         for rank, domain, outcome in sorted(results):
             if outcome in CONCLUSIVE_OUTCOMES and len(qualified) < size:
                 qualified.append({"rank": rank, "domain": domain})
+            else:
+                excluded.append({"rank": rank, "domain": domain, "outcome": outcome})
         if len(qualified) >= size:
             break
 
-    return qualified, examined
+    return qualified, examined, excluded
+
+
+def _count_outcomes(entries: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for entry in entries:
+        counts[entry["outcome"]] = counts.get(entry["outcome"], 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def write_panel(
@@ -88,6 +106,7 @@ def write_panel(
     tranco_list_id: str,
     qualified: list[dict],
     examined: int,
+    excluded: list[dict] | None = None,
     captured: str | None = None,
 ) -> Path:
     path = root / "panel" / f"{year}.json"
@@ -101,7 +120,15 @@ def write_panel(
                     "robots.txt observation during the sweep",
             "candidates_examined": examined,
             "qualified": len(qualified),
+            "excluded": len(excluded or []),
+            "excluded_by_outcome": _count_outcomes(excluded or []),
+            "known_bias": "sites behind anti-automation challenges are excluded "
+                          "and are plausibly more AI-hostile than average, so "
+                          "the panel likely under-represents AI-hostile sites",
         },
+        "excluded": sorted(
+            (excluded or []), key=lambda entry: entry["rank"]
+        ),
         "ranks": {entry["domain"]: entry["rank"] for entry in qualified},
         "domains": [entry["domain"] for entry in qualified],
     }

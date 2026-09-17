@@ -189,7 +189,7 @@ def _cmd_qualify(args) -> int:
                     concurrency=args.concurrency,
                 )
 
-        qualified, examined = asyncio.run(run())
+        qualified, examined, excluded = asyncio.run(run())
         if len(qualified) < args.size:
             print(
                 f"error: only {len(qualified)} of {args.size} domains qualified "
@@ -204,6 +204,7 @@ def _cmd_qualify(args) -> int:
             tranco_list_id=args.list_id,
             qualified=qualified,
             examined=examined,
+            excluded=excluded,
         )
         rejected = examined - len(qualified)
         print(

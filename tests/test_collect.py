@@ -409,3 +409,29 @@ async def test_retry_backoff_is_bounded():
     # Exponential, capped at 30s: the collection window is spanned by cron
     # re-running collect, not by one process sleeping.
     assert delays == [2, 4, 8]
+
+
+def test_a_cloudflare_challenge_is_not_a_refusal():
+    # cf-mitigated is Cloudflare's own label for "we interposed a challenge".
+    # Reading the label they publish is not evasion; it is the difference
+    # between recording "challenged" and recording "refused".
+    headers = {"cf-mitigated": "challenge", "content-type": "text/html"}
+    assert classify_response(403, "text/html", 100, headers=headers) == "Challenged"
+
+
+def test_a_challenge_is_recognised_from_the_challenge_platform_csp():
+    headers = {"content-security-policy": "script-src 'nonce-x' https://cf-chl.example",
+               "content-type": "text/html"}
+    assert classify_response(403, "text/html", 100, headers=headers) == "Challenged"
+
+
+def test_a_plain_403_is_still_a_server_error():
+    assert classify_response(403, "text/html", 100, headers={}) == "ServerError"
+
+
+def test_a_challenge_is_not_conclusive():
+    from tallyhouse.constants import CONCLUSIVE_OUTCOMES
+    # Yelp names seven AI crawlers and disallows them all, and sits behind a
+    # challenge. Treating a challenge as "no restrictions" would publish that
+    # Yelp does not block AI crawlers.
+    assert "Challenged" not in CONCLUSIVE_OUTCOMES

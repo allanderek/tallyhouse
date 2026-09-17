@@ -14,6 +14,7 @@ from tallyhouse.compute import (
     effective_rate,
     like_for_like_change,
     per_agent_rates,
+    unreadable_rate,
     targeted_rate,
 )
 from tallyhouse.ledger import LedgerConflict, append_row, would_conflict
@@ -66,6 +67,9 @@ def build_print(
         ),
         "blanket": row(blanket_rate(tables["blanket"], conclusive), n_conclusive),
         "coverage": row(cov, panel_size),
+        # The blind spot, published rather than footnoted: sites whose server
+        # answered but would not let us read the policy.
+        "unreadable": row(unreadable_rate(tables["observations"], panel_size), panel_size),
     }
     for agent, rate in per_agent_rates(tables["verdicts"], conclusive).items():
         series[f"agent:{agent}"] = row(rate, n_conclusive)

@@ -114,8 +114,8 @@ domain, period, outcome, http_status, final_url, content_type,
 bytes, sha256, fetched_at, attempts
 ```
 
-`outcome` is one of `Fetched | NoRobotsTxt | ServerError | Timeout | DnsFailure |
-ConnectFailure | TransportError | NotPlainText | TooLarge`.
+`outcome` is one of `Fetched | NoRobotsTxt | ServerError | Challenged | Timeout |
+DnsFailure | ConnectFailure | TransportError | NotPlainText | TooLarge`.
 
 Only `Fetched` and `NoRobotsTxt` are conclusive; the rest are recorded so that
 *why* a domain was unobservable is itself evidence. `ConnectFailure` and
@@ -249,11 +249,69 @@ Collection opens Monday 00:00 UTC. The window — including all retries — clos
 
 ### 6.2 Panel
 
-Tranco top 1000, **frozen annually**. `data/panel/<year>.json` pins the Tranco
-list ID and capture date, so the panel is falsifiable rather than asserted. The
-basket is fixed for the year, so the index measures behaviour change rather than
-composition change. Rebasing happens each January, with both panels published
-across the overlap period so the chain is visible.
+Tranco top 1000, **qualified at construction and frozen annually**.
+`data/panel/<year>.json` pins the Tranco list ID and capture date, so the panel
+is falsifiable rather than asserted. The basket is fixed for the year, so the
+index measures behaviour change rather than composition change. Rebasing happens
+each January, with both panels published across the overlap period so the chain
+is visible.
+
+**Qualification.** Tranco ranks domains by DNS traffic, not by whether they are
+websites: its top ranks include CDN endpoints and name servers — `akamai.net`,
+`domaincontrol.com` — that never serve a `robots.txt` at all. A sweep of the real
+top 20 found two such domains, capping coverage at 90%.
+
+Admitting them would put a *permanent floor* under coverage, and a floor makes
+the provisional rule in §6.5 meaningless: set the threshold above the floor and
+every print is provisional forever, set it below and it can no longer detect a
+genuine outage. So the panel is the first 1000 domains of the named Tranco list
+that returned a **conclusive** observation during a one-off qualification sweep.
+A 404 qualifies — that is a site which exists and permits everything, not a site
+that is missing.
+
+Structural non-responders therefore never enter the panel, and coverage loss
+during a later collection is transient by construction, which is exactly what the
+provisional threshold exists to detect. `tallyhouse qualify` performs the sweep
+and records the list ID, the sweep date, the number of candidates examined and
+each domain's Tranco rank, so a stranger can rebuild the same panel. A sweep that
+cannot fill the panel fails rather than publishing a smaller denominator.
+
+**The unreadable web.** A measured ~12% of the top 1000 sit behind
+anti-automation protection that returns HTTP 403 to any client that cannot
+execute JavaScript. Cloudflare labels these itself with `cf-mitigated:
+challenge`, which the collector reads to record `Challenged`; other providers
+(Akamai, Varnish, CloudFront) return an unlabelled 403 recorded as
+`ServerError`. Both are inconclusive.
+
+RFC 9309 §2.3.1.3 permits a crawler to treat an unavailable `robots.txt` as
+licence to crawl. That rule governs **crawler behaviour**; it does not state what
+a site's policy *is*, and this index reports policy. The distinction is not
+academic: behind these responses `ietf.org` is permissive while `yelp.com` names
+seven AI crawlers and disallows them all. Inferring "no restrictions" would
+publish a falsehood about Yelp, so an unreadable response is recorded as
+evidence of nothing.
+
+**The collector never solves a challenge.** A challenge is a site expressing a
+preference against automated access, and an index about crawler etiquette cannot
+be the thing that routes around it. A headless browser would pass these
+legitimately and raise coverage substantially; it is declined deliberately.
+
+**Known limitation — panel bias.** Unreadable sites are excluded at
+qualification, which keeps coverage loss transient and preserves the meaning of
+the provisional threshold (§6.5). The exclusion is not neutral: sites deploying
+aggressive bot protection are plausibly more hostile to AI crawlers than average,
+and Yelp is a concrete example of an AI-hostile site excluded on these grounds.
+**The panel therefore probably under-represents AI-hostile sites, and the
+headline is likely an underestimate.** The panel file records every excluded
+domain with the outcome that excluded it, and the `unreadable` series publishes
+the size of the blind spot each period, so a reader can size the effect rather
+than take the claim on trust.
+
+**Known limitation — corporate grouping.** Qualification does not collapse
+domains owned by one operator: `facebook.com`, `instagram.com` and `fbcdn.net` are three panel members
+and one editorial policy, so large groups carry proportionate extra weight.
+Grouping is an editorial judgement that cannot be derived reproducibly from
+public data, so it is documented rather than applied.
 
 ### 6.3 Agent set
 
@@ -284,7 +342,12 @@ out to be large, the effective series can be promoted to co-equal later with
 complete history behind it and no gap in the record.
 
 Sub-series published from day one: per-agent block rate; blanket-block rate;
-coverage.
+coverage; and `unreadable` — the share of the panel whose server answered but
+withheld its policy. `unreadable` is distinct from coverage loss: a timeout is an
+absence, whereas a challenge or refusal is a site that exists, has a policy, and
+would not show it. Publishing it makes the index's blind spot a number on the
+chart rather than a footnote, and makes its growth measurable as bot protection
+spreads.
 
 **Week-on-week change is published like-for-like**, computed only over domains
 conclusively observed in *both* the current and preceding period. At weekly

@@ -135,3 +135,22 @@ def test_blanket_partial_block_with_targeted_verdict_is_counted_in_effective_rat
     blanket = {"a.com": "PartialBlock"}
     verdicts = [{"domain": "a.com", "agent": "GPTBot", "stance": "PartialBlock"}]
     assert effective_rate(verdicts, blanket, {"a.com"}) == 100.0
+
+
+def test_unreadable_counts_servers_that_answered_but_withheld_the_policy():
+    from tallyhouse.compute import unreadable_rate
+    observations = [
+        {"domain": "a.com", "outcome": "Fetched"},
+        {"domain": "b.com", "outcome": "Challenged"},
+        {"domain": "c.com", "outcome": "ServerError"},
+        {"domain": "d.com", "outcome": "Timeout"},
+    ]
+    # A timeout is an absence; a challenge or refusal is a site that exists,
+    # has a policy, and would not show it. Only the latter two count.
+    assert unreadable_rate(observations, panel_size=4) == 50.0
+
+
+def test_unreadable_is_zero_when_every_server_answered():
+    from tallyhouse.compute import unreadable_rate
+    observations = [{"domain": "a.com", "outcome": "Fetched"}]
+    assert unreadable_rate(observations, panel_size=1) == 0.0

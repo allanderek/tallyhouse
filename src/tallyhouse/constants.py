@@ -28,6 +28,21 @@ PROBE_PATHS = [
 # - TransportError: protocol/redirect/proxy errors (bad robots.txt scenario; retry won't help)
 # - NotPlainText: 200 but served HTML or other non-plaintext (mangled 404 page)
 # - TooLarge: body exceeds MAX_BODY_BYTES
+# - ServerError: 5xx, or a 4xx other than 404/410 (we were refused, not answered)
+# - Challenged: an anti-automation challenge stood between us and the file
+#
+# Challenged and ServerError are deliberately NOT conclusive. RFC 9309 2.3.1.3
+# lets a crawler treat an unavailable robots.txt as permission to crawl, but
+# that governs crawler behaviour, not what the site's policy says — and this
+# index reports policy. Measured against the real top 1000, the files behind
+# these responses are heterogeneous: ietf.org is permissive, yelp.com names
+# seven AI crawlers and disallows them all. Inferring either way would publish
+# a falsehood, so we record that we learned nothing.
 CONCLUSIVE_OUTCOMES = frozenset({"Fetched", "NoRobotsTxt"})
+
+# Outcomes meaning "the server answered but would not let us read the policy".
+# Published as the `unreadable` series so the size of this blind spot is a
+# number on the chart rather than a footnote, and so its growth is tracked.
+UNREADABLE_OUTCOMES = frozenset({"Challenged", "ServerError"})
 
 MAX_BODY_BYTES = 512 * 1024
