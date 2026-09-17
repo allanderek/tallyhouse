@@ -411,3 +411,57 @@ def test_collect_derive_print_end_to_end(tmp_path, monkeypatch):
 
     # Collecting again now refuses: the period is published.
     assert main(["collect", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0
+
+
+def test_qualify_builds_a_panel_from_a_tranco_list(tmp_path, monkeypatch):
+    import httpx
+    from tallyhouse import cli
+
+    tranco = tmp_path / "top.csv"
+    tranco.write_text("1,good1.com\n2,dead.com\n3,good2.com\n")
+
+    def handler(request):
+        if "dead.com" in request.url.host:
+            raise httpx.ConnectError("not a website")
+        return httpx.Response(200, text="User-agent: *\nAllow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    class FakeClient(httpx.AsyncClient):
+        def __init__(self, *a, **kw):
+            super().__init__(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(cli.httpx, "AsyncClient", FakeClient)
+
+    rc = main(["qualify", "--root", str(tmp_path), "--tranco", str(tranco),
+               "--list-id", "N2P2W", "--year", "2026", "--size", "2"])
+    assert rc == 0
+
+    from tallyhouse.config import load_panel
+    panel = load_panel(tmp_path, 2026)
+    # dead.com is skipped; the panel keeps Tranco order among survivors.
+    assert panel.domains == ["good1.com", "good2.com"]
+    assert panel.tranco_list_id == "N2P2W"
+
+
+def test_qualify_refuses_a_short_panel(tmp_path, monkeypatch, capsys):
+    import httpx
+    from tallyhouse import cli
+
+    tranco = tmp_path / "top.csv"
+    tranco.write_text("1,a.com\n2,b.com\n")
+
+    def handler(request):
+        raise httpx.ConnectError("nothing answers")
+
+    class FakeClient(httpx.AsyncClient):
+        def __init__(self, *a, **kw):
+            super().__init__(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(cli.httpx, "AsyncClient", FakeClient)
+
+    rc = main(["qualify", "--root", str(tmp_path), "--tranco", str(tranco),
+               "--list-id", "N2P2W", "--year", "2026", "--size", "10"])
+    # A short panel must fail loudly, not silently publish a smaller denominator.
+    assert rc != 0
+    assert "qualified" in capsys.readouterr().err
+    assert not (tmp_path / "panel" / "2026.json").exists()

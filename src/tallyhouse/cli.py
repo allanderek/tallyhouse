@@ -19,6 +19,7 @@ from tallyhouse.ledger import LedgerConflict, latest
 from tallyhouse.periods import InvalidPeriod, parse_period, period_for, previous_period
 from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
+from tallyhouse.qualify import qualify, read_tranco, write_panel
 from tallyhouse.storage import manifest_collector_version, manifest_path
 
 # The repository whose commit is the collector's version. Resolved from this
@@ -168,9 +169,64 @@ def _cmd_print(args) -> int:
         return 1
 
 
+def _cmd_qualify(args) -> int:
+    """Build the frozen annual panel from a Tranco list.
+
+    Panel construction is methodology, not setup: the panel is the denominator
+    of every published number. Running this again over the same Tranco list
+    reproduces the same panel, modulo sites that changed their behaviour.
+    """
+    try:
+        root = Path(args.root)
+        candidates = read_tranco(Path(args.tranco))
+
+        async def run():
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                return await qualify(
+                    candidates,
+                    client=client,
+                    size=args.size,
+                    concurrency=args.concurrency,
+                )
+
+        qualified, examined = asyncio.run(run())
+        if len(qualified) < args.size:
+            print(
+                f"error: only {len(qualified)} of {args.size} domains qualified "
+                f"from {examined} candidates; supply a longer Tranco list",
+                file=sys.stderr,
+            )
+            return 1
+
+        path = write_panel(
+            root,
+            args.year,
+            tranco_list_id=args.list_id,
+            qualified=qualified,
+            examined=examined,
+        )
+        rejected = examined - len(qualified)
+        print(
+            f"panel: {len(qualified)} domains from {examined} candidates "
+            f"({rejected} rejected as unobservable) -> {path}"
+        )
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="tallyhouse")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    qual = sub.add_parser("qualify", help="build the frozen annual panel")
+    qual.add_argument("--root", default="data")
+    qual.add_argument("--tranco", required=True, help="path to a Tranco rank,domain CSV")
+    qual.add_argument("--list-id", required=True, dest="list_id")
+    qual.add_argument("--year", type=int, required=True)
+    qual.add_argument("--size", type=int, default=1000)
+    qual.add_argument("--concurrency", type=int, default=8)
 
     for name in ("collect", "derive", "print"):
         child = sub.add_parser(name)
@@ -192,6 +248,9 @@ def main(argv: list[str] | None = None) -> int:
             )
 
     args = parser.parse_args(argv)
+    if args.command == "qualify":
+        return _cmd_qualify(args)
+
     try:
         parse_period(args.period)
     except InvalidPeriod as exc:
