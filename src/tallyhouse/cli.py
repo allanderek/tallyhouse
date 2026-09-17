@@ -27,6 +27,7 @@ from tallyhouse.periods import (
 )
 from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
+from tallyhouse.balanced import balanced_panel, write_balanced_panel
 from tallyhouse.qualify import qualify, read_tranco, write_panel
 from tallyhouse.storage import manifest_collector_version, manifest_path
 
@@ -267,9 +268,45 @@ def _cmd_qualify(args) -> int:
         return 1
 
 
+def _cmd_balanced_panel(args) -> int:
+    """Build the balanced panel for the historical index."""
+    try:
+        early = read_tranco(Path(args.early))
+        late = read_tranco(Path(args.late))
+        entries = balanced_panel(early, late)
+        if not entries:
+            print("error: the two endpoints share no domains", file=sys.stderr)
+            return 1
+        path = write_balanced_panel(
+            Path(args.root), args.name,
+            early_list_id=args.early_list_id, early_date=args.early_date,
+            late_list_id=args.late_list_id, late_date=args.late_date,
+            entries=entries, early_size=len(early), late_size=len(late),
+        )
+        churn = len(early) - len(entries)
+        print(
+            f"balanced panel: {len(entries)} domains present at both endpoints "
+            f"({churn} of {len(early)} churned) -> {path}"
+        )
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="tallyhouse")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    bal = sub.add_parser("balanced-panel", help="build a balanced panel from two Tranco endpoints")
+    bal.add_argument("--root", default="data")
+    bal.add_argument("--name", default="historical")
+    bal.add_argument("--early", required=True, help="early Tranco rank,domain CSV")
+    bal.add_argument("--early-list-id", required=True, dest="early_list_id")
+    bal.add_argument("--early-date", required=True, dest="early_date")
+    bal.add_argument("--late", required=True, help="late Tranco rank,domain CSV")
+    bal.add_argument("--late-list-id", required=True, dest="late_list_id")
+    bal.add_argument("--late-date", required=True, dest="late_date")
 
     qual = sub.add_parser("qualify", help="build the frozen annual panel")
     qual.add_argument("--root", default="data")
@@ -307,6 +344,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "qualify":
         return _cmd_qualify(args)
+    if args.command == "balanced-panel":
+        return _cmd_balanced_panel(args)
 
     try:
         parse_period(args.period)

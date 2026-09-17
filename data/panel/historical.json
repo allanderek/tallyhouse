@@ -1,0 +1,3082 @@
+{
+  "construction": {
+    "churn": "389 of 1000 early entries absent at the later endpoint",
+    "known_bias": "members were prominent at both endpoints, so the panel is biased toward durably significant sites; sites that rose or fell within the span are absent",
+    "not_comparable": "a different population from the live index panel, so levels are not comparable between the two indices",
+    "retained": 611,
+    "rule": "domains present in the Tranco top-N at BOTH endpoints"
+  },
+  "domains": [
+    "google.com",
+    "cloudflare.com",
+    "facebook.com",
+    "gstatic.com",
+    "googleapis.com",
+    "microsoft.com",
+    "amazonaws.com",
+    "akamai.net",
+    "youtube.com",
+    "apple.com",
+    "instagram.com",
+    "mail.ru",
+    "fbcdn.net",
+    "twitter.com",
+    "dzen.ru",
+    "linkedin.com",
+    "domaincontrol.com",
+    "googlevideo.com",
+    "googletagmanager.com",
+    "office.com",
+    "live.com",
+    "akamaiedge.net",
+    "amazon.com",
+    "gtld-servers.net",
+    "akadns.net",
+    "azure.com",
+    "github.com",
+    "wikipedia.org",
+    "bing.com",
+    "whatsapp.net",
+    "apple-dns.net",
+    "googleusercontent.com",
+    "fastly.net",
+    "doubleclick.net",
+    "aaplimg.com",
+    "microsoftonline.com",
+    "office.net",
+    "netflix.com",
+    "trafficmanager.net",
+    "sharepoint.com",
+    "gandi.net",
+    "youtu.be",
+    "digicert.com",
+    "wordpress.org",
+    "skype.com",
+    "icloud.com",
+    "cloudfront.net",
+    "goo.gl",
+    "tiktok.com",
+    "whatsapp.com",
+    "pinterest.com",
+    "googledomains.com",
+    "cloudflare.net",
+    "yahoo.com",
+    "roblox.com",
+    "googlesyndication.com",
+    "gvt1.com",
+    "spotify.com",
+    "windows.net",
+    "windowsupdate.com",
+    "wa.me",
+    "ntp.org",
+    "adobe.com",
+    "msn.com",
+    "myfritz.net",
+    "qq.com",
+    "nginx.org",
+    "root-servers.net",
+    "zoom.us",
+    "cdninstagram.com",
+    "tiktokcdn.com",
+    "tiktokv.com",
+    "akam.net",
+    "openai.com",
+    "gvt2.com",
+    "edgekey.net",
+    "baidu.com",
+    "yandex.net",
+    "vimeo.com",
+    "ytimg.com",
+    "windows.com",
+    "opera.com",
+    "sentry.io",
+    "samsung.com",
+    "nginx.com",
+    "yandex.ru",
+    "edgesuite.net",
+    "blogspot.com",
+    "mozilla.org",
+    "wordpress.com",
+    "t.me",
+    "a2z.com",
+    "b-cdn.net",
+    "reddit.com",
+    "ui.com",
+    "nic.ru",
+    "office365.com",
+    "google-analytics.com",
+    "europa.eu",
+    "bit.ly",
+    "outlook.com",
+    "registrar-servers.com",
+    "app-measurement.com",
+    "amazonvideo.com",
+    "criteo.com",
+    "github.io",
+    "cdn77.org",
+    "vk.com",
+    "apache.org",
+    "trbcdn.net",
+    "snapchat.com",
+    "amazon-adsystem.com",
+    "unity3d.com",
+    "dnsowl.com",
+    "intuit.com",
+    "dropbox.com",
+    "msftncsi.com",
+    "kaspersky.com",
+    "epicgames.com",
+    "reg.ru",
+    "nih.gov",
+    "miit.gov.cn",
+    "discord.gg",
+    "forms.gle",
+    "azurefd.net",
+    "archive.org",
+    "xiaomi.com",
+    "godaddy.com",
+    "aliyuncs.com",
+    "nytimes.com",
+    "gravatar.com",
+    "msftconnecttest.com",
+    "tumblr.com",
+    "jomodns.com",
+    "dns-parking.com",
+    "webex.com",
+    "discord.com",
+    "paypal.com",
+    "mts.ru",
+    "example.com",
+    "adobe.io",
+    "azurewebsites.net",
+    "ggpht.com",
+    "shopify.com",
+    "soundcloud.com",
+    "macromedia.com",
+    "cdn-apple.com",
+    "flickr.com",
+    "googleadservices.com",
+    "w3.org",
+    "hichina.com",
+    "namebrightdns.com",
+    "nflxso.net",
+    "bytefcdn-oversea.com",
+    "lencr.org",
+    "rubiconproject.com",
+    "creativecommons.org",
+    "medium.com",
+    "cnn.com",
+    "vungle.com",
+    "duckdns.org",
+    "theguardian.com",
+    "oracle.com",
+    "taboola.com",
+    "ksyuncdn.com",
+    "shifen.com",
+    "doi.org",
+    "ebay.com",
+    "youtube-nocookie.com",
+    "bbc.com",
+    "forbes.com",
+    "sfx.ms",
+    "sciencedirect.com",
+    "twitch.tv",
+    "gmail.com",
+    "cdngslb.com",
+    "researchgate.net",
+    "miui.com",
+    "akamaized.net",
+    "mit.edu",
+    "ozon.ru",
+    "pki.goog",
+    "userapi.com",
+    "ubuntu.com",
+    "nr-data.net",
+    "azureedge.net",
+    "bbc.co.uk",
+    "playstation.net",
+    "nist.gov",
+    "stripe.com",
+    "pubmatic.com",
+    "cpanel.net",
+    "t.co",
+    "canva.com",
+    "wsdvs.com",
+    "rbxcdn.com",
+    "adsrvr.org",
+    "meraki.com",
+    "imcmdb.net",
+    "sourceforge.net",
+    "omtrdc.net",
+    "comcast.net",
+    "roku.com",
+    "cisco.com",
+    "wikimedia.org",
+    "ripn.net",
+    "android.com",
+    "telegram.org",
+    "hubspot.com",
+    "alidns.com",
+    "adnxs.com",
+    "alibabadns.com",
+    "scorecardresearch.com",
+    "booking.com",
+    "imdb.com",
+    "who.int",
+    "name-services.com",
+    "forter.com",
+    "wixsite.com",
+    "linktr.ee",
+    "media-amazon.com",
+    "launchpad.net",
+    "ttvnw.net",
+    "facebook.net",
+    "etsy.com",
+    "ibm.com",
+    "mangosip.ru",
+    "msedge.net",
+    "reuters.com",
+    "2mdn.net",
+    "appsflyer.com",
+    "dnsmadeeasy.com",
+    "springer.com",
+    "telegram.me",
+    "tinyurl.com",
+    "drom.ru",
+    "amplitude.com",
+    "mzstatic.com",
+    "hp.com",
+    "salesforce.com",
+    "nature.com",
+    "byteoversea.net",
+    "weibo.com",
+    "steampowered.com",
+    "jsdelivr.net",
+    "autodesk.com",
+    "www.gov.uk",
+    "dell.com",
+    "avast.com",
+    "alibaba.com",
+    "ok.ru",
+    "weather.com",
+    "mozilla.com",
+    "samsungcloud.com",
+    "harvard.edu",
+    "debian.org",
+    "ea.com",
+    "wiley.com",
+    "samsungqbe.com",
+    "datadoghq.com",
+    "php.net",
+    "akamaihd.net",
+    "aliyun.com",
+    "amazon.co.uk",
+    "myshopify.com",
+    "worldnic.com",
+    "spaceweb.pro",
+    "smartadserver.com",
+    "name.com",
+    "crashlytics.com",
+    "bilibili.com",
+    "tbcache.com",
+    "gnu.org",
+    "trustpilot.com",
+    "doubleverify.com",
+    "naver.com",
+    "checkpoint.com",
+    "slack.com",
+    "hostgator.com",
+    "licdn.com",
+    "media.net",
+    "opendns.com",
+    "un.org",
+    "cdc.gov",
+    "tradingview.com",
+    "washingtonpost.com",
+    "weebly.com",
+    "casalemedia.com",
+    "nvidia.com",
+    "zendesk.com",
+    "indeed.com",
+    "issuu.com",
+    "wsj.com",
+    "calendly.com",
+    "samsungcloudsolution.com",
+    "bloomberg.com",
+    "dnspod.net",
+    "stanford.edu",
+    "launchdarkly.com",
+    "gitlab.com",
+    "plesk.com",
+    "newrelic.com",
+    "online-metrix.net",
+    "amazontrust.com",
+    "paloaltonetworks.com",
+    "yandex.com",
+    "amazon.de",
+    "mi.com",
+    "demdex.net",
+    "xcal.tv",
+    "wildberries.ru",
+    "netangels.ru",
+    "espn.com",
+    "rocket-cdn.com",
+    "walmart.com",
+    "nasa.gov",
+    "aliexpress.com",
+    "nflxvideo.net",
+    "globo.com",
+    "163.com",
+    "unsplash.com",
+    "line.me",
+    "google.cn",
+    "dailymotion.com",
+    "steamcommunity.com",
+    "beian.gov.cn",
+    "huawei.com",
+    "kaspersky-labs.com",
+    "chinamobile.com",
+    "taobao.com",
+    "intel.com",
+    "awsglobalaccelerator.com",
+    "go.com",
+    "netease.com",
+    "goodreads.com",
+    "substack.com",
+    "skyhigh.cloud",
+    "bluehost.com",
+    "myqcloud.com",
+    "timeweb.ru",
+    "cloudns.net",
+    "yahoo.co.jp",
+    "sina.com.cn",
+    "businessinsider.com",
+    "gcdn.co",
+    "adobe.net",
+    "wp.com",
+    "pixabay.com",
+    "tencent-cloud.net",
+    "edgecdn.ru",
+    "speedtest.net",
+    "g.page",
+    "aol.com",
+    "duolingo.com",
+    "arxiv.org",
+    "sohu.com",
+    "cnbc.com",
+    "bdydns.com",
+    "statista.com",
+    "list-manage.com",
+    "addtoany.com",
+    "ietf.org",
+    "nease.net",
+    "sc-gw.com",
+    "okta.com",
+    "quora.com",
+    "amazon.co.jp",
+    "adriver.ru",
+    "atlassian.net",
+    "mcafee.com",
+    "scribd.com",
+    "duckduckgo.com",
+    "markmonitor.com",
+    "ivi.ru",
+    "npr.org",
+    "mediatek.com",
+    "shein.com",
+    "docker.com",
+    "stackoverflow.com",
+    "eventbrite.com",
+    "behance.net",
+    "google.de",
+    "ampproject.org",
+    "foxnews.com",
+    "mysql.com",
+    "indiatimes.com",
+    "amzn.to",
+    "gosuslugi.ru",
+    "ngenix.net",
+    "ui-dns.com",
+    "trendmicro.com",
+    "ft.com",
+    "elasticbeanstalk.com",
+    "slideshare.net",
+    "fandom.com",
+    "noaa.gov",
+    "visualstudio.com",
+    "openx.net",
+    "google.com.hk",
+    "squarespace.com",
+    "mynetname.net",
+    "oup.com",
+    "jquery.com",
+    "spo-msedge.net",
+    "wired.com",
+    "icloud-content.com",
+    "netflix.net",
+    "azure-dns.com",
+    "blogger.com",
+    "tandfonline.com",
+    "360yield.com",
+    "grammarly.com",
+    "uol.com.br",
+    "eset.com",
+    "time.com",
+    "hicloud.com",
+    "rakuten.co.jp",
+    "nstld.com",
+    "deviantart.com",
+    "cornell.edu",
+    "bitrix24.ru",
+    "yahoodns.net",
+    "digitalocean.com",
+    "aboutads.info",
+    "usatoday.com",
+    "teamviewer.com",
+    "tripadvisor.com",
+    "target.com",
+    "free.fr",
+    "rlcdn.com",
+    "3lift.com",
+    "hotjar.com",
+    "dreamhost.com",
+    "ca.gov",
+    "imgsmail.ru",
+    "avito.ru",
+    "cdn20.com",
+    "ieee.org",
+    "playstation.com",
+    "berkeley.edu",
+    "patreon.com",
+    "force.com",
+    "telegraph.co.uk",
+    "mdpi.com",
+    "openstreetmap.org",
+    "2gis.com",
+    "cdnvideo.ru",
+    "onetrust.com",
+    "amazon.fr",
+    "atlassian.com",
+    "wix.com",
+    "alicdn.com",
+    "accuweather.com",
+    "sharethrough.com",
+    "mega.co.nz",
+    "unesco.org",
+    "ikea.com",
+    "dyndns.org",
+    "comcast.com",
+    "nike.com",
+    "branch.io",
+    "tencent.com",
+    "jotform.com",
+    "xhamster.com",
+    "loc.gov",
+    "amazon.ca",
+    "ups.com",
+    "sagepub.com",
+    "googletagservices.com",
+    "bidswitch.net",
+    "techcrunch.com",
+    "ovh.net",
+    "redhat.com",
+    "yelp.com",
+    "britannica.com",
+    "elpais.com",
+    "surveymonkey.com",
+    "primevideo.com",
+    "ks-cdn.com",
+    "att.com",
+    "cambridge.org",
+    "dailymail.co.uk",
+    "linode.com",
+    "360.cn",
+    "optimizely.com",
+    "outbrain.com",
+    "amazon.in",
+    "imgur.com",
+    "consultant.ru",
+    "twimg.com",
+    "vkontakte.ru",
+    "alipaydns.com",
+    "cbsnews.com",
+    "cdnhwc1.com",
+    "fontawesome.com",
+    "fb.com",
+    "ring.com",
+    "sophos.com",
+    "iso.org",
+    "pinimg.com",
+    "marriott.com",
+    "amazon.es",
+    "ya.ru",
+    "quantserve.com",
+    "verisign.com",
+    "cnet.com",
+    "amazon.it",
+    "independent.co.uk",
+    "uber.com",
+    "asus.com",
+    "mailchimp.com",
+    "hostgator.com.br",
+    "stripchat.com",
+    "agkn.com",
+    "bandcamp.com",
+    "zillow.com",
+    "python.org",
+    "safebrowsing.apple",
+    "google.co.uk",
+    "homedepot.com",
+    "wattpad.com",
+    "mediafire.com",
+    "criteo.net",
+    "usgovcloudapi.net",
+    "herokudns.com",
+    "box.com",
+    "bestbuy.com",
+    "fda.gov",
+    "sedo.com",
+    "airbnb.com",
+    "ovscdns.com",
+    "allaboutcookies.org",
+    "craigslist.org",
+    "mckinsey.com",
+    "ted.com",
+    "lenovo.com",
+    "fiverr.com",
+    "google.com.br",
+    "rt.ru",
+    "apnews.com",
+    "no-ip.com",
+    "networkadvertising.org",
+    "xbox.com",
+    "prnewswire.com",
+    "33across.com",
+    "erome.com",
+    "zoho.com",
+    "goskope.com",
+    "discordapp.com",
+    "usps.com",
+    "daum.net",
+    "deepl.com",
+    "academia.edu",
+    "spiegel.de",
+    "a-msedge.net",
+    "usda.gov",
+    "theverge.com",
+    "onlyfans.com",
+    "livejournal.com",
+    "nintendo.net",
+    "zoom.com",
+    "ebay.co.uk",
+    "pexels.com",
+    "figma.com",
+    "chess.com",
+    "hbr.org",
+    "disqus.com",
+    "expedia.com",
+    "appspot.com",
+    "xvideos.com",
+    "frontiersin.org",
+    "att.net",
+    "ys7.com",
+    "nbcnews.com",
+    "myspace.com",
+    "mayoclinic.org",
+    "bankofamerica.com",
+    "360safe.com",
+    "washington.edu",
+    "pornhub.com",
+    "immedia-semi.com",
+    "worldbank.org",
+    "princeton.edu",
+    "dbankcloud.ru",
+    "coupang.com",
+    "latimes.com",
+    "hilton.com",
+    "herokuapp.com",
+    "arcgis.com",
+    "qualtrics.com",
+    "epa.gov",
+    "genius.com",
+    "epam.com",
+    "deloitte.com",
+    "zenecn.net",
+    "youku.com",
+    "state.gov",
+    "eporner.com",
+    "webmd.com",
+    "chaturbate.com",
+    "jd.com",
+    "mailchi.mp",
+    "xerox.com",
+    "change.org",
+    "trendyol.com",
+    "investopedia.com",
+    "xnxx.com",
+    "nationalgeographic.com",
+    "healthline.com",
+    "ddns.net",
+    "pixiv.net"
+  ],
+  "endpoints": [
+    {
+      "date": "2023-02-01",
+      "size": 1000,
+      "tranco_list_id": "K2K4W"
+    },
+    {
+      "date": "2026-09-16",
+      "size": 1000,
+      "tranco_list_id": "N2P2W"
+    }
+  ],
+  "kind": "balanced",
+  "name": "historical",
+  "ranks": {
+    "163.com": {
+      "early": 78,
+      "late": 418
+    },
+    "2gis.com": {
+      "early": 966,
+      "late": 615
+    },
+    "2mdn.net": {
+      "early": 288,
+      "late": 286
+    },
+    "33across.com": {
+      "early": 800,
+      "late": 815
+    },
+    "360.cn": {
+      "early": 538,
+      "late": 691
+    },
+    "360safe.com": {
+      "early": 855,
+      "late": 897
+    },
+    "360yield.com": {
+      "early": 711,
+      "late": 562
+    },
+    "3lift.com": {
+      "early": 656,
+      "late": 590
+    },
+    "a-msedge.net": {
+      "early": 2,
+      "late": 844
+    },
+    "a2z.com": {
+      "early": 180,
+      "late": 107
+    },
+    "aaplimg.com": {
+      "early": 64,
+      "late": 38
+    },
+    "aboutads.info": {
+      "early": 509,
+      "late": 579
+    },
+    "academia.edu": {
+      "early": 507,
+      "late": 832
+    },
+    "accuweather.com": {
+      "early": 771,
+      "late": 629
+    },
+    "addtoany.com": {
+      "early": 388,
+      "late": 488
+    },
+    "adnxs.com": {
+      "early": 194,
+      "late": 261
+    },
+    "adobe.com": {
+      "early": 46,
+      "late": 69
+    },
+    "adobe.io": {
+      "early": 348,
+      "late": 175
+    },
+    "adobe.net": {
+      "early": 747,
+      "late": 463
+    },
+    "adriver.ru": {
+      "early": 303,
+      "late": 495
+    },
+    "adsrvr.org": {
+      "early": 622,
+      "late": 246
+    },
+    "agkn.com": {
+      "early": 933,
+      "late": 743
+    },
+    "airbnb.com": {
+      "early": 718,
+      "late": 780
+    },
+    "akadns.net": {
+      "early": 29,
+      "late": 27
+    },
+    "akam.net": {
+      "early": 188,
+      "late": 82
+    },
+    "akamai.net": {
+      "early": 16,
+      "late": 8
+    },
+    "akamaiedge.net": {
+      "early": 7,
+      "late": 23
+    },
+    "akamaihd.net": {
+      "early": 176,
+      "late": 330
+    },
+    "akamaized.net": {
+      "early": 185,
+      "late": 226
+    },
+    "alibaba.com": {
+      "early": 259,
+      "late": 313
+    },
+    "alibabadns.com": {
+      "early": 346,
+      "late": 262
+    },
+    "alicdn.com": {
+      "early": 470,
+      "late": 628
+    },
+    "alidns.com": {
+      "early": 606,
+      "late": 259
+    },
+    "aliexpress.com": {
+      "early": 121,
+      "late": 415
+    },
+    "alipaydns.com": {
+      "early": 992,
+      "late": 703
+    },
+    "aliyun.com": {
+      "early": 210,
+      "late": 331
+    },
+    "aliyuncs.com": {
+      "early": 358,
+      "late": 157
+    },
+    "allaboutcookies.org": {
+      "early": 663,
+      "late": 786
+    },
+    "amazon-adsystem.com": {
+      "early": 309,
+      "late": 131
+    },
+    "amazon.ca": {
+      "early": 417,
+      "late": 649
+    },
+    "amazon.co.jp": {
+      "early": 192,
+      "late": 494
+    },
+    "amazon.co.uk": {
+      "early": 168,
+      "late": 332
+    },
+    "amazon.com": {
+      "early": 20,
+      "late": 24
+    },
+    "amazon.de": {
+      "early": 234,
+      "late": 393
+    },
+    "amazon.es": {
+      "early": 564,
+      "late": 721
+    },
+    "amazon.fr": {
+      "early": 489,
+      "late": 624
+    },
+    "amazon.in": {
+      "early": 167,
+      "late": 695
+    },
+    "amazon.it": {
+      "early": 445,
+      "late": 727
+    },
+    "amazonaws.com": {
+      "early": 6,
+      "late": 7
+    },
+    "amazontrust.com": {
+      "early": 492,
+      "late": 390
+    },
+    "amazonvideo.com": {
+      "early": 263,
+      "late": 123
+    },
+    "amplitude.com": {
+      "early": 989,
+      "late": 295
+    },
+    "ampproject.org": {
+      "early": 275,
+      "late": 514
+    },
+    "amzn.to": {
+      "early": 391,
+      "late": 518
+    },
+    "android.com": {
+      "early": 512,
+      "late": 256
+    },
+    "aol.com": {
+      "early": 350,
+      "late": 471
+    },
+    "apache.org": {
+      "early": 125,
+      "late": 128
+    },
+    "apnews.com": {
+      "early": 804,
+      "late": 800
+    },
+    "app-measurement.com": {
+      "early": 281,
+      "late": 122
+    },
+    "apple-dns.net": {
+      "early": 63,
+      "late": 33
+    },
+    "apple.com": {
+      "early": 12,
+      "late": 10
+    },
+    "appsflyer.com": {
+      "early": 409,
+      "late": 287
+    },
+    "appspot.com": {
+      "early": 639,
+      "late": 881
+    },
+    "arcgis.com": {
+      "early": 689,
+      "late": 923
+    },
+    "archive.org": {
+      "early": 132,
+      "late": 152
+    },
+    "arxiv.org": {
+      "early": 650,
+      "late": 479
+    },
+    "asus.com": {
+      "early": 782,
+      "late": 730
+    },
+    "atlassian.com": {
+      "early": 513,
+      "late": 625
+    },
+    "atlassian.net": {
+      "early": 448,
+      "late": 496
+    },
+    "att.com": {
+      "early": 361,
+      "late": 684
+    },
+    "att.net": {
+      "early": 326,
+      "late": 886
+    },
+    "autodesk.com": {
+      "early": 614,
+      "late": 308
+    },
+    "avast.com": {
+      "early": 426,
+      "late": 312
+    },
+    "avito.ru": {
+      "early": 324,
+      "late": 600
+    },
+    "awsglobalaccelerator.com": {
+      "early": 798,
+      "late": 445
+    },
+    "azure-dns.com": {
+      "early": 452,
+      "late": 554
+    },
+    "azure.com": {
+      "early": 24,
+      "late": 28
+    },
+    "azureedge.net": {
+      "early": 195,
+      "late": 234
+    },
+    "azurefd.net": {
+      "early": 442,
+      "late": 150
+    },
+    "azurewebsites.net": {
+      "early": 170,
+      "late": 176
+    },
+    "b-cdn.net": {
+      "early": 340,
+      "late": 108
+    },
+    "baidu.com": {
+      "early": 10,
+      "late": 86
+    },
+    "bandcamp.com": {
+      "early": 519,
+      "late": 749
+    },
+    "bankofamerica.com": {
+      "early": 603,
+      "late": 896
+    },
+    "bbc.co.uk": {
+      "early": 156,
+      "late": 235
+    },
+    "bbc.com": {
+      "early": 145,
+      "late": 214
+    },
+    "bdydns.com": {
+      "early": 821,
+      "late": 485
+    },
+    "behance.net": {
+      "early": 271,
+      "late": 512
+    },
+    "beian.gov.cn": {
+      "early": 393,
+      "late": 433
+    },
+    "berkeley.edu": {
+      "early": 387,
+      "late": 604
+    },
+    "bestbuy.com": {
+      "early": 753,
+      "late": 773
+    },
+    "bidswitch.net": {
+      "early": 673,
+      "late": 654
+    },
+    "bilibili.com": {
+      "early": 17,
+      "late": 343
+    },
+    "bing.com": {
+      "early": 22,
+      "late": 31
+    },
+    "bit.ly": {
+      "early": 56,
+      "late": 117
+    },
+    "bitrix24.ru": {
+      "early": 523,
+      "late": 575
+    },
+    "blogger.com": {
+      "early": 237,
+      "late": 556
+    },
+    "blogspot.com": {
+      "early": 69,
+      "late": 98
+    },
+    "bloomberg.com": {
+      "early": 229,
+      "late": 375
+    },
+    "bluehost.com": {
+      "early": 368,
+      "late": 454
+    },
+    "booking.com": {
+      "early": 159,
+      "late": 264
+    },
+    "box.com": {
+      "early": 517,
+      "late": 772
+    },
+    "branch.io": {
+      "early": 891,
+      "late": 639
+    },
+    "britannica.com": {
+      "early": 490,
+      "late": 663
+    },
+    "businessinsider.com": {
+      "early": 268,
+      "late": 461
+    },
+    "bytefcdn-oversea.com": {
+      "early": 937,
+      "late": 195
+    },
+    "byteoversea.net": {
+      "early": 812,
+      "late": 301
+    },
+    "ca.gov": {
+      "early": 367,
+      "late": 595
+    },
+    "calendly.com": {
+      "early": 558,
+      "late": 373
+    },
+    "cambridge.org": {
+      "early": 480,
+      "late": 685
+    },
+    "canva.com": {
+      "early": 97,
+      "late": 243
+    },
+    "casalemedia.com": {
+      "early": 380,
+      "late": 366
+    },
+    "cbsnews.com": {
+      "early": 447,
+      "late": 706
+    },
+    "cdc.gov": {
+      "early": 203,
+      "late": 360
+    },
+    "cdn-apple.com": {
+      "early": 684,
+      "late": 187
+    },
+    "cdn20.com": {
+      "early": 819,
+      "late": 601
+    },
+    "cdn77.org": {
+      "early": 253,
+      "late": 126
+    },
+    "cdngslb.com": {
+      "early": 252,
+      "late": 223
+    },
+    "cdnhwc1.com": {
+      "early": 767,
+      "late": 708
+    },
+    "cdninstagram.com": {
+      "early": 473,
+      "late": 78
+    },
+    "cdnvideo.ru": {
+      "early": 778,
+      "late": 617
+    },
+    "change.org": {
+      "early": 646,
+      "late": 969
+    },
+    "chaturbate.com": {
+      "early": 261,
+      "late": 958
+    },
+    "checkpoint.com": {
+      "early": 827,
+      "late": 352
+    },
+    "chess.com": {
+      "early": 479,
+      "late": 872
+    },
+    "chinamobile.com": {
+      "early": 483,
+      "late": 436
+    },
+    "cisco.com": {
+      "early": 208,
+      "late": 253
+    },
+    "cloudflare.com": {
+      "early": 11,
+      "late": 2
+    },
+    "cloudflare.net": {
+      "early": 76,
+      "late": 58
+    },
+    "cloudfront.net": {
+      "early": 96,
+      "late": 52
+    },
+    "cloudns.net": {
+      "early": 289,
+      "late": 458
+    },
+    "cnbc.com": {
+      "early": 274,
+      "late": 483
+    },
+    "cnet.com": {
+      "early": 328,
+      "late": 725
+    },
+    "cnn.com": {
+      "early": 126,
+      "late": 200
+    },
+    "comcast.com": {
+      "early": 496,
+      "late": 637
+    },
+    "comcast.net": {
+      "early": 131,
+      "late": 251
+    },
+    "consultant.ru": {
+      "early": 305,
+      "late": 698
+    },
+    "cornell.edu": {
+      "early": 454,
+      "late": 574
+    },
+    "coupang.com": {
+      "early": 871,
+      "late": 913
+    },
+    "cpanel.net": {
+      "early": 317,
+      "late": 241
+    },
+    "craigslist.org": {
+      "early": 530,
+      "late": 789
+    },
+    "crashlytics.com": {
+      "early": 901,
+      "late": 342
+    },
+    "creativecommons.org": {
+      "early": 174,
+      "late": 198
+    },
+    "criteo.com": {
+      "early": 323,
+      "late": 124
+    },
+    "criteo.net": {
+      "early": 956,
+      "late": 767
+    },
+    "dailymail.co.uk": {
+      "early": 220,
+      "late": 686
+    },
+    "dailymotion.com": {
+      "early": 310,
+      "late": 427
+    },
+    "datadoghq.com": {
+      "early": 563,
+      "late": 327
+    },
+    "daum.net": {
+      "early": 660,
+      "late": 828
+    },
+    "dbankcloud.ru": {
+      "early": 868,
+      "late": 911
+    },
+    "ddns.net": {
+      "early": 548,
+      "late": 989
+    },
+    "debian.org": {
+      "early": 456,
+      "late": 320
+    },
+    "deepl.com": {
+      "early": 265,
+      "late": 829
+    },
+    "dell.com": {
+      "early": 169,
+      "late": 310
+    },
+    "deloitte.com": {
+      "early": 704,
+      "late": 943
+    },
+    "demdex.net": {
+      "early": 238,
+      "late": 396
+    },
+    "deviantart.com": {
+      "early": 355,
+      "late": 572
+    },
+    "digicert.com": {
+      "early": 107,
+      "late": 47
+    },
+    "digitalocean.com": {
+      "early": 325,
+      "late": 577
+    },
+    "discord.com": {
+      "early": 232,
+      "late": 168
+    },
+    "discord.gg": {
+      "early": 541,
+      "late": 147
+    },
+    "discordapp.com": {
+      "early": 916,
+      "late": 826
+    },
+    "disqus.com": {
+      "early": 578,
+      "late": 878
+    },
+    "dns-parking.com": {
+      "early": 943,
+      "late": 166
+    },
+    "dnsmadeeasy.com": {
+      "early": 141,
+      "late": 290
+    },
+    "dnsowl.com": {
+      "early": 359,
+      "late": 133
+    },
+    "dnspod.net": {
+      "early": 619,
+      "late": 377
+    },
+    "docker.com": {
+      "early": 670,
+      "late": 507
+    },
+    "doi.org": {
+      "early": 270,
+      "late": 210
+    },
+    "domaincontrol.com": {
+      "early": 28,
+      "late": 18
+    },
+    "doubleclick.net": {
+      "early": 31,
+      "late": 37
+    },
+    "doubleverify.com": {
+      "early": 872,
+      "late": 348
+    },
+    "dreamhost.com": {
+      "early": 635,
+      "late": 594
+    },
+    "drom.ru": {
+      "early": 692,
+      "late": 294
+    },
+    "dropbox.com": {
+      "early": 101,
+      "late": 138
+    },
+    "duckdns.org": {
+      "early": 591,
+      "late": 202
+    },
+    "duckduckgo.com": {
+      "early": 187,
+      "late": 499
+    },
+    "duolingo.com": {
+      "early": 682,
+      "late": 477
+    },
+    "dyndns.org": {
+      "early": 794,
+      "late": 635
+    },
+    "dzen.ru": {
+      "early": 137,
+      "late": 16
+    },
+    "ea.com": {
+      "early": 439,
+      "late": 321
+    },
+    "ebay.co.uk": {
+      "early": 940,
+      "late": 864
+    },
+    "ebay.com": {
+      "early": 108,
+      "late": 211
+    },
+    "edgecdn.ru": {
+      "early": 276,
+      "late": 467
+    },
+    "edgekey.net": {
+      "early": 67,
+      "late": 85
+    },
+    "edgesuite.net": {
+      "early": 164,
+      "late": 97
+    },
+    "elasticbeanstalk.com": {
+      "early": 214,
+      "late": 531
+    },
+    "elpais.com": {
+      "early": 935,
+      "late": 669
+    },
+    "epa.gov": {
+      "early": 652,
+      "late": 933
+    },
+    "epam.com": {
+      "early": 467,
+      "late": 942
+    },
+    "epicgames.com": {
+      "early": 166,
+      "late": 142
+    },
+    "eporner.com": {
+      "early": 527,
+      "late": 950
+    },
+    "erome.com": {
+      "early": 920,
+      "late": 821
+    },
+    "eset.com": {
+      "early": 351,
+      "late": 566
+    },
+    "espn.com": {
+      "early": 264,
+      "late": 407
+    },
+    "etsy.com": {
+      "early": 158,
+      "late": 277
+    },
+    "europa.eu": {
+      "early": 91,
+      "late": 116
+    },
+    "eventbrite.com": {
+      "early": 327,
+      "late": 511
+    },
+    "example.com": {
+      "early": 924,
+      "late": 173
+    },
+    "expedia.com": {
+      "early": 597,
+      "late": 879
+    },
+    "facebook.com": {
+      "early": 4,
+      "late": 3
+    },
+    "facebook.net": {
+      "early": 419,
+      "late": 275
+    },
+    "fandom.com": {
+      "early": 88,
+      "late": 534
+    },
+    "fastly.net": {
+      "early": 40,
+      "late": 36
+    },
+    "fb.com": {
+      "early": 438,
+      "late": 715
+    },
+    "fbcdn.net": {
+      "early": 160,
+      "late": 13
+    },
+    "fda.gov": {
+      "early": 534,
+      "late": 776
+    },
+    "figma.com": {
+      "early": 602,
+      "late": 868
+    },
+    "fiverr.com": {
+      "early": 330,
+      "late": 793
+    },
+    "flickr.com": {
+      "early": 99,
+      "late": 188
+    },
+    "fontawesome.com": {
+      "early": 923,
+      "late": 710
+    },
+    "forbes.com": {
+      "early": 136,
+      "late": 215
+    },
+    "force.com": {
+      "early": 100,
+      "late": 609
+    },
+    "forms.gle": {
+      "early": 146,
+      "late": 149
+    },
+    "forter.com": {
+      "early": 460,
+      "late": 268
+    },
+    "foxnews.com": {
+      "early": 336,
+      "late": 515
+    },
+    "free.fr": {
+      "early": 474,
+      "late": 588
+    },
+    "frontiersin.org": {
+      "early": 816,
+      "late": 884
+    },
+    "ft.com": {
+      "early": 293,
+      "late": 530
+    },
+    "g.page": {
+      "early": 365,
+      "late": 470
+    },
+    "gandi.net": {
+      "early": 51,
+      "late": 45
+    },
+    "gcdn.co": {
+      "early": 710,
+      "late": 462
+    },
+    "genius.com": {
+      "early": 917,
+      "late": 941
+    },
+    "ggpht.com": {
+      "early": 463,
+      "late": 178
+    },
+    "github.com": {
+      "early": 34,
+      "late": 29
+    },
+    "github.io": {
+      "early": 128,
+      "late": 125
+    },
+    "gitlab.com": {
+      "early": 694,
+      "late": 385
+    },
+    "globo.com": {
+      "early": 559,
+      "late": 417
+    },
+    "gmail.com": {
+      "early": 557,
+      "late": 222
+    },
+    "gnu.org": {
+      "early": 299,
+      "late": 345
+    },
+    "go.com": {
+      "early": 212,
+      "late": 446
+    },
+    "godaddy.com": {
+      "early": 278,
+      "late": 154
+    },
+    "goo.gl": {
+      "early": 55,
+      "late": 53
+    },
+    "goodreads.com": {
+      "early": 356,
+      "late": 450
+    },
+    "google-analytics.com": {
+      "early": 66,
+      "late": 115
+    },
+    "google.cn": {
+      "early": 938,
+      "late": 426
+    },
+    "google.co.uk": {
+      "early": 312,
+      "late": 758
+    },
+    "google.com": {
+      "early": 1,
+      "late": 1
+    },
+    "google.com.br": {
+      "early": 963,
+      "late": 798
+    },
+    "google.com.hk": {
+      "early": 122,
+      "late": 540
+    },
+    "google.de": {
+      "early": 318,
+      "late": 513
+    },
+    "googleadservices.com": {
+      "early": 244,
+      "late": 189
+    },
+    "googleapis.com": {
+      "early": 154,
+      "late": 5
+    },
+    "googledomains.com": {
+      "early": 65,
+      "late": 57
+    },
+    "googlesyndication.com": {
+      "early": 218,
+      "late": 61
+    },
+    "googletagmanager.com": {
+      "early": 25,
+      "late": 20
+    },
+    "googletagservices.com": {
+      "early": 529,
+      "late": 653
+    },
+    "googleusercontent.com": {
+      "early": 48,
+      "late": 35
+    },
+    "googlevideo.com": {
+      "early": 27,
+      "late": 19
+    },
+    "goskope.com": {
+      "early": 379,
+      "late": 825
+    },
+    "gosuslugi.ru": {
+      "early": 362,
+      "late": 519
+    },
+    "grammarly.com": {
+      "early": 337,
+      "late": 563
+    },
+    "gravatar.com": {
+      "early": 110,
+      "late": 159
+    },
+    "gstatic.com": {
+      "early": 148,
+      "late": 4
+    },
+    "gtld-servers.net": {
+      "early": 19,
+      "late": 26
+    },
+    "gvt1.com": {
+      "early": 127,
+      "late": 63
+    },
+    "gvt2.com": {
+      "early": 175,
+      "late": 84
+    },
+    "harvard.edu": {
+      "early": 222,
+      "late": 319
+    },
+    "hbr.org": {
+      "early": 583,
+      "late": 876
+    },
+    "healthline.com": {
+      "early": 421,
+      "late": 988
+    },
+    "herokuapp.com": {
+      "early": 482,
+      "late": 920
+    },
+    "herokudns.com": {
+      "early": 255,
+      "late": 770
+    },
+    "hichina.com": {
+      "early": 314,
+      "late": 191
+    },
+    "hicloud.com": {
+      "early": 478,
+      "late": 569
+    },
+    "hilton.com": {
+      "early": 733,
+      "late": 919
+    },
+    "homedepot.com": {
+      "early": 651,
+      "late": 760
+    },
+    "hostgator.com": {
+      "early": 353,
+      "late": 355
+    },
+    "hostgator.com.br": {
+      "early": 840,
+      "late": 736
+    },
+    "hotjar.com": {
+      "early": 469,
+      "late": 592
+    },
+    "hp.com": {
+      "early": 199,
+      "late": 297
+    },
+    "huawei.com": {
+      "early": 423,
+      "late": 434
+    },
+    "hubspot.com": {
+      "early": 307,
+      "late": 258
+    },
+    "ibm.com": {
+      "early": 250,
+      "late": 280
+    },
+    "icloud-content.com": {
+      "early": 951,
+      "late": 550
+    },
+    "icloud.com": {
+      "early": 87,
+      "late": 51
+    },
+    "ieee.org": {
+      "early": 665,
+      "late": 602
+    },
+    "ietf.org": {
+      "early": 486,
+      "late": 489
+    },
+    "ikea.com": {
+      "early": 528,
+      "late": 634
+    },
+    "imcmdb.net": {
+      "early": 657,
+      "late": 248
+    },
+    "imdb.com": {
+      "early": 102,
+      "late": 265
+    },
+    "imgsmail.ru": {
+      "early": 556,
+      "late": 597
+    },
+    "imgur.com": {
+      "early": 172,
+      "late": 697
+    },
+    "immedia-semi.com": {
+      "early": 811,
+      "late": 902
+    },
+    "indeed.com": {
+      "early": 157,
+      "late": 369
+    },
+    "independent.co.uk": {
+      "early": 410,
+      "late": 728
+    },
+    "indiatimes.com": {
+      "early": 401,
+      "late": 517
+    },
+    "instagram.com": {
+      "early": 9,
+      "late": 11
+    },
+    "intel.com": {
+      "early": 440,
+      "late": 441
+    },
+    "intuit.com": {
+      "early": 60,
+      "late": 136
+    },
+    "investopedia.com": {
+      "early": 493,
+      "late": 974
+    },
+    "iso.org": {
+      "early": 672,
+      "late": 718
+    },
+    "issuu.com": {
+      "early": 190,
+      "late": 371
+    },
+    "ivi.ru": {
+      "early": 405,
+      "late": 502
+    },
+    "jd.com": {
+      "early": 111,
+      "late": 959
+    },
+    "jomodns.com": {
+      "early": 245,
+      "late": 164
+    },
+    "jotform.com": {
+      "early": 659,
+      "late": 643
+    },
+    "jquery.com": {
+      "early": 887,
+      "late": 546
+    },
+    "jsdelivr.net": {
+      "early": 988,
+      "late": 307
+    },
+    "kaspersky-labs.com": {
+      "early": 745,
+      "late": 435
+    },
+    "kaspersky.com": {
+      "early": 248,
+      "late": 140
+    },
+    "ks-cdn.com": {
+      "early": 954,
+      "late": 677
+    },
+    "ksyuncdn.com": {
+      "early": 758,
+      "late": 208
+    },
+    "latimes.com": {
+      "early": 441,
+      "late": 918
+    },
+    "launchdarkly.com": {
+      "early": 641,
+      "late": 384
+    },
+    "launchpad.net": {
+      "early": 567,
+      "late": 272
+    },
+    "lencr.org": {
+      "early": 124,
+      "late": 196
+    },
+    "lenovo.com": {
+      "early": 716,
+      "late": 792
+    },
+    "licdn.com": {
+      "early": 831,
+      "late": 356
+    },
+    "line.me": {
+      "early": 313,
+      "late": 423
+    },
+    "linkedin.com": {
+      "early": 13,
+      "late": 17
+    },
+    "linktr.ee": {
+      "early": 239,
+      "late": 270
+    },
+    "linode.com": {
+      "early": 693,
+      "late": 689
+    },
+    "list-manage.com": {
+      "early": 287,
+      "late": 487
+    },
+    "live.com": {
+      "early": 18,
+      "late": 22
+    },
+    "livejournal.com": {
+      "early": 406,
+      "late": 855
+    },
+    "loc.gov": {
+      "early": 432,
+      "late": 646
+    },
+    "macromedia.com": {
+      "early": 86,
+      "late": 186
+    },
+    "mail.ru": {
+      "early": 39,
+      "late": 12
+    },
+    "mailchi.mp": {
+      "early": 579,
+      "late": 962
+    },
+    "mailchimp.com": {
+      "early": 404,
+      "late": 734
+    },
+    "mangosip.ru": {
+      "early": 153,
+      "late": 281
+    },
+    "markmonitor.com": {
+      "early": 552,
+      "late": 501
+    },
+    "marriott.com": {
+      "early": 386,
+      "late": 720
+    },
+    "mayoclinic.org": {
+      "early": 587,
+      "late": 894
+    },
+    "mcafee.com": {
+      "early": 298,
+      "late": 497
+    },
+    "mckinsey.com": {
+      "early": 805,
+      "late": 790
+    },
+    "mdpi.com": {
+      "early": 740,
+      "late": 613
+    },
+    "media-amazon.com": {
+      "early": 664,
+      "late": 271
+    },
+    "media.net": {
+      "early": 685,
+      "late": 357
+    },
+    "mediafire.com": {
+      "early": 277,
+      "late": 766
+    },
+    "mediatek.com": {
+      "early": 957,
+      "late": 504
+    },
+    "medium.com": {
+      "early": 106,
+      "late": 199
+    },
+    "mega.co.nz": {
+      "early": 407,
+      "late": 631
+    },
+    "meraki.com": {
+      "early": 142,
+      "late": 247
+    },
+    "mi.com": {
+      "early": 384,
+      "late": 395
+    },
+    "microsoft.com": {
+      "early": 5,
+      "late": 6
+    },
+    "microsoftonline.com": {
+      "early": 41,
+      "late": 39
+    },
+    "miit.gov.cn": {
+      "early": 139,
+      "late": 145
+    },
+    "mit.edu": {
+      "early": 224,
+      "late": 227
+    },
+    "miui.com": {
+      "early": 425,
+      "late": 225
+    },
+    "mozilla.com": {
+      "early": 600,
+      "late": 317
+    },
+    "mozilla.org": {
+      "early": 70,
+      "late": 100
+    },
+    "msedge.net": {
+      "early": 103,
+      "late": 282
+    },
+    "msftconnecttest.com": {
+      "early": 543,
+      "late": 160
+    },
+    "msftncsi.com": {
+      "early": 623,
+      "late": 139
+    },
+    "msn.com": {
+      "early": 74,
+      "late": 70
+    },
+    "mts.ru": {
+      "early": 654,
+      "late": 171
+    },
+    "myfritz.net": {
+      "early": 77,
+      "late": 71
+    },
+    "mynetname.net": {
+      "early": 792,
+      "late": 543
+    },
+    "myqcloud.com": {
+      "early": 678,
+      "late": 455
+    },
+    "myshopify.com": {
+      "early": 162,
+      "late": 335
+    },
+    "myspace.com": {
+      "early": 424,
+      "late": 890
+    },
+    "mysql.com": {
+      "early": 400,
+      "late": 516
+    },
+    "mzstatic.com": {
+      "early": 703,
+      "late": 296
+    },
+    "name-services.com": {
+      "early": 219,
+      "late": 267
+    },
+    "name.com": {
+      "early": 397,
+      "late": 341
+    },
+    "namebrightdns.com": {
+      "early": 769,
+      "late": 192
+    },
+    "nasa.gov": {
+      "early": 297,
+      "late": 414
+    },
+    "nationalgeographic.com": {
+      "early": 532,
+      "late": 980
+    },
+    "nature.com": {
+      "early": 262,
+      "late": 300
+    },
+    "naver.com": {
+      "early": 117,
+      "late": 350
+    },
+    "nbcnews.com": {
+      "early": 516,
+      "late": 889
+    },
+    "nease.net": {
+      "early": 506,
+      "late": 490
+    },
+    "netangels.ru": {
+      "early": 428,
+      "late": 404
+    },
+    "netease.com": {
+      "early": 501,
+      "late": 448
+    },
+    "netflix.com": {
+      "early": 14,
+      "late": 41
+    },
+    "netflix.net": {
+      "early": 71,
+      "late": 551
+    },
+    "networkadvertising.org": {
+      "early": 636,
+      "late": 808
+    },
+    "newrelic.com": {
+      "early": 625,
+      "late": 388
+    },
+    "nflxso.net": {
+      "early": 43,
+      "late": 193
+    },
+    "nflxvideo.net": {
+      "early": 544,
+      "late": 416
+    },
+    "ngenix.net": {
+      "early": 433,
+      "late": 521
+    },
+    "nginx.com": {
+      "early": 258,
+      "late": 95
+    },
+    "nginx.org": {
+      "early": 230,
+      "late": 74
+    },
+    "nic.ru": {
+      "early": 84,
+      "late": 111
+    },
+    "nih.gov": {
+      "early": 89,
+      "late": 144
+    },
+    "nike.com": {
+      "early": 687,
+      "late": 638
+    },
+    "nintendo.net": {
+      "early": 573,
+      "late": 860
+    },
+    "nist.gov": {
+      "early": 728,
+      "late": 238
+    },
+    "no-ip.com": {
+      "early": 376,
+      "late": 804
+    },
+    "noaa.gov": {
+      "early": 572,
+      "late": 535
+    },
+    "npr.org": {
+      "early": 339,
+      "late": 503
+    },
+    "nr-data.net": {
+      "early": 502,
+      "late": 233
+    },
+    "nstld.com": {
+      "early": 554,
+      "late": 571
+    },
+    "ntp.org": {
+      "early": 582,
+      "late": 68
+    },
+    "nvidia.com": {
+      "early": 508,
+      "late": 367
+    },
+    "nytimes.com": {
+      "early": 93,
+      "late": 158
+    },
+    "office.com": {
+      "early": 35,
+      "late": 21
+    },
+    "office.net": {
+      "early": 138,
+      "late": 40
+    },
+    "office365.com": {
+      "early": 75,
+      "late": 114
+    },
+    "ok.ru": {
+      "early": 243,
+      "late": 314
+    },
+    "okta.com": {
+      "early": 311,
+      "late": 492
+    },
+    "omtrdc.net": {
+      "early": 98,
+      "late": 250
+    },
+    "onetrust.com": {
+      "early": 780,
+      "late": 622
+    },
+    "online-metrix.net": {
+      "early": 691,
+      "late": 389
+    },
+    "onlyfans.com": {
+      "early": 304,
+      "late": 851
+    },
+    "openai.com": {
+      "early": 73,
+      "late": 83
+    },
+    "opendns.com": {
+      "early": 233,
+      "late": 358
+    },
+    "openstreetmap.org": {
+      "early": 985,
+      "late": 614
+    },
+    "openx.net": {
+      "early": 488,
+      "late": 538
+    },
+    "opera.com": {
+      "early": 90,
+      "late": 91
+    },
+    "optimizely.com": {
+      "early": 699,
+      "late": 693
+    },
+    "oracle.com": {
+      "early": 198,
+      "late": 205
+    },
+    "oup.com": {
+      "early": 444,
+      "late": 544
+    },
+    "outbrain.com": {
+      "early": 752,
+      "late": 694
+    },
+    "outlook.com": {
+      "early": 95,
+      "late": 120
+    },
+    "ovh.net": {
+      "early": 726,
+      "late": 656
+    },
+    "ovscdns.com": {
+      "early": 613,
+      "late": 782
+    },
+    "ozon.ru": {
+      "early": 320,
+      "late": 229
+    },
+    "paloaltonetworks.com": {
+      "early": 616,
+      "late": 391
+    },
+    "patreon.com": {
+      "early": 331,
+      "late": 608
+    },
+    "paypal.com": {
+      "early": 81,
+      "late": 169
+    },
+    "pexels.com": {
+      "early": 437,
+      "late": 867
+    },
+    "php.net": {
+      "early": 266,
+      "late": 329
+    },
+    "pinimg.com": {
+      "early": 461,
+      "late": 719
+    },
+    "pinterest.com": {
+      "early": 33,
+      "late": 56
+    },
+    "pixabay.com": {
+      "early": 366,
+      "late": 465
+    },
+    "pixiv.net": {
+      "early": 205,
+      "late": 996
+    },
+    "pki.goog": {
+      "early": 321,
+      "late": 230
+    },
+    "playstation.com": {
+      "early": 576,
+      "late": 603
+    },
+    "playstation.net": {
+      "early": 637,
+      "late": 236
+    },
+    "plesk.com": {
+      "early": 910,
+      "late": 387
+    },
+    "pornhub.com": {
+      "early": 72,
+      "late": 900
+    },
+    "primevideo.com": {
+      "early": 832,
+      "late": 673
+    },
+    "princeton.edu": {
+      "early": 562,
+      "late": 906
+    },
+    "prnewswire.com": {
+      "early": 481,
+      "late": 813
+    },
+    "pubmatic.com": {
+      "early": 617,
+      "late": 240
+    },
+    "python.org": {
+      "early": 746,
+      "late": 754
+    },
+    "qq.com": {
+      "early": 23,
+      "late": 73
+    },
+    "qualtrics.com": {
+      "early": 764,
+      "late": 925
+    },
+    "quantserve.com": {
+      "early": 850,
+      "late": 723
+    },
+    "quora.com": {
+      "early": 150,
+      "late": 493
+    },
+    "rakuten.co.jp": {
+      "early": 377,
+      "late": 570
+    },
+    "rbxcdn.com": {
+      "early": 291,
+      "late": 245
+    },
+    "reddit.com": {
+      "early": 36,
+      "late": 109
+    },
+    "redhat.com": {
+      "early": 618,
+      "late": 661
+    },
+    "reg.ru": {
+      "early": 257,
+      "late": 143
+    },
+    "registrar-servers.com": {
+      "early": 130,
+      "late": 121
+    },
+    "researchgate.net": {
+      "early": 181,
+      "late": 224
+    },
+    "reuters.com": {
+      "early": 213,
+      "late": 285
+    },
+    "ring.com": {
+      "early": 193,
+      "late": 716
+    },
+    "ripn.net": {
+      "early": 700,
+      "late": 255
+    },
+    "rlcdn.com": {
+      "early": 570,
+      "late": 589
+    },
+    "roblox.com": {
+      "early": 129,
+      "late": 60
+    },
+    "rocket-cdn.com": {
+      "early": 588,
+      "late": 408
+    },
+    "roku.com": {
+      "early": 430,
+      "late": 252
+    },
+    "root-servers.net": {
+      "early": 296,
+      "late": 76
+    },
+    "rt.ru": {
+      "early": 347,
+      "late": 799
+    },
+    "rubiconproject.com": {
+      "early": 580,
+      "late": 197
+    },
+    "safebrowsing.apple": {
+      "early": 525,
+      "late": 757
+    },
+    "sagepub.com": {
+      "early": 535,
+      "late": 652
+    },
+    "salesforce.com": {
+      "early": 116,
+      "late": 299
+    },
+    "samsung.com": {
+      "early": 225,
+      "late": 94
+    },
+    "samsungcloud.com": {
+      "early": 817,
+      "late": 318
+    },
+    "samsungcloudsolution.com": {
+      "early": 870,
+      "late": 374
+    },
+    "samsungqbe.com": {
+      "early": 886,
+      "late": 324
+    },
+    "sc-gw.com": {
+      "early": 908,
+      "late": 491
+    },
+    "sciencedirect.com": {
+      "early": 161,
+      "late": 219
+    },
+    "scorecardresearch.com": {
+      "early": 402,
+      "late": 263
+    },
+    "scribd.com": {
+      "early": 382,
+      "late": 498
+    },
+    "sedo.com": {
+      "early": 521,
+      "late": 778
+    },
+    "sentry.io": {
+      "early": 389,
+      "late": 92
+    },
+    "sfx.ms": {
+      "early": 722,
+      "late": 218
+    },
+    "sharepoint.com": {
+      "early": 54,
+      "late": 44
+    },
+    "sharethrough.com": {
+      "early": 717,
+      "late": 630
+    },
+    "shein.com": {
+      "early": 786,
+      "late": 505
+    },
+    "shifen.com": {
+      "early": 235,
+      "late": 209
+    },
+    "shopify.com": {
+      "early": 179,
+      "late": 179
+    },
+    "sina.com.cn": {
+      "early": 119,
+      "late": 460
+    },
+    "skyhigh.cloud": {
+      "early": 859,
+      "late": 453
+    },
+    "skype.com": {
+      "early": 94,
+      "late": 49
+    },
+    "slack.com": {
+      "early": 260,
+      "late": 353
+    },
+    "slideshare.net": {
+      "early": 283,
+      "late": 532
+    },
+    "smartadserver.com": {
+      "early": 773,
+      "late": 340
+    },
+    "snapchat.com": {
+      "early": 332,
+      "late": 130
+    },
+    "sohu.com": {
+      "early": 140,
+      "late": 481
+    },
+    "sophos.com": {
+      "early": 574,
+      "late": 717
+    },
+    "soundcloud.com": {
+      "early": 118,
+      "late": 185
+    },
+    "sourceforge.net": {
+      "early": 165,
+      "late": 249
+    },
+    "spaceweb.pro": {
+      "early": 627,
+      "late": 339
+    },
+    "speedtest.net": {
+      "early": 413,
+      "late": 469
+    },
+    "spiegel.de": {
+      "early": 946,
+      "late": 841
+    },
+    "spo-msedge.net": {
+      "early": 114,
+      "late": 547
+    },
+    "spotify.com": {
+      "early": 82,
+      "late": 64
+    },
+    "springer.com": {
+      "early": 256,
+      "late": 291
+    },
+    "squarespace.com": {
+      "early": 420,
+      "late": 542
+    },
+    "stackoverflow.com": {
+      "early": 147,
+      "late": 510
+    },
+    "stanford.edu": {
+      "early": 284,
+      "late": 379
+    },
+    "state.gov": {
+      "early": 560,
+      "late": 948
+    },
+    "statista.com": {
+      "early": 381,
+      "late": 486
+    },
+    "steamcommunity.com": {
+      "early": 631,
+      "late": 428
+    },
+    "steampowered.com": {
+      "early": 349,
+      "late": 306
+    },
+    "stripchat.com": {
+      "early": 306,
+      "late": 739
+    },
+    "stripe.com": {
+      "early": 267,
+      "late": 239
+    },
+    "substack.com": {
+      "early": 849,
+      "late": 452
+    },
+    "surveymonkey.com": {
+      "early": 357,
+      "late": 672
+    },
+    "t.co": {
+      "early": 61,
+      "late": 242
+    },
+    "t.me": {
+      "early": 109,
+      "late": 103
+    },
+    "taboola.com": {
+      "early": 435,
+      "late": 206
+    },
+    "tandfonline.com": {
+      "early": 457,
+      "late": 558
+    },
+    "taobao.com": {
+      "early": 83,
+      "late": 440
+    },
+    "target.com": {
+      "early": 734,
+      "late": 585
+    },
+    "tbcache.com": {
+      "early": 551,
+      "late": 344
+    },
+    "teamviewer.com": {
+      "early": 196,
+      "late": 583
+    },
+    "techcrunch.com": {
+      "early": 418,
+      "late": 655
+    },
+    "ted.com": {
+      "early": 369,
+      "late": 791
+    },
+    "telegram.me": {
+      "early": 536,
+      "late": 292
+    },
+    "telegram.org": {
+      "early": 204,
+      "late": 257
+    },
+    "telegraph.co.uk": {
+      "early": 344,
+      "late": 610
+    },
+    "tencent-cloud.net": {
+      "early": 979,
+      "late": 466
+    },
+    "tencent.com": {
+      "early": 282,
+      "late": 641
+    },
+    "theguardian.com": {
+      "early": 143,
+      "late": 203
+    },
+    "theverge.com": {
+      "early": 464,
+      "late": 849
+    },
+    "tiktok.com": {
+      "early": 62,
+      "late": 54
+    },
+    "tiktokcdn.com": {
+      "early": 135,
+      "late": 80
+    },
+    "tiktokv.com": {
+      "early": 186,
+      "late": 81
+    },
+    "time.com": {
+      "early": 341,
+      "late": 568
+    },
+    "timeweb.ru": {
+      "early": 524,
+      "late": 457
+    },
+    "tinyurl.com": {
+      "early": 221,
+      "late": 293
+    },
+    "tradingview.com": {
+      "early": 217,
+      "late": 363
+    },
+    "trafficmanager.net": {
+      "early": 50,
+      "late": 42
+    },
+    "trbcdn.net": {
+      "early": 677,
+      "late": 129
+    },
+    "trendmicro.com": {
+      "early": 553,
+      "late": 529
+    },
+    "trendyol.com": {
+      "early": 977,
+      "late": 971
+    },
+    "tripadvisor.com": {
+      "early": 375,
+      "late": 584
+    },
+    "trustpilot.com": {
+      "early": 504,
+      "late": 347
+    },
+    "ttvnw.net": {
+      "early": 607,
+      "late": 273
+    },
+    "tumblr.com": {
+      "early": 79,
+      "late": 162
+    },
+    "twimg.com": {
+      "early": 173,
+      "late": 701
+    },
+    "twitch.tv": {
+      "early": 151,
+      "late": 220
+    },
+    "twitter.com": {
+      "early": 8,
+      "late": 15
+    },
+    "uber.com": {
+      "early": 796,
+      "late": 729
+    },
+    "ubuntu.com": {
+      "early": 494,
+      "late": 232
+    },
+    "ui-dns.com": {
+      "early": 797,
+      "late": 524
+    },
+    "ui.com": {
+      "early": 932,
+      "late": 110
+    },
+    "un.org": {
+      "early": 285,
+      "late": 359
+    },
+    "unesco.org": {
+      "early": 620,
+      "late": 633
+    },
+    "unity3d.com": {
+      "early": 280,
+      "late": 132
+    },
+    "unsplash.com": {
+      "early": 294,
+      "late": 419
+    },
+    "uol.com.br": {
+      "early": 499,
+      "late": 565
+    },
+    "ups.com": {
+      "early": 487,
+      "late": 651
+    },
+    "usatoday.com": {
+      "early": 322,
+      "late": 581
+    },
+    "usda.gov": {
+      "early": 510,
+      "late": 847
+    },
+    "userapi.com": {
+      "early": 246,
+      "late": 231
+    },
+    "usgovcloudapi.net": {
+      "early": 610,
+      "late": 769
+    },
+    "usps.com": {
+      "early": 701,
+      "late": 827
+    },
+    "verisign.com": {
+      "early": 756,
+      "late": 724
+    },
+    "vimeo.com": {
+      "early": 45,
+      "late": 88
+    },
+    "visualstudio.com": {
+      "early": 683,
+      "late": 536
+    },
+    "vk.com": {
+      "early": 58,
+      "late": 127
+    },
+    "vkontakte.ru": {
+      "early": 658,
+      "late": 702
+    },
+    "vungle.com": {
+      "early": 785,
+      "late": 201
+    },
+    "w3.org": {
+      "early": 144,
+      "late": 190
+    },
+    "wa.me": {
+      "early": 177,
+      "late": 67
+    },
+    "walmart.com": {
+      "early": 241,
+      "late": 410
+    },
+    "washington.edu": {
+      "early": 471,
+      "late": 899
+    },
+    "washingtonpost.com": {
+      "early": 201,
+      "late": 364
+    },
+    "wattpad.com": {
+      "early": 914,
+      "late": 764
+    },
+    "weather.com": {
+      "early": 308,
+      "late": 316
+    },
+    "webex.com": {
+      "early": 92,
+      "late": 167
+    },
+    "webmd.com": {
+      "early": 385,
+      "late": 951
+    },
+    "weebly.com": {
+      "early": 191,
+      "late": 365
+    },
+    "weibo.com": {
+      "early": 80,
+      "late": 304
+    },
+    "whatsapp.com": {
+      "early": 38,
+      "late": 55
+    },
+    "whatsapp.net": {
+      "early": 269,
+      "late": 32
+    },
+    "who.int": {
+      "early": 184,
+      "late": 266
+    },
+    "wikimedia.org": {
+      "early": 206,
+      "late": 254
+    },
+    "wikipedia.org": {
+      "early": 15,
+      "late": 30
+    },
+    "wildberries.ru": {
+      "early": 292,
+      "late": 402
+    },
+    "wiley.com": {
+      "early": 231,
+      "late": 322
+    },
+    "windows.com": {
+      "early": 279,
+      "late": 90
+    },
+    "windows.net": {
+      "early": 59,
+      "late": 65
+    },
+    "windowsupdate.com": {
+      "early": 30,
+      "late": 66
+    },
+    "wired.com": {
+      "early": 373,
+      "late": 549
+    },
+    "wix.com": {
+      "early": 240,
+      "late": 627
+    },
+    "wixsite.com": {
+      "early": 197,
+      "late": 269
+    },
+    "wordpress.com": {
+      "early": 53,
+      "late": 101
+    },
+    "wordpress.org": {
+      "early": 32,
+      "late": 48
+    },
+    "worldbank.org": {
+      "early": 674,
+      "late": 905
+    },
+    "worldnic.com": {
+      "early": 396,
+      "late": 336
+    },
+    "wp.com": {
+      "early": 273,
+      "late": 464
+    },
+    "wsdvs.com": {
+      "early": 171,
+      "late": 244
+    },
+    "wsj.com": {
+      "early": 236,
+      "late": 372
+    },
+    "www.gov.uk": {
+      "early": 295,
+      "late": 309
+    },
+    "xbox.com": {
+      "early": 949,
+      "late": 812
+    },
+    "xcal.tv": {
+      "early": 211,
+      "late": 401
+    },
+    "xerox.com": {
+      "early": 925,
+      "late": 967
+    },
+    "xhamster.com": {
+      "early": 123,
+      "late": 645
+    },
+    "xiaomi.com": {
+      "early": 301,
+      "late": 153
+    },
+    "xnxx.com": {
+      "early": 182,
+      "late": 979
+    },
+    "xvideos.com": {
+      "early": 68,
+      "late": 883
+    },
+    "ya.ru": {
+      "early": 998,
+      "late": 722
+    },
+    "yahoo.co.jp": {
+      "early": 113,
+      "late": 459
+    },
+    "yahoo.com": {
+      "early": 21,
+      "late": 59
+    },
+    "yahoodns.net": {
+      "early": 669,
+      "late": 576
+    },
+    "yandex.com": {
+      "early": 545,
+      "late": 392
+    },
+    "yandex.net": {
+      "early": 85,
+      "late": 87
+    },
+    "yandex.ru": {
+      "early": 49,
+      "late": 96
+    },
+    "yelp.com": {
+      "early": 372,
+      "late": 662
+    },
+    "youku.com": {
+      "early": 216,
+      "late": 946
+    },
+    "youtu.be": {
+      "early": 37,
+      "late": 46
+    },
+    "youtube-nocookie.com": {
+      "early": 247,
+      "late": 213
+    },
+    "youtube.com": {
+      "early": 3,
+      "late": 9
+    },
+    "ys7.com": {
+      "early": 880,
+      "late": 887
+    },
+    "ytimg.com": {
+      "early": 200,
+      "late": 89
+    },
+    "zendesk.com": {
+      "early": 207,
+      "late": 368
+    },
+    "zenecn.net": {
+      "early": 968,
+      "late": 945
+    },
+    "zillow.com": {
+      "early": 498,
+      "late": 753
+    },
+    "zoho.com": {
+      "early": 584,
+      "late": 822
+    },
+    "zoom.com": {
+      "early": 712,
+      "late": 861
+    },
+    "zoom.us": {
+      "early": 47,
+      "late": 77
+    }
+  }
+}
