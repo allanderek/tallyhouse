@@ -1,0 +1,4807 @@
+{
+  "captured": "2026-09-17T15:47:47Z",
+  "domains": [
+    "google.com",
+    "cloudflare.com",
+    "facebook.com",
+    "gstatic.com",
+    "googleapis.com",
+    "microsoft.com",
+    "amazonaws.com",
+    "youtube.com",
+    "apple.com",
+    "instagram.com",
+    "mail.ru",
+    "fbcdn.net",
+    "ezviz7.com",
+    "twitter.com",
+    "dzen.ru",
+    "linkedin.com",
+    "googlevideo.com",
+    "googletagmanager.com",
+    "amazon.com",
+    "hicloudcam.com",
+    "github.com",
+    "wikipedia.org",
+    "bing.com",
+    "whatsapp.net",
+    "googleusercontent.com",
+    "fastly.net",
+    "doubleclick.net",
+    "netflix.com",
+    "gandi.net",
+    "youtu.be",
+    "digicert.com",
+    "wordpress.org",
+    "x.com",
+    "icloud.com",
+    "goo.gl",
+    "tiktok.com",
+    "whatsapp.com",
+    "pinterest.com",
+    "cloudflare.net",
+    "yahoo.com",
+    "roblox.com",
+    "googlesyndication.com",
+    "spotify.com",
+    "wa.me",
+    "ntp.org",
+    "adobe.com",
+    "msn.com",
+    "myfritz.net",
+    "cloudflare-dns.com",
+    "qq.com",
+    "nginx.org",
+    "chatgpt.com",
+    "zoom.us",
+    "tiktokv.com",
+    "openai.com",
+    "baidu.com",
+    "yandex.net",
+    "vimeo.com",
+    "opera.com",
+    "sentry.io",
+    "f5.com",
+    "samsung.com",
+    "yandex.ru",
+    "blogspot.com",
+    "mozilla.org",
+    "wordpress.com",
+    "t.me",
+    "achmea.nl",
+    "actify.nl",
+    "reddit.com",
+    "ui.com",
+    "google-analytics.com",
+    "europa.eu",
+    "bit.ly",
+    "okcdn.ru",
+    "app-analytics-services.com",
+    "registrar-servers.com",
+    "app-measurement.com",
+    "amazonvideo.com",
+    "vk.com",
+    "apache.org",
+    "snapchat.com",
+    "unity3d.com",
+    "afternic.com",
+    "intuit.com",
+    "triplinkintl.com",
+    "dropbox.com",
+    "msftncsi.com",
+    "kaspersky.com",
+    "dns.google",
+    "miit.gov.cn",
+    "discord.gg",
+    "azurefd.net",
+    "archive.org",
+    "xiaomi.com",
+    "one.one",
+    "aliyuncs.com",
+    "nytimes.com",
+    "gravatar.com",
+    "msftconnecttest.com",
+    "adtrafficquality.google",
+    "tumblr.com",
+    "applovin.com",
+    "webex.com",
+    "discord.com",
+    "paypal.com",
+    "mts.ru",
+    "example.com",
+    "adobe.io",
+    "vk.ru",
+    "shopify.com",
+    "base.org",
+    "soundcloud.com",
+    "macromedia.com",
+    "flickr.com",
+    "googleadservices.com",
+    "w3.org",
+    "rubiconproject.com",
+    "creativecommons.org",
+    "medium.com",
+    "cnn.com",
+    "vungle.com",
+    "duckdns.org",
+    "theguardian.com",
+    "oracle.com",
+    "taboola.com",
+    "lsrelayaccess.com",
+    "doi.org",
+    "ebay.com",
+    "t-online.de",
+    "youtube-nocookie.com",
+    "bbc.com",
+    "forbes.com",
+    "twitch.tv",
+    "gmail.com",
+    "researchgate.net",
+    "miui.com",
+    "mit.edu",
+    "ozon.ru",
+    "pki.goog",
+    "userapi.com",
+    "ubuntu.com",
+    "azureedge.net",
+    "bbc.co.uk",
+    "nist.gov",
+    "stripe.com",
+    "cpanel.net",
+    "t.co",
+    "canva.com",
+    "meraki.com",
+    "sourceforge.net",
+    "comcast.net",
+    "roku.com",
+    "cisco.com",
+    "wikimedia.org",
+    "android.com",
+    "telegram.org",
+    "hubspot.com",
+    "hcaptcha.com",
+    "adnxs.com",
+    "scorecardresearch.com",
+    "booking.com",
+    "imdb.com",
+    "who.int",
+    "forter.com",
+    "wixsite.com",
+    "linktr.ee",
+    "launchpad.net",
+    "etsy.com",
+    "ack.de",
+    "amon.tech",
+    "ibm.com",
+    "reuters.com",
+    "dnsmadeeasy.com",
+    "springer.com",
+    "tinyurl.com",
+    "drom.ru",
+    "amplitude.com",
+    "mzstatic.com",
+    "hp.com",
+    "salesforce.com",
+    "nature.com",
+    "inmobi.com",
+    "weibo.com",
+    "namecheap.com",
+    "steampowered.com",
+    "www.gov.uk",
+    "dell.com",
+    "clarity.ms",
+    "avast.com",
+    "alibaba.com",
+    "ok.ru",
+    "weather.com",
+    "mozilla.com",
+    "samsungcloud.com",
+    "harvard.edu",
+    "debian.org",
+    "ea.com",
+    "mtgglobals.com",
+    "datadoghq.com",
+    "shalltry.com",
+    "php.net",
+    "aliyun.com",
+    "amazon.co.uk",
+    "googleblog.com",
+    "hostinger.com",
+    "myshopify.com",
+    "smartadserver.com",
+    "name.com",
+    "bilibili.com",
+    "gnu.org",
+    "trustpilot.com",
+    "doubleverify.com",
+    "inner-active.mobi",
+    "checkpoint.com",
+    "slack.com",
+    "hostgator.com",
+    "media.net",
+    "opendns.com",
+    "un.org",
+    "cdc.gov",
+    "selectel.ru",
+    "tradingview.com",
+    "washingtonpost.com",
+    "nvidia.com",
+    "zendesk.com",
+    "indeed.com",
+    "issuu.com",
+    "wsj.com",
+    "calendly.com",
+    "bloomberg.com",
+    "mobile.de",
+    "cookiedatabase.org",
+    "stanford.edu",
+    "ip-api.com",
+    "launchdarkly.com",
+    "gitlab.com",
+    "plesk.com",
+    "newrelic.com",
+    "amazontrust.com",
+    "paloaltonetworks.com",
+    "yandex.com",
+    "amazon.de",
+    "tp-link.com",
+    "mi.com",
+    "demdex.net",
+    "prodregistryv2.org",
+    "bsky.app",
+    "netangels.ru",
+    "vivoglobal.com",
+    "ipify.org",
+    "espn.com",
+    "walmart.com",
+    "kwai-pro.com",
+    "quickconnect.to",
+    "nasa.gov",
+    "aliexpress.com",
+    "nflxvideo.net",
+    "globo.com",
+    "163.com",
+    "unsplash.com",
+    "ezvizlife.com",
+    "expireddomains.com",
+    "line.me",
+    "brave.com",
+    "google.cn",
+    "dailymotion.com",
+    "steamcommunity.com",
+    "supercell.com",
+    "huawei.com",
+    "kaspersky-labs.com",
+    "chinamobile.com",
+    "claude.ai",
+    "taobao.com",
+    "intel.com",
+    "kwaipros.com",
+    "go.com",
+    "netease.com",
+    "goodreads.com",
+    "ipinfo.io",
+    "cloudns.net",
+    "sina.com.cn",
+    "businessinsider.com",
+    "gcdn.co",
+    "adobe.net",
+    "wp.com",
+    "pixabay.com",
+    "edgecdn.ru",
+    "avsxappcaptiveportal.com",
+    "speedtest.net",
+    "aol.com",
+    "vercel-dns-016.com",
+    "mikrotik.com",
+    "duolingo.com",
+    "nflximg.com",
+    "arxiv.org",
+    "sohu.com",
+    "firetvcaptiveportal.com",
+    "cnbc.com",
+    "kwai.net",
+    "statista.com",
+    "addtoany.com",
+    "nease.net",
+    "okta.com",
+    "quora.com",
+    "amazon.co.jp",
+    "adriver.ru",
+    "atlassian.net",
+    "duckduckgo.com",
+    "dynatrace.com",
+    "markmonitor.com",
+    "ivi.ru",
+    "npr.org",
+    "mediatek.com",
+    "shein.com",
+    "docker.com",
+    "run.app",
+    "eventbrite.com",
+    "behance.net",
+    "google.de",
+    "ampproject.org",
+    "foxnews.com",
+    "indiatimes.com",
+    "amzn.to",
+    "tplinkcloud.com",
+    "amazon.co.za",
+    "trendmicro.com",
+    "ft.com",
+    "elasticbeanstalk.com",
+    "capcut.com",
+    "visualstudio.com",
+    "openx.net",
+    "share.google",
+    "google.com.hk",
+    "firefox.com",
+    "squarespace.com",
+    "jquery.com",
+    "fast.com",
+    "wired.com",
+    "netflix.net",
+    "shop.app",
+    "translate.goog",
+    "blogger.com",
+    "tandfonline.com",
+    "palmplaystore.com",
+    "svc.ms",
+    "360yield.com",
+    "grammarly.com",
+    "uol.com.br",
+    "eset.com",
+    "time.com",
+    "rakuten.co.jp",
+    "deviantart.com",
+    "cornell.edu",
+    "bitrix24.ru",
+    "digitalocean.com",
+    "usatoday.com",
+    "teamviewer.com",
+    "tripadvisor.com",
+    "target.com",
+    "skybridge.click",
+    "free.fr",
+    "rlcdn.com",
+    "klaviyo.com",
+    "hotjar.com",
+    "dreamhost.com",
+    "ca.gov",
+    "braze.com",
+    "imgsmail.ru",
+    "avito.ru",
+    "playstation.com",
+    "berkeley.edu",
+    "bitdefender.net",
+    "xiaomi.net",
+    "patreon.com",
+    "telegraph.co.uk",
+    "anthropic.com",
+    "openstreetmap.org",
+    "cdnvideo.ru",
+    "threads.com",
+    "pushy.io",
+    "onetrust.com",
+    "nintendo.com",
+    "amazon.fr",
+    "atlassian.com",
+    "wix.com",
+    "sharethrough.com",
+    "mega.co.nz",
+    "doctolib.fr",
+    "unesco.org",
+    "scdn.co",
+    "comcast.com",
+    "nike.com",
+    "branch.io",
+    "tencent.com",
+    "jotform.com",
+    "xhamster.com",
+    "shopee.com.br",
+    "amazon.ca",
+    "vercel-dns-017.com",
+    "sagepub.com",
+    "googletagservices.com",
+    "techcrunch.com",
+    "mhverifier.ru",
+    "allegro.pl",
+    "intercom.io",
+    "redhat.com",
+    "britannica.com",
+    "stackadapt.com",
+    "uk.com",
+    "elpais.com",
+    "surveymonkey.com",
+    "primevideo.com",
+    "anydesk.com",
+    "viber.com",
+    "hstgr.net",
+    "cambridge.org",
+    "dailymail.co.uk",
+    "perplexity.ai",
+    "linode.com",
+    "360.cn",
+    "hihonorcloud.com",
+    "optimizely.com",
+    "outbrain.com",
+    "amazon.in",
+    "consultant.ru",
+    "wp.pl",
+    "vkontakte.ru",
+    "alipaydns.com",
+    "seznam.cz",
+    "wps.com",
+    "cbsnews.com",
+    "wpguardian.io",
+    "dailymail.com",
+    "fontawesome.com",
+    "lemonde.fr",
+    "kick.com",
+    "fb.com",
+    "sophos.com",
+    "pinimg.com",
+    "amazon.es",
+    "ya.ru",
+    "quantserve.com",
+    "verisign.com",
+    "cnet.com",
+    "amazon.it",
+    "independent.co.uk",
+    "uber.com",
+    "asus.com",
+    "wpguardian.com",
+    "mailchimp.com",
+    "globalsign.com",
+    "webempresa.eu",
+    "creativecdn.com",
+    "porkbun.com",
+    "agkn.com",
+    "shopee.co.id",
+    "g.co",
+    "bandcamp.com",
+    "crwdcntrl.net",
+    "zillow.com",
+    "python.org",
+    "bugsnag.com",
+    "google.co.uk",
+    "homedepot.com",
+    "gumgum.com",
+    "wattpad.com",
+    "bild.de",
+    "mediafire.com",
+    "ddnss.de",
+    "cursor.sh",
+    "box.com",
+    "fda.gov",
+    "nikkei.com",
+    "sedo.com",
+    "usercontent.goog",
+    "airbnb.com",
+    "oxylabs.io",
+    "singular.net",
+    "appcenter.ms",
+    "craigslist.org",
+    "ted.com",
+    "lenovo.com",
+    "fiverr.com",
+    "parklogic.com",
+    "ad-tech.ru",
+    "google.com.br",
+    "apnews.com",
+    "recaptcha.net",
+    "visma.com",
+    "welt.de",
+    "no-ip.com",
+    "ameblo.jp",
+    "mixpanel.com",
+    "adform.net",
+    "networkadvertising.org",
+    "disneyplus.com",
+    "people.com",
+    "xbox.com",
+    "prnewswire.com",
+    "rakuten.com",
+    "moloco.com",
+    "erome.com",
+    "zoho.com",
+    "discordapp.com",
+    "daum.net",
+    "deepl.com",
+    "vivo.com.cn",
+    "academia.edu",
+    "ryanair.com",
+    "liftoff.io",
+    "blackberry.com",
+    "blackhub.team",
+    "spiegel.de",
+    "focus.de",
+    "eeroup.com",
+    "theverge.com",
+    "amazon.com.au",
+    "agoda.com",
+    "auvik.com",
+    "abovedomains.com",
+    "zoom.com",
+    "jetbrains.com",
+    "amazon.com.br",
+    "ebay.co.uk",
+    "pendo.io",
+    "adgrx.com",
+    "pexels.com",
+    "figma.com",
+    "it.com",
+    "ebay.de",
+    "chess.com",
+    "pikabu.ru",
+    "pccc.com",
+    "synology.com",
+    "hbr.org",
+    "lg.com",
+    "disqus.com",
+    "expedia.com",
+    "fbsbx.com",
+    "tbank.ru",
+    "xvideos.com",
+    "frontiersin.org",
+    "ys7.com",
+    "www.gov.br",
+    "nbcnews.com",
+    "myspace.com",
+    "spotifycdn.com",
+    "biblegateway.com",
+    "bankofamerica.com",
+    "readthedocs.io",
+    "washington.edu",
+    "kleinanzeigen.de",
+    "agora.io",
+    "worldbank.org",
+    "princeton.edu",
+    "fwmrm.net",
+    "meta.com",
+    "amagi.tv",
+    "latimes.com",
+    "herokuapp.com",
+    "wyzecam.com",
+    "arcgis.com",
+    "starlink.com",
+    "qualtrics.com",
+    "samsungosp.com",
+    "lwsdns.com",
+    "seedtag.com",
+    "onet.pl",
+    "epa.gov",
+    "docker.io",
+    "smartthings.com",
+    "miwifi.com",
+    "tiktokw.us",
+    "netlify.app",
+    "deloitte.com",
+    "leiniao.com",
+    "eporner.com",
+    "webmd.com",
+    "tailscale.com",
+    "gotinder.com",
+    "character.ai",
+    "jd.com",
+    "fifa.com",
+    "sentinelone.net",
+    "mailchi.mp",
+    "note.com",
+    "repubblica.it",
+    "xerox.com",
+    "thenai.org",
+    "change.org",
+    "xhamster46.desi",
+    "trendyol.com",
+    "investopedia.com",
+    "stbid.ru",
+    "corriere.it",
+    "xnxx.com",
+    "nationalgeographic.com",
+    "caixa.gov.br",
+    "btloader.com",
+    "warnerbros.com",
+    "healthline.com",
+    "otto.de",
+    "kwai.com",
+    "beyondwickedmapping.org",
+    "tsyndicate.com",
+    "pixiv.net",
+    "app-ads-services.com",
+    "bol.com",
+    "conviva.com",
+    "flightradar24.com",
+    "elmundo.es",
+    "faphouse.com",
+    "eu.com",
+    "binance.com",
+    "heytapmobi.com",
+    "flashscore.com",
+    "onesignal.com",
+    "statcounter.com",
+    "xing.com",
+    "archiveofourown.org",
+    "youronlinechoices.com",
+    "infobae.com",
+    "spamhaus.org",
+    "ecosia.org",
+    "themeforest.net",
+    "shopee.ph",
+    "theatlantic.com",
+    "nextcloud.com",
+    "whitehouse.gov",
+    "amemv.com",
+    "kontur.ru",
+    "cloudinary.com",
+    "segment.io",
+    "freepik.com",
+    "bidmachine.io",
+    "docomo.ne.jp",
+    "columbia.edu",
+    "zhihu.com",
+    "amazon.com.mx",
+    "poki.com",
+    "merriam-webster.com",
+    "garmin.com",
+    "interia.pl",
+    "umich.edu",
+    "pbs.org",
+    "letterboxd.com",
+    "moneycontrol.com",
+    "bund.de",
+    "epicgames.dev",
+    "one.com",
+    "wise.com",
+    "app-analytics-services-att.com",
+    "xhamster.desi",
+    "n-tv.de",
+    "redfin.com",
+    "skroutz.gr",
+    "alphonso.tv",
+    "netgear.com",
+    "ouest-france.fr",
+    "terra.com.br",
+    "maricopa.gov",
+    "as.com",
+    "ameba.jp",
+    "bfmtv.com",
+    "goal.com",
+    "ltwebstatic.com",
+    "marca.com",
+    "giphy.com",
+    "huffpost.com",
+    "ilovepdf.com",
+    "kslawin.com",
+    "riotgames.com",
+    "crazygames.com",
+    "google.fr",
+    "magnit.ru",
+    "oecd.org",
+    "theconversation.com",
+    "supabase.co",
+    "tabelog.com",
+    "aparat.com",
+    "rocketmoney.dev",
+    "olx.pl",
+    "finn.no",
+    "inkuai.com",
+    "tnaflix.com",
+    "instructure.com",
+    "lge.com",
+    "wetteronline.de",
+    "ultimate-guitar.com",
+    "skysports.com",
+    "safety.google",
+    "netcraze.io",
+    "ubnt.com",
+    "gofundme.com",
+    "cookpad.com",
+    "gsmarena.com",
+    "xiaohongshu.com",
+    "alipay.com",
+    "lanacion.com.ar",
+    "xhaccess.com",
+    "superhosting.bg",
+    "usercentrics.eu",
+    "jimdo.com",
+    "huggingface.co",
+    "magnific.com",
+    "apa.org",
+    "nypost.com",
+    "vivo.com",
+    "typeform.com",
+    "us.com",
+    "orange.fr",
+    "cspserver.net",
+    "hotpepper.jp",
+    "meethue.com",
+    "mobolize.com",
+    "letsencrypt.org",
+    "rbc.ru",
+    "icanhazip.com",
+    "megafon.ru",
+    "clarin.com",
+    "inven.co.kr",
+    "digitaloceanspaces.com",
+    "yastatic.net",
+    "hugedomains.com",
+    "google.ca",
+    "yieldmo.com",
+    "pimpbunny.com",
+    "dafont.com",
+    "yale.edu",
+    "plos.org",
+    "he.net",
+    "aftonbladet.se",
+    "xhamster2.com",
+    "wetter.com",
+    "xserver.jp",
+    "tbs.co.jp",
+    "jw.org",
+    "tabor.ru",
+    "itmedia.co.jp",
+    "paramountplus.com",
+    "dmm.co.jp",
+    "ad.nl",
+    "economist.com",
+    "vnexpress.net",
+    "xhamster19.com",
+    "xhname.com",
+    "nu.nl",
+    "auth0.com",
+    "namecheaphosting.com",
+    "rule34.xxx",
+    "fmkorea.com",
+    "indiamart.com",
+    "leboncoin.fr",
+    "pandora.com",
+    "fortune.com",
+    "dcinside.com",
+    "siemens.com",
+    "xhtotal.com",
+    "xhopen.com",
+    "vg.no",
+    "pornpics.com",
+    "rightmove.co.uk",
+    "dlsite.com",
+    "coursera.org",
+    "ay267.com",
+    "upenn.edu",
+    "adfuse-ssp.com",
+    "remove.bg",
+    "lichess.org",
+    "px-cloud.net",
+    "namu.wiki",
+    "dribbble.com",
+    "marktplaats.nl",
+    "kakao.com",
+    "rutube.ru",
+    "gazzetta.it",
+    "savefrom.net",
+    "xhspot.com",
+    "rfc-editor.org",
+    "vscode-cdn.net",
+    "kernel.org",
+    "blackberry.net",
+    "google.co.jp",
+    "divar.ir",
+    "idealista.com",
+    "fetlife.com",
+    "amap.com",
+    "xhamster1.desi",
+    "furaffinity.net",
+    "hln.be",
+    "tori.fi",
+    "admin.ch",
+    "wiktionary.org",
+    "mundodeportivo.com",
+    "litnet.com",
+    "livescore.com",
+    "abc.net.au",
+    "fanfiction.net",
+    "postgresql.org",
+    "labs.google",
+    "digikala.com",
+    "ladepeche.fr",
+    "deepseek.com",
+    "vercel-dns.com",
+    "xhsocial.com",
+    "psu.edu",
+    "themoviedb.org",
+    "canada.ca",
+    "beboo.ru",
+    "edna.ru",
+    "cricbuzz.com",
+    "biomedcentral.com",
+    "noodlemagazine.com",
+    "polybuzz.ai",
+    "xhtv.today",
+    "rustdesk.com",
+    "cdiscount.com",
+    "hai8g.com",
+    "waze.com",
+    "bilibili.tv",
+    "mmechocaptiveportal.com",
+    "f95zone.to",
+    "ilfattoquotidiano.it",
+    "luugy.com",
+    "donmai.us",
+    "faphouse2.com",
+    "suumo.jp",
+    "playhop.com",
+    "rajasthan.gov.in",
+    "epcco.com.sa",
+    "mydramalist.com",
+    "jstor.org",
+    "meteofrance.com",
+    "sotwe.com",
+    "pornone.com",
+    "lookmovie2.to",
+    "rambler.ru",
+    "netkeiba.com",
+    "calculator.net",
+    "ovhcloud.com",
+    "publicnode.com",
+    "aternos.org",
+    "charter.net",
+    "funpay.com",
+    "youjizz.com",
+    "tgju.org",
+    "rustore.ru",
+    "thisvid.com",
+    "beget.ru",
+    "tapad.com",
+    "locaweb.com.br",
+    "jalan.net",
+    "mediaexpert.pl",
+    "aznude.com",
+    "asurascans.com",
+    "leroymerlin.fr",
+    "varzesh3.com",
+    "weathernews.jp",
+    "turkiye.gov.tr",
+    "huffingtonpost.com",
+    "irs.gov",
+    "fdown.net",
+    "xxxbp.tv",
+    "nesine.com",
+    "missav.ws",
+    "e-hentai.org",
+    "sportybet.com",
+    "oricon.co.jp",
+    "haberler.com",
+    "ultradns.com",
+    "sex-studentki.team",
+    "rule34video.com",
+    "cardgames.io",
+    "tenki.jp",
+    "novinky.cz",
+    "nikkansports.com",
+    "mbga.jp",
+    "sexvid.xxx",
+    "okdiario.com",
+    "dagbladet.no",
+    "ilmeteo.it",
+    "idealista.it",
+    "syosetu.com",
+    "admanmedia.com",
+    "dw.com",
+    "cronista.com",
+    "uidai.gov.in",
+    "zedge.net",
+    "xhwide.com",
+    "rtve.es",
+    "inps.it",
+    "ukdevilz.com",
+    "property24.com",
+    "porno365.golf",
+    "action.com",
+    "iltalehti.fi",
+    "inleed.net",
+    "nosv.org",
+    "otomoto.pl",
+    "protothema.gr",
+    "aljazeera.com",
+    "cam.ac.uk",
+    "jutarnji.hr",
+    "ficbook.net",
+    "sozcu.com.tr",
+    "ixxx.com",
+    "index.hr",
+    "betway.co.za",
+    "24h.com.vn",
+    "blic.rs",
+    "3bmeteo.com",
+    "loobygamesonline.com",
+    "xnxx.tv",
+    "elsevier.com",
+    "omg10.com",
+    "carsensor.net",
+    "gamewith.jp",
+    "filmweb.pl",
+    "iana.org",
+    "fpo.xxx",
+    "moe.video",
+    "ssstik.io",
+    "hitomi.la",
+    "gcash.com",
+    "jagran.com",
+    "pussyspace.com",
+    "toyhou.se",
+    "luxuretv.com",
+    "hdporncomics.com",
+    "ekstrabladet.dk",
+    "google.co.in",
+    "inxxx.com",
+    "fedoraproject.org",
+    "theblowers.com",
+    "utorrent.com",
+    "leroymerlin.es",
+    "klikbca.com",
+    "letsporn.com",
+    "bookmark.xxx",
+    "attn.tv",
+    "xvideos2.com",
+    "xvv1deos.com",
+    "superporn.com",
+    "iporntv.net",
+    "hdtube.porn",
+    "liteapks.com",
+    "crn77.com",
+    "markt.de",
+    "nfse.gov.br",
+    "rat.xxx",
+    "txnhh.com",
+    "bblaa.com",
+    "ahacdn.me",
+    "dogdrip.net",
+    "eci.gov.in",
+    "upskirt.tv",
+    "testbook.com",
+    "xnxx2.com",
+    "ppomppu.co.kr",
+    "xnxx.health",
+    "mangago.me",
+    "kaspi.kz",
+    "torob.com",
+    "ucla.edu",
+    "ioh.co.id",
+    "xvideos.es",
+    "simpcity.cr",
+    "cmoa.jp",
+    "xnxx.es",
+    "wpastra.com",
+    "missav.live",
+    "immobiliare.it",
+    "1mg.com",
+    "ptt.cc",
+    "xnxx-arabic.com",
+    "hostpoint.ch",
+    "missav.ai",
+    "exhentai.org",
+    "joyclub.de",
+    "fatalmodel.com",
+    "programme-tv.net",
+    "18comic.vip",
+    "sondakika.com",
+    "twilio.com",
+    "missav123.com",
+    "hanime1.me",
+    "bt.dk",
+    "musicdel.ir",
+    "buzzfeed.com",
+    "tokyomotion.net",
+    "sexlog.com",
+    "shahvani.com",
+    "ninisite.com",
+    "aajtak.in",
+    "luticlip.com",
+    "goodreturns.in",
+    "wisc.edu",
+    "indianrail.gov.in",
+    "rakuten-sec.co.jp"
+  ],
+  "excluded": [
+    {
+      "domain": "akamai.net",
+      "outcome": "ConnectFailure",
+      "rank": 8
+    },
+    {
+      "domain": "domaincontrol.com",
+      "outcome": "ConnectFailure",
+      "rank": 18
+    },
+    {
+      "domain": "office.com",
+      "outcome": "NotPlainText",
+      "rank": 21
+    },
+    {
+      "domain": "live.com",
+      "outcome": "NotPlainText",
+      "rank": 22
+    },
+    {
+      "domain": "akamaiedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 23
+    },
+    {
+      "domain": "gtld-servers.net",
+      "outcome": "ConnectFailure",
+      "rank": 26
+    },
+    {
+      "domain": "akadns.net",
+      "outcome": "ConnectFailure",
+      "rank": 27
+    },
+    {
+      "domain": "azure.com",
+      "outcome": "NotPlainText",
+      "rank": 28
+    },
+    {
+      "domain": "apple-dns.net",
+      "outcome": "ConnectFailure",
+      "rank": 33
+    },
+    {
+      "domain": "appsflyersdk.com",
+      "outcome": "ServerError",
+      "rank": 34
+    },
+    {
+      "domain": "aaplimg.com",
+      "outcome": "ConnectFailure",
+      "rank": 38
+    },
+    {
+      "domain": "microsoftonline.com",
+      "outcome": "ConnectFailure",
+      "rank": 39
+    },
+    {
+      "domain": "office.net",
+      "outcome": "ConnectFailure",
+      "rank": 40
+    },
+    {
+      "domain": "trafficmanager.net",
+      "outcome": "ConnectFailure",
+      "rank": 42
+    },
+    {
+      "domain": "cloud.microsoft",
+      "outcome": "NotPlainText",
+      "rank": 43
+    },
+    {
+      "domain": "sharepoint.com",
+      "outcome": "NotPlainText",
+      "rank": 44
+    },
+    {
+      "domain": "skype.com",
+      "outcome": "NotPlainText",
+      "rank": 49
+    },
+    {
+      "domain": "cloudfront.net",
+      "outcome": "ConnectFailure",
+      "rank": 52
+    },
+    {
+      "domain": "googledomains.com",
+      "outcome": "NotPlainText",
+      "rank": 57
+    },
+    {
+      "domain": "pv-cdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 62
+    },
+    {
+      "domain": "gvt1.com",
+      "outcome": "ConnectFailure",
+      "rank": 63
+    },
+    {
+      "domain": "windows.net",
+      "outcome": "ConnectFailure",
+      "rank": 65
+    },
+    {
+      "domain": "windowsupdate.com",
+      "outcome": "ConnectFailure",
+      "rank": 66
+    },
+    {
+      "domain": "root-servers.net",
+      "outcome": "ConnectFailure",
+      "rank": 76
+    },
+    {
+      "domain": "cdninstagram.com",
+      "outcome": "ConnectFailure",
+      "rank": 78
+    },
+    {
+      "domain": "workers.dev",
+      "outcome": "TooLarge",
+      "rank": 79
+    },
+    {
+      "domain": "tiktokcdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 80
+    },
+    {
+      "domain": "akam.net",
+      "outcome": "ConnectFailure",
+      "rank": 82
+    },
+    {
+      "domain": "gvt2.com",
+      "outcome": "ConnectFailure",
+      "rank": 84
+    },
+    {
+      "domain": "edgekey.net",
+      "outcome": "ConnectFailure",
+      "rank": 85
+    },
+    {
+      "domain": "ytimg.com",
+      "outcome": "ConnectFailure",
+      "rank": 89
+    },
+    {
+      "domain": "windows.com",
+      "outcome": "NotPlainText",
+      "rank": 90
+    },
+    {
+      "domain": "nginx.com",
+      "outcome": "NotPlainText",
+      "rank": 95
+    },
+    {
+      "domain": "edgesuite.net",
+      "outcome": "ConnectFailure",
+      "rank": 97
+    },
+    {
+      "domain": "highwebmedia.com",
+      "outcome": "ConnectFailure",
+      "rank": 99
+    },
+    {
+      "domain": "gwfb.net",
+      "outcome": "ConnectFailure",
+      "rank": 102
+    },
+    {
+      "domain": "dellemc.com",
+      "outcome": "Timeout",
+      "rank": 105
+    },
+    {
+      "domain": "a2z.com",
+      "outcome": "ConnectFailure",
+      "rank": 107
+    },
+    {
+      "domain": "b-cdn.net",
+      "outcome": "TooLarge",
+      "rank": 108
+    },
+    {
+      "domain": "nic.ru",
+      "outcome": "NotPlainText",
+      "rank": 111
+    },
+    {
+      "domain": "yccdn.ru",
+      "outcome": "ConnectFailure",
+      "rank": 112
+    },
+    {
+      "domain": "aws.dev",
+      "outcome": "ConnectFailure",
+      "rank": 113
+    },
+    {
+      "domain": "office365.com",
+      "outcome": "ServerError",
+      "rank": 114
+    },
+    {
+      "domain": "outlook.com",
+      "outcome": "NotPlainText",
+      "rank": 120
+    },
+    {
+      "domain": "criteo.com",
+      "outcome": "ServerError",
+      "rank": 124
+    },
+    {
+      "domain": "github.io",
+      "outcome": "NotPlainText",
+      "rank": 125
+    },
+    {
+      "domain": "cdn77.org",
+      "outcome": "ConnectFailure",
+      "rank": 126
+    },
+    {
+      "domain": "trbcdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 129
+    },
+    {
+      "domain": "amazon-adsystem.com",
+      "outcome": "TransportError",
+      "rank": 131
+    },
+    {
+      "domain": "dnsowl.com",
+      "outcome": "ConnectFailure",
+      "rank": 133
+    },
+    {
+      "domain": "amazon.dev",
+      "outcome": "ConnectFailure",
+      "rank": 134
+    },
+    {
+      "domain": "epicgames.com",
+      "outcome": "Challenged",
+      "rank": 142
+    },
+    {
+      "domain": "reg.ru",
+      "outcome": "NotPlainText",
+      "rank": 143
+    },
+    {
+      "domain": "nih.gov",
+      "outcome": "Challenged",
+      "rank": 144
+    },
+    {
+      "domain": "static.microsoft",
+      "outcome": "ConnectFailure",
+      "rank": 146
+    },
+    {
+      "domain": "iiko.it",
+      "outcome": "ConnectFailure",
+      "rank": 148
+    },
+    {
+      "domain": "forms.gle",
+      "outcome": "ServerError",
+      "rank": 149
+    },
+    {
+      "domain": "vkuserphoto.ru",
+      "outcome": "ServerError",
+      "rank": 151
+    },
+    {
+      "domain": "godaddy.com",
+      "outcome": "ServerError",
+      "rank": 154
+    },
+    {
+      "domain": "steamserver.net",
+      "outcome": "ConnectFailure",
+      "rank": 155
+    },
+    {
+      "domain": "jomodns.com",
+      "outcome": "ConnectFailure",
+      "rank": 164
+    },
+    {
+      "domain": "tm-azurefd.net",
+      "outcome": "ConnectFailure",
+      "rank": 165
+    },
+    {
+      "domain": "dns-parking.com",
+      "outcome": "ConnectFailure",
+      "rank": 166
+    },
+    {
+      "domain": "ax-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 170
+    },
+    {
+      "domain": "3gppnetwork.org",
+      "outcome": "ConnectFailure",
+      "rank": 172
+    },
+    {
+      "domain": "vedcdnlb.com",
+      "outcome": "ConnectFailure",
+      "rank": 174
+    },
+    {
+      "domain": "azurewebsites.net",
+      "outcome": "ConnectFailure",
+      "rank": 176
+    },
+    {
+      "domain": "ggpht.com",
+      "outcome": "ConnectFailure",
+      "rank": 178
+    },
+    {
+      "domain": "telekom.net",
+      "outcome": "Timeout",
+      "rank": 180
+    },
+    {
+      "domain": "spectrum.com",
+      "outcome": "ServerError",
+      "rank": 181
+    },
+    {
+      "domain": "hosting24.com",
+      "outcome": "TooLarge",
+      "rank": 183
+    },
+    {
+      "domain": "doctolib.net",
+      "outcome": "ConnectFailure",
+      "rank": 184
+    },
+    {
+      "domain": "cdn-apple.com",
+      "outcome": "ConnectFailure",
+      "rank": 187
+    },
+    {
+      "domain": "hichina.com",
+      "outcome": "ConnectFailure",
+      "rank": 191
+    },
+    {
+      "domain": "namebrightdns.com",
+      "outcome": "ConnectFailure",
+      "rank": 192
+    },
+    {
+      "domain": "nflxso.net",
+      "outcome": "ConnectFailure",
+      "rank": 193
+    },
+    {
+      "domain": "adsafeprotected.com",
+      "outcome": "NotPlainText",
+      "rank": 194
+    },
+    {
+      "domain": "bytefcdn-oversea.com",
+      "outcome": "ConnectFailure",
+      "rank": 195
+    },
+    {
+      "domain": "lencr.org",
+      "outcome": "NotPlainText",
+      "rank": 196
+    },
+    {
+      "domain": "ttdns2.com",
+      "outcome": "ConnectFailure",
+      "rank": 204
+    },
+    {
+      "domain": "ksyuncdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 208
+    },
+    {
+      "domain": "shifen.com",
+      "outcome": "Timeout",
+      "rank": 209
+    },
+    {
+      "domain": "ailawandorder.com",
+      "outcome": "ConnectFailure",
+      "rank": 216
+    },
+    {
+      "domain": "fastly-edge.com",
+      "outcome": "ConnectFailure",
+      "rank": 217
+    },
+    {
+      "domain": "sfx.ms",
+      "outcome": "ConnectFailure",
+      "rank": 218
+    },
+    {
+      "domain": "sciencedirect.com",
+      "outcome": "ServerError",
+      "rank": 219
+    },
+    {
+      "domain": "capcutapi.com",
+      "outcome": "ConnectFailure",
+      "rank": 221
+    },
+    {
+      "domain": "cdngslb.com",
+      "outcome": "Timeout",
+      "rank": 223
+    },
+    {
+      "domain": "akamaized.net",
+      "outcome": "ConnectFailure",
+      "rank": 226
+    },
+    {
+      "domain": "pages.dev",
+      "outcome": "TooLarge",
+      "rank": 228
+    },
+    {
+      "domain": "nr-data.net",
+      "outcome": "ConnectFailure",
+      "rank": 233
+    },
+    {
+      "domain": "playstation.net",
+      "outcome": "ConnectFailure",
+      "rank": 236
+    },
+    {
+      "domain": "yandexcloud.net",
+      "outcome": "ConnectFailure",
+      "rank": 237
+    },
+    {
+      "domain": "pubmatic.com",
+      "outcome": "ServerError",
+      "rank": 240
+    },
+    {
+      "domain": "wsdvs.com",
+      "outcome": "ConnectFailure",
+      "rank": 244
+    },
+    {
+      "domain": "rbxcdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 245
+    },
+    {
+      "domain": "adsrvr.org",
+      "outcome": "ServerError",
+      "rank": 246
+    },
+    {
+      "domain": "imcmdb.net",
+      "outcome": "Timeout",
+      "rank": 248
+    },
+    {
+      "domain": "omtrdc.net",
+      "outcome": "ConnectFailure",
+      "rank": 250
+    },
+    {
+      "domain": "ripn.net",
+      "outcome": "ConnectFailure",
+      "rank": 255
+    },
+    {
+      "domain": "alidns.com",
+      "outcome": "NotPlainText",
+      "rank": 259
+    },
+    {
+      "domain": "alibabadns.com",
+      "outcome": "ConnectFailure",
+      "rank": 262
+    },
+    {
+      "domain": "name-services.com",
+      "outcome": "ConnectFailure",
+      "rank": 267
+    },
+    {
+      "domain": "media-amazon.com",
+      "outcome": "ConnectFailure",
+      "rank": 271
+    },
+    {
+      "domain": "ttvnw.net",
+      "outcome": "ConnectFailure",
+      "rank": 273
+    },
+    {
+      "domain": "statsigapi.net",
+      "outcome": "ServerError",
+      "rank": 274
+    },
+    {
+      "domain": "facebook.net",
+      "outcome": "ConnectFailure",
+      "rank": 275
+    },
+    {
+      "domain": "spov-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 276
+    },
+    {
+      "domain": "mangosip.ru",
+      "outcome": "Timeout",
+      "rank": 281
+    },
+    {
+      "domain": "msedge.net",
+      "outcome": "Timeout",
+      "rank": 282
+    },
+    {
+      "domain": "aliyuncsslbintl.com",
+      "outcome": "ConnectFailure",
+      "rank": 283
+    },
+    {
+      "domain": "shiabank.com",
+      "outcome": "Timeout",
+      "rank": 284
+    },
+    {
+      "domain": "2mdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 286
+    },
+    {
+      "domain": "appsflyer.com",
+      "outcome": "ServerError",
+      "rank": 287
+    },
+    {
+      "domain": "arubanetworks.com",
+      "outcome": "ConnectFailure",
+      "rank": 288
+    },
+    {
+      "domain": "telecid.ru",
+      "outcome": "ConnectFailure",
+      "rank": 289
+    },
+    {
+      "domain": "telegram.me",
+      "outcome": "NotPlainText",
+      "rank": 292
+    },
+    {
+      "domain": "tiktokcdn-us.com",
+      "outcome": "ConnectFailure",
+      "rank": 298
+    },
+    {
+      "domain": "byteoversea.net",
+      "outcome": "ConnectFailure",
+      "rank": 301
+    },
+    {
+      "domain": "crpt.ru",
+      "outcome": "NotPlainText",
+      "rank": 302
+    },
+    {
+      "domain": "jsdelivr.net",
+      "outcome": "ConnectFailure",
+      "rank": 307
+    },
+    {
+      "domain": "autodesk.com",
+      "outcome": "ServerError",
+      "rank": 308
+    },
+    {
+      "domain": "wac-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 315
+    },
+    {
+      "domain": "wiley.com",
+      "outcome": "ServerError",
+      "rank": 322
+    },
+    {
+      "domain": "samsungqbe.com",
+      "outcome": "ConnectFailure",
+      "rank": 324
+    },
+    {
+      "domain": "douyincdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 325
+    },
+    {
+      "domain": "heytapmobile.com",
+      "outcome": "ConnectFailure",
+      "rank": 326
+    },
+    {
+      "domain": "akamaihd.net",
+      "outcome": "ConnectFailure",
+      "rank": 330
+    },
+    {
+      "domain": "worldnic.com",
+      "outcome": "Timeout",
+      "rank": 336
+    },
+    {
+      "domain": "trueconf.net",
+      "outcome": "ConnectFailure",
+      "rank": 337
+    },
+    {
+      "domain": "awswaf.com",
+      "outcome": "ConnectFailure",
+      "rank": 338
+    },
+    {
+      "domain": "spaceweb.pro",
+      "outcome": "ConnectFailure",
+      "rank": 339
+    },
+    {
+      "domain": "crashlytics.com",
+      "outcome": "NotPlainText",
+      "rank": 342
+    },
+    {
+      "domain": "tbcache.com",
+      "outcome": "Timeout",
+      "rank": 344
+    },
+    {
+      "domain": "edgcdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 346
+    },
+    {
+      "domain": "twc.com",
+      "outcome": "ConnectFailure",
+      "rank": 349
+    },
+    {
+      "domain": "naver.com",
+      "outcome": "NotPlainText",
+      "rank": 350
+    },
+    {
+      "domain": "vecdnlb.com",
+      "outcome": "ConnectFailure",
+      "rank": 354
+    },
+    {
+      "domain": "licdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 356
+    },
+    {
+      "domain": "allawnos.com",
+      "outcome": "ConnectFailure",
+      "rank": 362
+    },
+    {
+      "domain": "weebly.com",
+      "outcome": "Challenged",
+      "rank": 365
+    },
+    {
+      "domain": "casalemedia.com",
+      "outcome": "NotPlainText",
+      "rank": 366
+    },
+    {
+      "domain": "live-video.net",
+      "outcome": "ServerError",
+      "rank": 370
+    },
+    {
+      "domain": "samsungcloudsolution.com",
+      "outcome": "ConnectFailure",
+      "rank": 374
+    },
+    {
+      "domain": "dnspod.net",
+      "outcome": "Timeout",
+      "rank": 377
+    },
+    {
+      "domain": "cdnbuild.net",
+      "outcome": "ConnectFailure",
+      "rank": 380
+    },
+    {
+      "domain": "tiktokv.us",
+      "outcome": "ConnectFailure",
+      "rank": 381
+    },
+    {
+      "domain": "volcfcdndvs.com",
+      "outcome": "ConnectFailure",
+      "rank": 382
+    },
+    {
+      "domain": "virginm.net",
+      "outcome": "ConnectFailure",
+      "rank": 386
+    },
+    {
+      "domain": "online-metrix.net",
+      "outcome": "ConnectFailure",
+      "rank": 389
+    },
+    {
+      "domain": "shopifysvc.com",
+      "outcome": "ConnectFailure",
+      "rank": 398
+    },
+    {
+      "domain": "ibyteimg.com",
+      "outcome": "ConnectFailure",
+      "rank": 399
+    },
+    {
+      "domain": "xcal.tv",
+      "outcome": "ConnectFailure",
+      "rank": 401
+    },
+    {
+      "domain": "wildberries.ru",
+      "outcome": "ServerError",
+      "rank": 402
+    },
+    {
+      "domain": "gandi-ns.fr",
+      "outcome": "ConnectFailure",
+      "rank": 403
+    },
+    {
+      "domain": "rocket-cdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 408
+    },
+    {
+      "domain": "onelink.me",
+      "outcome": "ServerError",
+      "rank": 409
+    },
+    {
+      "domain": "vkuser.net",
+      "outcome": "Timeout",
+      "rank": 413
+    },
+    {
+      "domain": "heytapdl.com",
+      "outcome": "ConnectFailure",
+      "rank": 420
+    },
+    {
+      "domain": "tiktokv.eu",
+      "outcome": "ConnectFailure",
+      "rank": 425
+    },
+    {
+      "domain": "amazonalexa.com",
+      "outcome": "NotPlainText",
+      "rank": 429
+    },
+    {
+      "domain": "tiktokcdn-eu.com",
+      "outcome": "ConnectFailure",
+      "rank": 431
+    },
+    {
+      "domain": "temu.com",
+      "outcome": "NotPlainText",
+      "rank": 432
+    },
+    {
+      "domain": "beian.gov.cn",
+      "outcome": "ConnectFailure",
+      "rank": 433
+    },
+    {
+      "domain": "avcdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 437
+    },
+    {
+      "domain": "pangle.io",
+      "outcome": "ConnectFailure",
+      "rank": 438
+    },
+    {
+      "domain": "dotaplabs.net",
+      "outcome": "ConnectFailure",
+      "rank": 442
+    },
+    {
+      "domain": "byteglb.com",
+      "outcome": "ConnectFailure",
+      "rank": 444
+    },
+    {
+      "domain": "awsglobalaccelerator.com",
+      "outcome": "ConnectFailure",
+      "rank": 445
+    },
+    {
+      "domain": "dropcatch.com",
+      "outcome": "NotPlainText",
+      "rank": 447
+    },
+    {
+      "domain": "wbx2.com",
+      "outcome": "Timeout",
+      "rank": 449
+    },
+    {
+      "domain": "substack.com",
+      "outcome": "ServerError",
+      "rank": 452
+    },
+    {
+      "domain": "skyhigh.cloud",
+      "outcome": "NotPlainText",
+      "rank": 453
+    },
+    {
+      "domain": "bluehost.com",
+      "outcome": "Challenged",
+      "rank": 454
+    },
+    {
+      "domain": "myqcloud.com",
+      "outcome": "Timeout",
+      "rank": 455
+    },
+    {
+      "domain": "enacdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 456
+    },
+    {
+      "domain": "timeweb.ru",
+      "outcome": "NotPlainText",
+      "rank": 457
+    },
+    {
+      "domain": "yahoo.co.jp",
+      "outcome": "ServerError",
+      "rank": 459
+    },
+    {
+      "domain": "tencent-cloud.net",
+      "outcome": "Timeout",
+      "rank": 466
+    },
+    {
+      "domain": "g.page",
+      "outcome": "NotPlainText",
+      "rank": 470
+    },
+    {
+      "domain": "cloudflareinsights.com",
+      "outcome": "NotPlainText",
+      "rank": 472
+    },
+    {
+      "domain": "eye4.cn",
+      "outcome": "ServerError",
+      "rank": 473
+    },
+    {
+      "domain": "gamepass.com",
+      "outcome": "ConnectFailure",
+      "rank": 474
+    },
+    {
+      "domain": "dual-s-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 480
+    },
+    {
+      "domain": "bdydns.com",
+      "outcome": "ConnectFailure",
+      "rank": 485
+    },
+    {
+      "domain": "list-manage.com",
+      "outcome": "Timeout",
+      "rank": 487
+    },
+    {
+      "domain": "ietf.org",
+      "outcome": "Challenged",
+      "rank": 489
+    },
+    {
+      "domain": "sc-gw.com",
+      "outcome": "ConnectFailure",
+      "rank": 491
+    },
+    {
+      "domain": "mcafee.com",
+      "outcome": "Timeout",
+      "rank": 497
+    },
+    {
+      "domain": "scribd.com",
+      "outcome": "ServerError",
+      "rank": 498
+    },
+    {
+      "domain": "impervadns.net",
+      "outcome": "ConnectFailure",
+      "rank": 506
+    },
+    {
+      "domain": "libp2p.direct",
+      "outcome": "ConnectFailure",
+      "rank": 508
+    },
+    {
+      "domain": "stackoverflow.com",
+      "outcome": "ServerError",
+      "rank": 510
+    },
+    {
+      "domain": "mysql.com",
+      "outcome": "ServerError",
+      "rank": 516
+    },
+    {
+      "domain": "gosuslugi.ru",
+      "outcome": "ConnectFailure",
+      "rank": 519
+    },
+    {
+      "domain": "exp-tas.com",
+      "outcome": "ConnectFailure",
+      "rank": 520
+    },
+    {
+      "domain": "ngenix.net",
+      "outcome": "ServerError",
+      "rank": 521
+    },
+    {
+      "domain": "squarespacedns.com",
+      "outcome": "ConnectFailure",
+      "rank": 522
+    },
+    {
+      "domain": "discord.media",
+      "outcome": "ServerError",
+      "rank": 523
+    },
+    {
+      "domain": "ui-dns.com",
+      "outcome": "ConnectFailure",
+      "rank": 524
+    },
+    {
+      "domain": "ipv4only.arpa",
+      "outcome": "Timeout",
+      "rank": 525
+    },
+    {
+      "domain": "adobedtm.com",
+      "outcome": "ConnectFailure",
+      "rank": 528
+    },
+    {
+      "domain": "slideshare.net",
+      "outcome": "ServerError",
+      "rank": 532
+    },
+    {
+      "domain": "fandom.com",
+      "outcome": "Challenged",
+      "rank": 534
+    },
+    {
+      "domain": "noaa.gov",
+      "outcome": "ServerError",
+      "rank": 535
+    },
+    {
+      "domain": "on.aws",
+      "outcome": "ConnectFailure",
+      "rank": 537
+    },
+    {
+      "domain": "mynetname.net",
+      "outcome": "ConnectFailure",
+      "rank": 543
+    },
+    {
+      "domain": "oup.com",
+      "outcome": "ServerError",
+      "rank": 544
+    },
+    {
+      "domain": "adobedc.net",
+      "outcome": "ConnectFailure",
+      "rank": 545
+    },
+    {
+      "domain": "spo-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 547
+    },
+    {
+      "domain": "icloud-content.com",
+      "outcome": "NotPlainText",
+      "rank": 550
+    },
+    {
+      "domain": "whecloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 552
+    },
+    {
+      "domain": "azure-dns.com",
+      "outcome": "ConnectFailure",
+      "rank": 554
+    },
+    {
+      "domain": "vidaahub.com",
+      "outcome": "ConnectFailure",
+      "rank": 557
+    },
+    {
+      "domain": "live.net",
+      "outcome": "ConnectFailure",
+      "rank": 560
+    },
+    {
+      "domain": "oraclecloud.com",
+      "outcome": "ServerError",
+      "rank": 564
+    },
+    {
+      "domain": "myhuaweicloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 567
+    },
+    {
+      "domain": "hicloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 569
+    },
+    {
+      "domain": "nstld.com",
+      "outcome": "ConnectFailure",
+      "rank": 571
+    },
+    {
+      "domain": "qlivecdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 573
+    },
+    {
+      "domain": "yahoodns.net",
+      "outcome": "ConnectFailure",
+      "rank": 576
+    },
+    {
+      "domain": "t-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 578
+    },
+    {
+      "domain": "aboutads.info",
+      "outcome": "NotPlainText",
+      "rank": 579
+    },
+    {
+      "domain": "cookielaw.org",
+      "outcome": "ServerError",
+      "rank": 580
+    },
+    {
+      "domain": "sberbank.ru",
+      "outcome": "ConnectFailure",
+      "rank": 582
+    },
+    {
+      "domain": "my.com",
+      "outcome": "ConnectFailure",
+      "rank": 587
+    },
+    {
+      "domain": "3lift.com",
+      "outcome": "ServerError",
+      "rank": 590
+    },
+    {
+      "domain": "easebar.com",
+      "outcome": "ConnectFailure",
+      "rank": 593
+    },
+    {
+      "domain": "vercel-dns-3.com",
+      "outcome": "ConnectFailure",
+      "rank": 598
+    },
+    {
+      "domain": "bx-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 599
+    },
+    {
+      "domain": "cdn20.com",
+      "outcome": "ConnectFailure",
+      "rank": 601
+    },
+    {
+      "domain": "ieee.org",
+      "outcome": "ServerError",
+      "rank": 602
+    },
+    {
+      "domain": "footprintdns.com",
+      "outcome": "ConnectFailure",
+      "rank": 607
+    },
+    {
+      "domain": "force.com",
+      "outcome": "ServerError",
+      "rank": 609
+    },
+    {
+      "domain": "h264.io",
+      "outcome": "ConnectFailure",
+      "rank": 612
+    },
+    {
+      "domain": "mdpi.com",
+      "outcome": "ServerError",
+      "rank": 613
+    },
+    {
+      "domain": "2gis.com",
+      "outcome": "Timeout",
+      "rank": 615
+    },
+    {
+      "domain": "samsungapps.com",
+      "outcome": "Timeout",
+      "rank": 616
+    },
+    {
+      "domain": "e2ro.com",
+      "outcome": "ConnectFailure",
+      "rank": 620
+    },
+    {
+      "domain": "wswebcdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 621
+    },
+    {
+      "domain": "supertms.com",
+      "outcome": "ConnectFailure",
+      "rank": 626
+    },
+    {
+      "domain": "alicdn.com",
+      "outcome": "Timeout",
+      "rank": 628
+    },
+    {
+      "domain": "accuweather.com",
+      "outcome": "Timeout",
+      "rank": 629
+    },
+    {
+      "domain": "ikea.com",
+      "outcome": "ServerError",
+      "rank": 634
+    },
+    {
+      "domain": "dyndns.org",
+      "outcome": "NotPlainText",
+      "rank": 635
+    },
+    {
+      "domain": "msidentity.com",
+      "outcome": "ConnectFailure",
+      "rank": 640
+    },
+    {
+      "domain": "ioref.io",
+      "outcome": "ConnectFailure",
+      "rank": 642
+    },
+    {
+      "domain": "withgoogle.com",
+      "outcome": "NotPlainText",
+      "rank": 644
+    },
+    {
+      "domain": "loc.gov",
+      "outcome": "Challenged",
+      "rank": 646
+    },
+    {
+      "domain": "bytedns1.com",
+      "outcome": "ConnectFailure",
+      "rank": 647
+    },
+    {
+      "domain": "ups.com",
+      "outcome": "NotPlainText",
+      "rank": 651
+    },
+    {
+      "domain": "bidswitch.net",
+      "outcome": "ConnectFailure",
+      "rank": 654
+    },
+    {
+      "domain": "ovh.net",
+      "outcome": "TransportError",
+      "rank": 656
+    },
+    {
+      "domain": "vercel.app",
+      "outcome": "TooLarge",
+      "rank": 659
+    },
+    {
+      "domain": "yelp.com",
+      "outcome": "ServerError",
+      "rank": 662
+    },
+    {
+      "domain": "service.gov.uk",
+      "outcome": "NotPlainText",
+      "rank": 666
+    },
+    {
+      "domain": "vedsalb.com",
+      "outcome": "ConnectFailure",
+      "rank": 667
+    },
+    {
+      "domain": "telephony.goog",
+      "outcome": "TransportError",
+      "rank": 668
+    },
+    {
+      "domain": "resolver.arpa",
+      "outcome": "ConnectFailure",
+      "rank": 670
+    },
+    {
+      "domain": "xboxlive.com",
+      "outcome": "ConnectFailure",
+      "rank": 671
+    },
+    {
+      "domain": "browser-intake-datadoghq.com",
+      "outcome": "ServerError",
+      "rank": 674
+    },
+    {
+      "domain": "cmediahub.ru",
+      "outcome": "ConnectFailure",
+      "rank": 675
+    },
+    {
+      "domain": "bunnyinfra.net",
+      "outcome": "ConnectFailure",
+      "rank": 676
+    },
+    {
+      "domain": "ks-cdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 677
+    },
+    {
+      "domain": "featureassets.org",
+      "outcome": "ServerError",
+      "rank": 679
+    },
+    {
+      "domain": "share-dns.com",
+      "outcome": "ConnectFailure",
+      "rank": 680
+    },
+    {
+      "domain": "pvp.net",
+      "outcome": "ConnectFailure",
+      "rank": 683
+    },
+    {
+      "domain": "att.com",
+      "outcome": "ServerError",
+      "rank": 684
+    },
+    {
+      "domain": "geobasket.ru",
+      "outcome": "ConnectFailure",
+      "rank": 687
+    },
+    {
+      "domain": "googlezip.net",
+      "outcome": "ConnectFailure",
+      "rank": 690
+    },
+    {
+      "domain": "typekit.net",
+      "outcome": "Timeout",
+      "rank": 696
+    },
+    {
+      "domain": "imgur.com",
+      "outcome": "ServerError",
+      "rank": 697
+    },
+    {
+      "domain": "dotomi.com",
+      "outcome": "NotPlainText",
+      "rank": 699
+    },
+    {
+      "domain": "twimg.com",
+      "outcome": "ConnectFailure",
+      "rank": 701
+    },
+    {
+      "domain": "cdnhwc1.com",
+      "outcome": "ConnectFailure",
+      "rank": 708
+    },
+    {
+      "domain": "samsungacr.com",
+      "outcome": "ConnectFailure",
+      "rank": 711
+    },
+    {
+      "domain": "id5-sync.com",
+      "outcome": "NotPlainText",
+      "rank": 714
+    },
+    {
+      "domain": "ring.com",
+      "outcome": "ServerError",
+      "rank": 716
+    },
+    {
+      "domain": "iso.org",
+      "outcome": "Challenged",
+      "rank": 718
+    },
+    {
+      "domain": "marriott.com",
+      "outcome": "ServerError",
+      "rank": 720
+    },
+    {
+      "domain": "nel.goog",
+      "outcome": "ConnectFailure",
+      "rank": 726
+    },
+    {
+      "domain": "itch.io",
+      "outcome": "Challenged",
+      "rank": 731
+    },
+    {
+      "domain": "bamgrid.com",
+      "outcome": "ConnectFailure",
+      "rank": 732
+    },
+    {
+      "domain": "hostgator.com.br",
+      "outcome": "ServerError",
+      "rank": 736
+    },
+    {
+      "domain": "dbankcloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 737
+    },
+    {
+      "domain": "stripchat.com",
+      "outcome": "ServerError",
+      "rank": 739
+    },
+    {
+      "domain": "mlb.com",
+      "outcome": "ServerError",
+      "rank": 741
+    },
+    {
+      "domain": "githubusercontent.com",
+      "outcome": "ConnectFailure",
+      "rank": 744
+    },
+    {
+      "domain": "1rx.io",
+      "outcome": "ConnectFailure",
+      "rank": 746
+    },
+    {
+      "domain": "bidr.io",
+      "outcome": "ConnectFailure",
+      "rank": 747
+    },
+    {
+      "domain": "imrworldwide.com",
+      "outcome": "ConnectFailure",
+      "rank": 750
+    },
+    {
+      "domain": "nmrodam.com",
+      "outcome": "ConnectFailure",
+      "rank": 751
+    },
+    {
+      "domain": "grammarly.io",
+      "outcome": "ConnectFailure",
+      "rank": 755
+    },
+    {
+      "domain": "safebrowsing.apple",
+      "outcome": "ConnectFailure",
+      "rank": 757
+    },
+    {
+      "domain": "lijit.com",
+      "outcome": "ServerError",
+      "rank": 759
+    },
+    {
+      "domain": "curseforge.com",
+      "outcome": "Challenged",
+      "rank": 762
+    },
+    {
+      "domain": "steamstatic.com",
+      "outcome": "ConnectFailure",
+      "rank": 763
+    },
+    {
+      "domain": "criteo.net",
+      "outcome": "ConnectFailure",
+      "rank": 767
+    },
+    {
+      "domain": "usgovcloudapi.net",
+      "outcome": "ConnectFailure",
+      "rank": 769
+    },
+    {
+      "domain": "herokudns.com",
+      "outcome": "ConnectFailure",
+      "rank": 770
+    },
+    {
+      "domain": "bestbuy.com",
+      "outcome": "Timeout",
+      "rank": 773
+    },
+    {
+      "domain": "akamaitech.net",
+      "outcome": "ConnectFailure",
+      "rank": 774
+    },
+    {
+      "domain": "buydomains.com",
+      "outcome": "Challenged",
+      "rank": 775
+    },
+    {
+      "domain": "ozone.ru",
+      "outcome": "Timeout",
+      "rank": 781
+    },
+    {
+      "domain": "ovscdns.com",
+      "outcome": "ConnectFailure",
+      "rank": 782
+    },
+    {
+      "domain": "wcdnga.com",
+      "outcome": "ConnectFailure",
+      "rank": 785
+    },
+    {
+      "domain": "allaboutcookies.org",
+      "outcome": "ServerError",
+      "rank": 786
+    },
+    {
+      "domain": "shopeemobile.com",
+      "outcome": "Timeout",
+      "rank": 788
+    },
+    {
+      "domain": "mckinsey.com",
+      "outcome": "Timeout",
+      "rank": 790
+    },
+    {
+      "domain": "sc-cdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 794
+    },
+    {
+      "domain": "liadm.com",
+      "outcome": "ConnectFailure",
+      "rank": 797
+    },
+    {
+      "domain": "rt.ru",
+      "outcome": "ServerError",
+      "rank": 799
+    },
+    {
+      "domain": "adjust.com",
+      "outcome": "ServerError",
+      "rank": 811
+    },
+    {
+      "domain": "33across.com",
+      "outcome": "Challenged",
+      "rank": 815
+    },
+    {
+      "domain": "cloudsink.net",
+      "outcome": "ConnectFailure",
+      "rank": 816
+    },
+    {
+      "domain": "keenetic.io",
+      "outcome": "ConnectFailure",
+      "rank": 817
+    },
+    {
+      "domain": "teads.tv",
+      "outcome": "NotPlainText",
+      "rank": 819
+    },
+    {
+      "domain": "wb.ru",
+      "outcome": "ServerError",
+      "rank": 820
+    },
+    {
+      "domain": "a-mo.net",
+      "outcome": "ServerError",
+      "rank": 823
+    },
+    {
+      "domain": "unpkg.com",
+      "outcome": "NotPlainText",
+      "rank": 824
+    },
+    {
+      "domain": "goskope.com",
+      "outcome": "ConnectFailure",
+      "rank": 825
+    },
+    {
+      "domain": "usps.com",
+      "outcome": "Timeout",
+      "rank": 827
+    },
+    {
+      "domain": "grab.co",
+      "outcome": "ConnectFailure",
+      "rank": 831
+    },
+    {
+      "domain": "orderbox-dns.com",
+      "outcome": "ConnectFailure",
+      "rank": 836
+    },
+    {
+      "domain": "turn.com",
+      "outcome": "ConnectFailure",
+      "rank": 837
+    },
+    {
+      "domain": "odoo.com",
+      "outcome": "Timeout",
+      "rank": 839
+    },
+    {
+      "domain": "lefigaro.fr",
+      "outcome": "ServerError",
+      "rank": 840
+    },
+    {
+      "domain": "me.com",
+      "outcome": "NotPlainText",
+      "rank": 842
+    },
+    {
+      "domain": "a-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 844
+    },
+    {
+      "domain": "lgtvcommon.com",
+      "outcome": "ConnectFailure",
+      "rank": 845
+    },
+    {
+      "domain": "opera-api2.com",
+      "outcome": "Timeout",
+      "rank": 846
+    },
+    {
+      "domain": "usda.gov",
+      "outcome": "ServerError",
+      "rank": 847
+    },
+    {
+      "domain": "onlyfans.com",
+      "outcome": "ServerError",
+      "rank": 851
+    },
+    {
+      "domain": "discogs.com",
+      "outcome": "Challenged",
+      "rank": 854
+    },
+    {
+      "domain": "livejournal.com",
+      "outcome": "Timeout",
+      "rank": 855
+    },
+    {
+      "domain": "onetag-sys.com",
+      "outcome": "NotPlainText",
+      "rank": 856
+    },
+    {
+      "domain": "msftauth.net",
+      "outcome": "ConnectFailure",
+      "rank": 857
+    },
+    {
+      "domain": "mercadolivre.com.br",
+      "outcome": "ServerError",
+      "rank": 859
+    },
+    {
+      "domain": "nintendo.net",
+      "outcome": "ConnectFailure",
+      "rank": 860
+    },
+    {
+      "domain": "yellowblue.io",
+      "outcome": "ConnectFailure",
+      "rank": 870
+    },
+    {
+      "domain": "appspot.com",
+      "outcome": "TooLarge",
+      "rank": 881
+    },
+    {
+      "domain": "life360.com",
+      "outcome": "ServerError",
+      "rank": 885
+    },
+    {
+      "domain": "att.net",
+      "outcome": "ServerError",
+      "rank": 886
+    },
+    {
+      "domain": "azure-devices.net",
+      "outcome": "ConnectFailure",
+      "rank": 893
+    },
+    {
+      "domain": "mayoclinic.org",
+      "outcome": "ServerError",
+      "rank": 894
+    },
+    {
+      "domain": "ssl-images-amazon.com",
+      "outcome": "ConnectFailure",
+      "rank": 895
+    },
+    {
+      "domain": "360safe.com",
+      "outcome": "Timeout",
+      "rank": 897
+    },
+    {
+      "domain": "pornhub.com",
+      "outcome": "TooLarge",
+      "rank": 900
+    },
+    {
+      "domain": "immedia-semi.com",
+      "outcome": "ConnectFailure",
+      "rank": 902
+    },
+    {
+      "domain": "dnse0.com",
+      "outcome": "ConnectFailure",
+      "rank": 904
+    },
+    {
+      "domain": "dv.tech",
+      "outcome": "ConnectFailure",
+      "rank": 908
+    },
+    {
+      "domain": "internetwarriors.net",
+      "outcome": "NotPlainText",
+      "rank": 910
+    },
+    {
+      "domain": "dbankcloud.ru",
+      "outcome": "ConnectFailure",
+      "rank": 911
+    },
+    {
+      "domain": "coupang.com",
+      "outcome": "NotPlainText",
+      "rank": 913
+    },
+    {
+      "domain": "queniuaa.com",
+      "outcome": "ConnectFailure",
+      "rank": 914
+    },
+    {
+      "domain": "zpath.net",
+      "outcome": "ConnectFailure",
+      "rank": 915
+    },
+    {
+      "domain": "t-s1-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 916
+    },
+    {
+      "domain": "eu-1-id5-sync.com",
+      "outcome": "ServerError",
+      "rank": 917
+    },
+    {
+      "domain": "hilton.com",
+      "outcome": "ServerError",
+      "rank": 919
+    },
+    {
+      "domain": "bytefcdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 921
+    },
+    {
+      "domain": "samsungiotcloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 926
+    },
+    {
+      "domain": "playrix.com",
+      "outcome": "NotPlainText",
+      "rank": 929
+    },
+    {
+      "domain": "volcgslb.com",
+      "outcome": "ConnectFailure",
+      "rank": 932
+    },
+    {
+      "domain": "flashtalking.com",
+      "outcome": "ConnectFailure",
+      "rank": 934
+    },
+    {
+      "domain": "dnse2.com",
+      "outcome": "ConnectFailure",
+      "rank": 935
+    },
+    {
+      "domain": "genius.com",
+      "outcome": "Challenged",
+      "rank": 941
+    },
+    {
+      "domain": "epam.com",
+      "outcome": "ServerError",
+      "rank": 942
+    },
+    {
+      "domain": "go-mpulse.net",
+      "outcome": "ConnectFailure",
+      "rank": 944
+    },
+    {
+      "domain": "zenecn.net",
+      "outcome": "ConnectFailure",
+      "rank": 945
+    },
+    {
+      "domain": "youku.com",
+      "outcome": "NotPlainText",
+      "rank": 946
+    },
+    {
+      "domain": "lowes.com",
+      "outcome": "ServerError",
+      "rank": 947
+    },
+    {
+      "domain": "state.gov",
+      "outcome": "ServerError",
+      "rank": 948
+    },
+    {
+      "domain": "cdn-vk.ru",
+      "outcome": "ConnectFailure",
+      "rank": 952
+    },
+    {
+      "domain": "kunluncan.com",
+      "outcome": "Timeout",
+      "rank": 953
+    },
+    {
+      "domain": "mercadolibre.com.ar",
+      "outcome": "ServerError",
+      "rank": 956
+    },
+    {
+      "domain": "chaturbate.com",
+      "outcome": "Challenged",
+      "rank": 958
+    },
+    {
+      "domain": "fidelity.com",
+      "outcome": "ServerError",
+      "rank": 963
+    },
+    {
+      "domain": "hm.com",
+      "outcome": "Timeout",
+      "rank": 965
+    },
+    {
+      "domain": "ancestry.com",
+      "outcome": "ServerError",
+      "rank": 972
+    },
+    {
+      "domain": "4dex.io",
+      "outcome": "ConnectFailure",
+      "rank": 973
+    },
+    {
+      "domain": "aiv-delivery.net",
+      "outcome": "ConnectFailure",
+      "rank": 975
+    },
+    {
+      "domain": "nexusmods.com",
+      "outcome": "Challenged",
+      "rank": 976
+    },
+    {
+      "domain": "presage.io",
+      "outcome": "ConnectFailure",
+      "rank": 983
+    },
+    {
+      "domain": "ubi.com",
+      "outcome": "TooLarge",
+      "rank": 984
+    },
+    {
+      "domain": "smaato.net",
+      "outcome": "ConnectFailure",
+      "rank": 985
+    },
+    {
+      "domain": "ln-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 986
+    },
+    {
+      "domain": "ddns.net",
+      "outcome": "Timeout",
+      "rank": 989
+    },
+    {
+      "domain": "sofascore.com",
+      "outcome": "ServerError",
+      "rank": 992
+    },
+    {
+      "domain": "opera-api.com",
+      "outcome": "Timeout",
+      "rank": 995
+    },
+    {
+      "domain": "nexthink.cloud",
+      "outcome": "ConnectFailure",
+      "rank": 999
+    },
+    {
+      "domain": "transsion-os.com",
+      "outcome": "ConnectFailure",
+      "rank": 1000
+    },
+    {
+      "domain": "weforum.org",
+      "outcome": "ServerError",
+      "rank": 1003
+    },
+    {
+      "domain": "cdnhwc2.com",
+      "outcome": "ConnectFailure",
+      "rank": 1006
+    },
+    {
+      "domain": "bytefcdn-ttpus.com",
+      "outcome": "ConnectFailure",
+      "rank": 1007
+    },
+    {
+      "domain": "nextlgsdp.com",
+      "outcome": "ConnectFailure",
+      "rank": 1010
+    },
+    {
+      "domain": "gtm-a2b2.com",
+      "outcome": "Timeout",
+      "rank": 1014
+    },
+    {
+      "domain": "costco.com",
+      "outcome": "Timeout",
+      "rank": 1015
+    },
+    {
+      "domain": "tplinknbu.com",
+      "outcome": "ConnectFailure",
+      "rank": 1016
+    },
+    {
+      "domain": "xhcdn.com",
+      "outcome": "ServerError",
+      "rank": 1017
+    },
+    {
+      "domain": "flipkart.com",
+      "outcome": "ServerError",
+      "rank": 1018
+    },
+    {
+      "domain": "ox.ac.uk",
+      "outcome": "Challenged",
+      "rank": 1019
+    },
+    {
+      "domain": "wscvip.cn",
+      "outcome": "ConnectFailure",
+      "rank": 1021
+    },
+    {
+      "domain": "tiktokpangle.us",
+      "outcome": "ConnectFailure",
+      "rank": 1029
+    },
+    {
+      "domain": "kwcdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 1036
+    },
+    {
+      "domain": "incapdns.net",
+      "outcome": "ConnectFailure",
+      "rank": 1040
+    },
+    {
+      "domain": "statuspage.io",
+      "outcome": "NotPlainText",
+      "rank": 1046
+    },
+    {
+      "domain": "vk-analytics.ru",
+      "outcome": "ConnectFailure",
+      "rank": 1047
+    },
+    {
+      "domain": "olx.com.br",
+      "outcome": "ServerError",
+      "rank": 1048
+    },
+    {
+      "domain": "kohls.com",
+      "outcome": "ServerError",
+      "rank": 1050
+    },
+    {
+      "domain": "douyinvod.com",
+      "outcome": "ConnectFailure",
+      "rank": 1061
+    },
+    {
+      "domain": "samsungcloudsolution.net",
+      "outcome": "ConnectFailure",
+      "rank": 1064
+    },
+    {
+      "domain": "tubi.io",
+      "outcome": "ConnectFailure",
+      "rank": 1072
+    },
+    {
+      "domain": "tiktokrow-cdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 1073
+    },
+    {
+      "domain": "adblockplus.org",
+      "outcome": "NotPlainText",
+      "rank": 1074
+    },
+    {
+      "domain": "i18n-pglstatp.com",
+      "outcome": "ConnectFailure",
+      "rank": 1079
+    },
+    {
+      "domain": "mps.gov.cn",
+      "outcome": "ConnectFailure",
+      "rank": 1080
+    },
+    {
+      "domain": "webhostbox.net",
+      "outcome": "ConnectFailure",
+      "rank": 1085
+    },
+    {
+      "domain": "ovscdns.net",
+      "outcome": "ConnectFailure",
+      "rank": 1095
+    },
+    {
+      "domain": "mi-img.com",
+      "outcome": "ConnectFailure",
+      "rank": 1097
+    },
+    {
+      "domain": "plex.direct",
+      "outcome": "ConnectFailure",
+      "rank": 1098
+    },
+    {
+      "domain": "wbbasket.ru",
+      "outcome": "ConnectFailure",
+      "rank": 1107
+    },
+    {
+      "domain": "t-mobile.com",
+      "outcome": "ServerError",
+      "rank": 1109
+    },
+    {
+      "domain": "company-target.com",
+      "outcome": "ConnectFailure",
+      "rank": 1110
+    },
+    {
+      "domain": "tesla.com",
+      "outcome": "ServerError",
+      "rank": 1113
+    },
+    {
+      "domain": "contentsquare.net",
+      "outcome": "ConnectFailure",
+      "rank": 1114
+    },
+    {
+      "domain": "kickstarter.com",
+      "outcome": "Challenged",
+      "rank": 1117
+    },
+    {
+      "domain": "mythad.com",
+      "outcome": "ConnectFailure",
+      "rank": 1123
+    },
+    {
+      "domain": "msauth.net",
+      "outcome": "ConnectFailure",
+      "rank": 1124
+    },
+    {
+      "domain": "hltv.org",
+      "outcome": "Challenged",
+      "rank": 1132
+    },
+    {
+      "domain": "zijieapi.com",
+      "outcome": "ConnectFailure",
+      "rank": 1133
+    },
+    {
+      "domain": "amd.com",
+      "outcome": "Timeout",
+      "rank": 1138
+    },
+    {
+      "domain": "nsone.net",
+      "outcome": "NotPlainText",
+      "rank": 1141
+    },
+    {
+      "domain": "azure.net",
+      "outcome": "NotPlainText",
+      "rank": 1143
+    },
+    {
+      "domain": "b-msedge.net",
+      "outcome": "ConnectFailure",
+      "rank": 1144
+    },
+    {
+      "domain": "samsungcloud.tv",
+      "outcome": "ConnectFailure",
+      "rank": 1145
+    },
+    {
+      "domain": "mercadolibre.com.mx",
+      "outcome": "ServerError",
+      "rank": 1148
+    },
+    {
+      "domain": "byteoversea.com",
+      "outcome": "ConnectFailure",
+      "rank": 1154
+    },
+    {
+      "domain": "dnse1.com",
+      "outcome": "ConnectFailure",
+      "rank": 1155
+    },
+    {
+      "domain": "adguard-vpn.online",
+      "outcome": "ConnectFailure",
+      "rank": 1164
+    },
+    {
+      "domain": "cricinfo.com",
+      "outcome": "ServerError",
+      "rank": 1169
+    },
+    {
+      "domain": "susercontent.com",
+      "outcome": "ConnectFailure",
+      "rank": 1172
+    },
+    {
+      "domain": "rings.solutions",
+      "outcome": "ConnectFailure",
+      "rank": 1175
+    },
+    {
+      "domain": "gismeteo.ru",
+      "outcome": "TransportError",
+      "rank": 1176
+    },
+    {
+      "domain": "cbc.ca",
+      "outcome": "Timeout",
+      "rank": 1179
+    },
+    {
+      "domain": "service-now.com",
+      "outcome": "ServerError",
+      "rank": 1188
+    },
+    {
+      "domain": "elconfidencial.com",
+      "outcome": "NotPlainText",
+      "rank": 1190
+    },
+    {
+      "domain": "sahibinden.com",
+      "outcome": "ServerError",
+      "rank": 1195
+    },
+    {
+      "domain": "singtelchina.cn",
+      "outcome": "ConnectFailure",
+      "rank": 1196
+    },
+    {
+      "domain": "mioffice.cn",
+      "outcome": "ConnectFailure",
+      "rank": 1198
+    },
+    {
+      "domain": "spankbang.com",
+      "outcome": "Challenged",
+      "rank": 1202
+    },
+    {
+      "domain": "janitorai.com",
+      "outcome": "ServerError",
+      "rank": 1209
+    },
+    {
+      "domain": "sectigo.com",
+      "outcome": "NotPlainText",
+      "rank": 1210
+    },
+    {
+      "domain": "fb.me",
+      "outcome": "NotPlainText",
+      "rank": 1213
+    },
+    {
+      "domain": "lequipe.fr",
+      "outcome": "ServerError",
+      "rank": 1216
+    },
+    {
+      "domain": "phncdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 1223
+    },
+    {
+      "domain": "acesso.gov.br",
+      "outcome": "NotPlainText",
+      "rank": 1224
+    },
+    {
+      "domain": "meesho.com",
+      "outcome": "ServerError",
+      "rank": 1228
+    },
+    {
+      "domain": "myntra.com",
+      "outcome": "NotPlainText",
+      "rank": 1230
+    },
+    {
+      "domain": "tradplusad.com",
+      "outcome": "NotPlainText",
+      "rank": 1237
+    },
+    {
+      "domain": "tinkoff.ru",
+      "outcome": "ConnectFailure",
+      "rank": 1239
+    },
+    {
+      "domain": "wswebpic.com",
+      "outcome": "ConnectFailure",
+      "rank": 1242
+    },
+    {
+      "domain": "psychologytoday.com",
+      "outcome": "ServerError",
+      "rank": 1244
+    },
+    {
+      "domain": "alikunlun.com",
+      "outcome": "Timeout",
+      "rank": 1247
+    },
+    {
+      "domain": "adaether.com",
+      "outcome": "ConnectFailure",
+      "rank": 1250
+    },
+    {
+      "domain": "tendawifi.com",
+      "outcome": "ConnectFailure",
+      "rank": 1255
+    },
+    {
+      "domain": "boyfriendtv.com",
+      "outcome": "Challenged",
+      "rank": 1260
+    },
+    {
+      "domain": "argos.co.uk",
+      "outcome": "ServerError",
+      "rank": 1261
+    },
+    {
+      "domain": "jusbrasil.com.br",
+      "outcome": "ServerError",
+      "rank": 1262
+    },
+    {
+      "domain": "livedoor.com",
+      "outcome": "ServerError",
+      "rank": 1265
+    },
+    {
+      "domain": "ap4r.com",
+      "outcome": "ConnectFailure",
+      "rank": 1266
+    },
+    {
+      "domain": "wshifen.com",
+      "outcome": "ConnectFailure",
+      "rank": 1267
+    },
+    {
+      "domain": "emag.ro",
+      "outcome": "ServerError",
+      "rank": 1273
+    },
+    {
+      "domain": "bbb.org",
+      "outcome": "Challenged",
+      "rank": 1276
+    },
+    {
+      "domain": "youporn.com",
+      "outcome": "NotPlainText",
+      "rank": 1277
+    },
+    {
+      "domain": "makemytrip.com",
+      "outcome": "Timeout",
+      "rank": 1280
+    },
+    {
+      "domain": "naukri.com",
+      "outcome": "Timeout",
+      "rank": 1282
+    },
+    {
+      "domain": "id.me",
+      "outcome": "Challenged",
+      "rank": 1286
+    },
+    {
+      "domain": "privacy-mgmt.com",
+      "outcome": "ConnectFailure",
+      "rank": 1290
+    },
+    {
+      "domain": "actu.fr",
+      "outcome": "ServerError",
+      "rank": 1299
+    },
+    {
+      "domain": "oneme.ru",
+      "outcome": "ConnectFailure",
+      "rank": 1301
+    },
+    {
+      "domain": "ctdns.cn",
+      "outcome": "ConnectFailure",
+      "rank": 1303
+    },
+    {
+      "domain": "justdial.com",
+      "outcome": "ServerError",
+      "rank": 1304
+    },
+    {
+      "domain": "arca.live",
+      "outcome": "Challenged",
+      "rank": 1307
+    },
+    {
+      "domain": "datadome.co",
+      "outcome": "ServerError",
+      "rank": 1308
+    },
+    {
+      "domain": "xham.live",
+      "outcome": "ServerError",
+      "rank": 1309
+    },
+    {
+      "domain": "xvideos-cdn.com",
+      "outcome": "ConnectFailure",
+      "rank": 1310
+    },
+    {
+      "domain": "websitewelcome.com",
+      "outcome": "ConnectFailure",
+      "rank": 1313
+    },
+    {
+      "domain": "grow.google",
+      "outcome": "NotPlainText",
+      "rank": 1315
+    },
+    {
+      "domain": "bmj.com",
+      "outcome": "Challenged",
+      "rank": 1319
+    },
+    {
+      "domain": "dyingbirds.com",
+      "outcome": "ConnectFailure",
+      "rank": 1321
+    },
+    {
+      "domain": "mybluehost.me",
+      "outcome": "ConnectFailure",
+      "rank": 1328
+    },
+    {
+      "domain": "akahost.net",
+      "outcome": "ConnectFailure",
+      "rank": 1331
+    },
+    {
+      "domain": "gst.gov.in",
+      "outcome": "ServerError",
+      "rank": 1332
+    },
+    {
+      "domain": "bihar.gov.in",
+      "outcome": "ConnectFailure",
+      "rank": 1338
+    },
+    {
+      "domain": "ruliweb.com",
+      "outcome": "Timeout",
+      "rank": 1343
+    },
+    {
+      "domain": "hollywoodbets.net",
+      "outcome": "Challenged",
+      "rank": 1344
+    },
+    {
+      "domain": "subito.it",
+      "outcome": "ServerError",
+      "rank": 1348
+    },
+    {
+      "domain": "e621.net",
+      "outcome": "NotPlainText",
+      "rank": 1352
+    },
+    {
+      "domain": "sport.es",
+      "outcome": "ConnectFailure",
+      "rank": 1358
+    },
+    {
+      "domain": "riotcdn.net",
+      "outcome": "ConnectFailure",
+      "rank": 1359
+    },
+    {
+      "domain": "navitime.co.jp",
+      "outcome": "ServerError",
+      "rank": 1361
+    },
+    {
+      "domain": "karnataka.gov.in",
+      "outcome": "Timeout",
+      "rank": 1362
+    },
+    {
+      "domain": "redtube.com",
+      "outcome": "NotPlainText",
+      "rank": 1364
+    },
+    {
+      "domain": "businesswire.com",
+      "outcome": "Timeout",
+      "rank": 1366
+    },
+    {
+      "domain": "comix.to",
+      "outcome": "ServerError",
+      "rank": 1370
+    },
+    {
+      "domain": "pornhub.org",
+      "outcome": "TooLarge",
+      "rank": 1371
+    },
+    {
+      "domain": "bookmyshow.com",
+      "outcome": "ServerError",
+      "rank": 1382
+    },
+    {
+      "domain": "platorelay.com",
+      "outcome": "ConnectFailure",
+      "rank": 1383
+    },
+    {
+      "domain": "incometax.gov.in",
+      "outcome": "ConnectFailure",
+      "rank": 1387
+    },
+    {
+      "domain": "9ffyu1g9c.com",
+      "outcome": "ConnectFailure",
+      "rank": 1393
+    },
+    {
+      "domain": "mangabuff.ru",
+      "outcome": "ServerError",
+      "rank": 1394
+    },
+    {
+      "domain": "vivox.com",
+      "outcome": "NotPlainText",
+      "rank": 1396
+    },
+    {
+      "domain": "zozo.jp",
+      "outcome": "ServerError",
+      "rank": 1399
+    },
+    {
+      "domain": "bing.net",
+      "outcome": "ConnectFailure",
+      "rank": 1411
+    },
+    {
+      "domain": "hik-connect.com",
+      "outcome": "ConnectFailure",
+      "rank": 1420
+    },
+    {
+      "domain": "evo-games.com",
+      "outcome": "ConnectFailure",
+      "rank": 1430
+    },
+    {
+      "domain": "playfabapi.com",
+      "outcome": "ConnectFailure",
+      "rank": 1433
+    },
+    {
+      "domain": "cardmarket.com",
+      "outcome": "ServerError",
+      "rank": 1439
+    },
+    {
+      "domain": "fapello.com",
+      "outcome": "ServerError",
+      "rank": 1442
+    },
+    {
+      "domain": "imagefap.com",
+      "outcome": "NotPlainText",
+      "rank": 1445
+    },
+    {
+      "domain": "jable.tv",
+      "outcome": "ServerError",
+      "rank": 1450
+    },
+    {
+      "domain": "kooora.com",
+      "outcome": "NotPlainText",
+      "rank": 1459
+    },
+    {
+      "domain": "epfindia.gov.in",
+      "outcome": "Timeout",
+      "rank": 1464
+    },
+    {
+      "domain": "akamaitechnologies.com",
+      "outcome": "ConnectFailure",
+      "rank": 1477
+    },
+    {
+      "domain": "eenadu.net",
+      "outcome": "ServerError",
+      "rank": 1478
+    },
+    {
+      "domain": "sxyprn.com",
+      "outcome": "Challenged",
+      "rank": 1481
+    },
+    {
+      "domain": "jamfcloud.com",
+      "outcome": "ConnectFailure",
+      "rank": 1491
+    },
+    {
+      "domain": "myinstants.com",
+      "outcome": "ServerError",
+      "rank": 1495
+    },
+    {
+      "domain": "spankbang.party",
+      "outcome": "Challenged",
+      "rank": 1501
+    },
+    {
+      "domain": "tremorhub.com",
+      "outcome": "ServerError",
+      "rank": 1503
+    },
+    {
+      "domain": "wb.gov.in",
+      "outcome": "Timeout",
+      "rank": 1506
+    },
+    {
+      "domain": "umn.edu",
+      "outcome": "ConnectFailure",
+      "rank": 1515
+    },
+    {
+      "domain": "iau.ir",
+      "outcome": "ServerError",
+      "rank": 1519
+    },
+    {
+      "domain": "t-bank-app.ru",
+      "outcome": "ConnectFailure",
+      "rank": 1522
+    },
+    {
+      "domain": "_wildcard_.ph",
+      "outcome": "Timeout",
+      "rank": 1523
+    },
+    {
+      "domain": "up.gov.in",
+      "outcome": "Timeout",
+      "rank": 1524
+    },
+    {
+      "domain": "cityheaven.net",
+      "outcome": "ServerError",
+      "rank": 1526
+    },
+    {
+      "domain": "absher.sa",
+      "outcome": "NotPlainText",
+      "rank": 1532
+    },
+    {
+      "domain": "casinoplus.com.ph",
+      "outcome": "ServerError",
+      "rank": 1534
+    },
+    {
+      "domain": "twpornstars.com",
+      "outcome": "Challenged",
+      "rank": 1539
+    },
+    {
+      "domain": "listcrawler.eu",
+      "outcome": "Challenged",
+      "rank": 1540
+    },
+    {
+      "domain": "sinoptik.ua",
+      "outcome": "Timeout",
+      "rank": 1552
+    },
+    {
+      "domain": "theqoo.net",
+      "outcome": "Challenged",
+      "rank": 1558
+    },
+    {
+      "domain": "myreadingmanga.info",
+      "outcome": "Challenged",
+      "rank": 1560
+    },
+    {
+      "domain": "osym.gov.tr",
+      "outcome": "Timeout",
+      "rank": 1564
+    },
+    {
+      "domain": "serviporno.com",
+      "outcome": "ServerError",
+      "rank": 1566
+    },
+    {
+      "domain": "porno666.fo",
+      "outcome": "ConnectFailure",
+      "rank": 1570
+    },
+    {
+      "domain": "ladies.de",
+      "outcome": "ServerError",
+      "rank": 1572
+    },
+    {
+      "domain": "syosetu.org",
+      "outcome": "Challenged",
+      "rank": 1573
+    },
+    {
+      "domain": "bingoplus.com",
+      "outcome": "ServerError",
+      "rank": 1579
+    },
+    {
+      "domain": "skokka.com",
+      "outcome": "Challenged",
+      "rank": 1581
+    },
+    {
+      "domain": "jav.guru",
+      "outcome": "ServerError",
+      "rank": 1582
+    },
+    {
+      "domain": "pussyboy.net",
+      "outcome": "ServerError",
+      "rank": 1583
+    },
+    {
+      "domain": "search-start.org",
+      "outcome": "ConnectFailure",
+      "rank": 1595
+    },
+    {
+      "domain": "supjav.com",
+      "outcome": "Challenged",
+      "rank": 1598
+    },
+    {
+      "domain": "lk21official.cc",
+      "outcome": "ConnectFailure",
+      "rank": 1600
+    }
+  ],
+  "qualification": {
+    "candidates_examined": 1600,
+    "excluded": 556,
+    "excluded_by_outcome": {
+      "Challenged": 35,
+      "ConnectFailure": 283,
+      "NotPlainText": 62,
+      "ServerError": 111,
+      "Timeout": 52,
+      "TooLarge": 9,
+      "TransportError": 4
+    },
+    "known_bias": "sites behind anti-automation challenges are excluded and are plausibly more AI-hostile than average, so the panel likely under-represents AI-hostile sites",
+    "qualified": 1000,
+    "rule": "first N domains of the Tranco list returning a conclusive robots.txt observation during the sweep"
+  },
+  "ranks": {
+    "163.com": 418,
+    "18comic.vip": 1514,
+    "1mg.com": 1504,
+    "24h.com.vn": 1425,
+    "360.cn": 691,
+    "360yield.com": 562,
+    "3bmeteo.com": 1427,
+    "aajtak.in": 1533,
+    "abc.net.au": 1269,
+    "abovedomains.com": 858,
+    "academia.edu": 832,
+    "achmea.nl": 104,
+    "ack.de": 278,
+    "actify.nl": 106,
+    "action.com": 1409,
+    "ad-tech.ru": 796,
+    "ad.nl": 1187,
+    "addtoany.com": 488,
+    "adform.net": 807,
+    "adfuse-ssp.com": 1222,
+    "adgrx.com": 866,
+    "admanmedia.com": 1397,
+    "admin.ch": 1258,
+    "adnxs.com": 261,
+    "adobe.com": 69,
+    "adobe.io": 175,
+    "adobe.net": 463,
+    "adriver.ru": 495,
+    "adtrafficquality.google": 161,
+    "afternic.com": 135,
+    "aftonbladet.se": 1174,
+    "agkn.com": 743,
+    "agoda.com": 852,
+    "agora.io": 903,
+    "ahacdn.me": 1479,
+    "airbnb.com": 780,
+    "alibaba.com": 313,
+    "aliexpress.com": 415,
+    "alipay.com": 1127,
+    "alipaydns.com": 703,
+    "aliyun.com": 331,
+    "aliyuncs.com": 157,
+    "aljazeera.com": 1416,
+    "allegro.pl": 658,
+    "alphonso.tv": 1069,
+    "amagi.tv": 912,
+    "amap.com": 1252,
+    "amazon.ca": 649,
+    "amazon.co.jp": 494,
+    "amazon.co.uk": 332,
+    "amazon.co.za": 527,
+    "amazon.com": 24,
+    "amazon.com.au": 850,
+    "amazon.com.br": 863,
+    "amazon.com.mx": 1045,
+    "amazon.de": 393,
+    "amazon.es": 721,
+    "amazon.fr": 624,
+    "amazon.in": 695,
+    "amazon.it": 727,
+    "amazonaws.com": 7,
+    "amazontrust.com": 390,
+    "amazonvideo.com": 123,
+    "ameba.jp": 1078,
+    "ameblo.jp": 805,
+    "amemv.com": 1034,
+    "amon.tech": 279,
+    "amplitude.com": 295,
+    "ampproject.org": 514,
+    "amzn.to": 518,
+    "android.com": 256,
+    "anthropic.com": 611,
+    "anydesk.com": 678,
+    "aol.com": 471,
+    "apa.org": 1137,
+    "apache.org": 128,
+    "aparat.com": 1101,
+    "apnews.com": 800,
+    "app-ads-services.com": 997,
+    "app-analytics-services-att.com": 1063,
+    "app-analytics-services.com": 119,
+    "app-measurement.com": 122,
+    "appcenter.ms": 787,
+    "apple.com": 10,
+    "applovin.com": 163,
+    "arcgis.com": 923,
+    "archive.org": 152,
+    "archiveofourown.org": 1023,
+    "arxiv.org": 479,
+    "as.com": 1077,
+    "asurascans.com": 1354,
+    "asus.com": 730,
+    "aternos.org": 1336,
+    "atlassian.com": 625,
+    "atlassian.net": 496,
+    "attn.tv": 1463,
+    "auth0.com": 1197,
+    "auvik.com": 853,
+    "avast.com": 312,
+    "avito.ru": 600,
+    "avsxappcaptiveportal.com": 468,
+    "ay267.com": 1220,
+    "aznude.com": 1353,
+    "azureedge.net": 234,
+    "azurefd.net": 150,
+    "baidu.com": 86,
+    "bandcamp.com": 749,
+    "bankofamerica.com": 896,
+    "base.org": 182,
+    "bbc.co.uk": 235,
+    "bbc.com": 214,
+    "bblaa.com": 1476,
+    "beboo.ru": 1287,
+    "beget.ru": 1346,
+    "behance.net": 512,
+    "berkeley.edu": 604,
+    "betway.co.za": 1424,
+    "beyondwickedmapping.org": 993,
+    "bfmtv.com": 1081,
+    "biblegateway.com": 892,
+    "bidmachine.io": 1041,
+    "bild.de": 765,
+    "bilibili.com": 343,
+    "bilibili.tv": 1300,
+    "binance.com": 1009,
+    "bing.com": 31,
+    "biomedcentral.com": 1291,
+    "bit.ly": 117,
+    "bitdefender.net": 605,
+    "bitrix24.ru": 575,
+    "blackberry.com": 835,
+    "blackberry.net": 1245,
+    "blackhub.team": 838,
+    "blic.rs": 1426,
+    "blogger.com": 556,
+    "blogspot.com": 98,
+    "bloomberg.com": 375,
+    "bol.com": 998,
+    "booking.com": 264,
+    "bookmark.xxx": 1462,
+    "box.com": 772,
+    "branch.io": 639,
+    "brave.com": 424,
+    "braze.com": 596,
+    "britannica.com": 663,
+    "bsky.app": 400,
+    "bt.dk": 1521,
+    "btloader.com": 982,
+    "bugsnag.com": 756,
+    "bund.de": 1058,
+    "businessinsider.com": 461,
+    "buzzfeed.com": 1527,
+    "ca.gov": 595,
+    "caixa.gov.br": 981,
+    "calculator.net": 1333,
+    "calendly.com": 373,
+    "cam.ac.uk": 1417,
+    "cambridge.org": 685,
+    "canada.ca": 1285,
+    "canva.com": 243,
+    "capcut.com": 533,
+    "cardgames.io": 1380,
+    "carsensor.net": 1434,
+    "cbsnews.com": 706,
+    "cdc.gov": 360,
+    "cdiscount.com": 1296,
+    "cdnvideo.ru": 617,
+    "change.org": 969,
+    "character.ai": 957,
+    "charter.net": 1337,
+    "chatgpt.com": 75,
+    "checkpoint.com": 352,
+    "chess.com": 872,
+    "chinamobile.com": 436,
+    "cisco.com": 253,
+    "clarin.com": 1159,
+    "clarity.ms": 311,
+    "claude.ai": 439,
+    "cloudflare-dns.com": 72,
+    "cloudflare.com": 2,
+    "cloudflare.net": 58,
+    "cloudinary.com": 1037,
+    "cloudns.net": 458,
+    "cmoa.jp": 1497,
+    "cnbc.com": 483,
+    "cnet.com": 725,
+    "cnn.com": 200,
+    "columbia.edu": 1043,
+    "comcast.com": 637,
+    "comcast.net": 251,
+    "consultant.ru": 698,
+    "conviva.com": 1001,
+    "cookiedatabase.org": 378,
+    "cookpad.com": 1122,
+    "cornell.edu": 574,
+    "corriere.it": 978,
+    "coursera.org": 1219,
+    "cpanel.net": 241,
+    "craigslist.org": 789,
+    "crazygames.com": 1091,
+    "creativecdn.com": 740,
+    "creativecommons.org": 198,
+    "cricbuzz.com": 1289,
+    "crn77.com": 1471,
+    "cronista.com": 1400,
+    "crwdcntrl.net": 752,
+    "cspserver.net": 1149,
+    "cursor.sh": 771,
+    "dafont.com": 1168,
+    "dagbladet.no": 1390,
+    "dailymail.co.uk": 686,
+    "dailymail.com": 709,
+    "dailymotion.com": 427,
+    "datadoghq.com": 327,
+    "daum.net": 828,
+    "dcinside.com": 1207,
+    "ddnss.de": 768,
+    "debian.org": 320,
+    "deepl.com": 829,
+    "deepseek.com": 1278,
+    "dell.com": 310,
+    "deloitte.com": 943,
+    "demdex.net": 396,
+    "deviantart.com": 572,
+    "digicert.com": 47,
+    "digikala.com": 1274,
+    "digitalocean.com": 577,
+    "digitaloceanspaces.com": 1161,
+    "discord.com": 168,
+    "discord.gg": 147,
+    "discordapp.com": 826,
+    "disneyplus.com": 809,
+    "disqus.com": 878,
+    "divar.ir": 1248,
+    "dlsite.com": 1218,
+    "dmm.co.jp": 1186,
+    "dns.google": 141,
+    "dnsmadeeasy.com": 290,
+    "docker.com": 507,
+    "docker.io": 936,
+    "docomo.ne.jp": 1042,
+    "doctolib.fr": 632,
+    "dogdrip.net": 1480,
+    "doi.org": 210,
+    "donmai.us": 1312,
+    "doubleclick.net": 37,
+    "doubleverify.com": 348,
+    "dreamhost.com": 594,
+    "dribbble.com": 1231,
+    "drom.ru": 294,
+    "dropbox.com": 138,
+    "duckdns.org": 202,
+    "duckduckgo.com": 499,
+    "duolingo.com": 477,
+    "dw.com": 1398,
+    "dynatrace.com": 500,
+    "dzen.ru": 16,
+    "e-hentai.org": 1373,
+    "ea.com": 321,
+    "ebay.co.uk": 864,
+    "ebay.com": 211,
+    "ebay.de": 871,
+    "eci.gov.in": 1482,
+    "economist.com": 1189,
+    "ecosia.org": 1027,
+    "edgecdn.ru": 467,
+    "edna.ru": 1288,
+    "eeroup.com": 848,
+    "ekstrabladet.dk": 1452,
+    "elasticbeanstalk.com": 531,
+    "elmundo.es": 1004,
+    "elpais.com": 669,
+    "elsevier.com": 1431,
+    "epa.gov": 933,
+    "epcco.com.sa": 1320,
+    "epicgames.dev": 1059,
+    "eporner.com": 950,
+    "erome.com": 821,
+    "eset.com": 566,
+    "espn.com": 407,
+    "etsy.com": 277,
+    "eu.com": 1008,
+    "europa.eu": 116,
+    "eventbrite.com": 511,
+    "example.com": 173,
+    "exhentai.org": 1510,
+    "expedia.com": 879,
+    "expireddomains.com": 422,
+    "ezviz7.com": 14,
+    "ezvizlife.com": 421,
+    "f5.com": 93,
+    "f95zone.to": 1305,
+    "facebook.com": 3,
+    "fanfiction.net": 1270,
+    "faphouse.com": 1005,
+    "faphouse2.com": 1314,
+    "fast.com": 548,
+    "fastly.net": 36,
+    "fatalmodel.com": 1512,
+    "fb.com": 715,
+    "fbcdn.net": 13,
+    "fbsbx.com": 880,
+    "fda.gov": 776,
+    "fdown.net": 1367,
+    "fedoraproject.org": 1455,
+    "fetlife.com": 1251,
+    "ficbook.net": 1419,
+    "fifa.com": 960,
+    "figma.com": 868,
+    "filmweb.pl": 1436,
+    "finn.no": 1104,
+    "firefox.com": 541,
+    "firetvcaptiveportal.com": 482,
+    "fiverr.com": 793,
+    "flashscore.com": 1012,
+    "flickr.com": 188,
+    "flightradar24.com": 1002,
+    "fmkorea.com": 1201,
+    "focus.de": 843,
+    "fontawesome.com": 710,
+    "forbes.com": 215,
+    "forter.com": 268,
+    "fortune.com": 1206,
+    "foxnews.com": 515,
+    "fpo.xxx": 1438,
+    "free.fr": 588,
+    "freepik.com": 1039,
+    "frontiersin.org": 884,
+    "ft.com": 530,
+    "funpay.com": 1339,
+    "furaffinity.net": 1254,
+    "fwmrm.net": 907,
+    "g.co": 748,
+    "gamewith.jp": 1435,
+    "gandi.net": 45,
+    "garmin.com": 1052,
+    "gazzetta.it": 1235,
+    "gcash.com": 1444,
+    "gcdn.co": 462,
+    "giphy.com": 1086,
+    "github.com": 29,
+    "gitlab.com": 385,
+    "globalsign.com": 735,
+    "globo.com": 417,
+    "gmail.com": 222,
+    "gnu.org": 345,
+    "go.com": 446,
+    "goal.com": 1082,
+    "gofundme.com": 1121,
+    "goo.gl": 53,
+    "goodreads.com": 450,
+    "goodreturns.in": 1536,
+    "google-analytics.com": 115,
+    "google.ca": 1165,
+    "google.cn": 426,
+    "google.co.in": 1453,
+    "google.co.jp": 1246,
+    "google.co.uk": 758,
+    "google.com": 1,
+    "google.com.br": 798,
+    "google.com.hk": 540,
+    "google.de": 513,
+    "google.fr": 1092,
+    "googleadservices.com": 189,
+    "googleapis.com": 5,
+    "googleblog.com": 333,
+    "googlesyndication.com": 61,
+    "googletagmanager.com": 20,
+    "googletagservices.com": 653,
+    "googleusercontent.com": 35,
+    "googlevideo.com": 19,
+    "gotinder.com": 955,
+    "grammarly.com": 563,
+    "gravatar.com": 159,
+    "gsmarena.com": 1125,
+    "gstatic.com": 4,
+    "gumgum.com": 761,
+    "haberler.com": 1376,
+    "hai8g.com": 1297,
+    "hanime1.me": 1520,
+    "harvard.edu": 319,
+    "hbr.org": 876,
+    "hcaptcha.com": 260,
+    "hdporncomics.com": 1451,
+    "hdtube.porn": 1469,
+    "he.net": 1173,
+    "healthline.com": 988,
+    "herokuapp.com": 920,
+    "heytapmobi.com": 1011,
+    "hicloudcam.com": 25,
+    "hihonorcloud.com": 692,
+    "hitomi.la": 1443,
+    "hln.be": 1256,
+    "homedepot.com": 760,
+    "hostgator.com": 355,
+    "hostinger.com": 334,
+    "hostpoint.ch": 1508,
+    "hotjar.com": 592,
+    "hotpepper.jp": 1150,
+    "hp.com": 297,
+    "hstgr.net": 682,
+    "huawei.com": 434,
+    "hubspot.com": 258,
+    "huffingtonpost.com": 1363,
+    "huffpost.com": 1087,
+    "hugedomains.com": 1163,
+    "huggingface.co": 1135,
+    "iana.org": 1437,
+    "ibm.com": 280,
+    "icanhazip.com": 1157,
+    "icloud.com": 51,
+    "idealista.com": 1249,
+    "idealista.it": 1392,
+    "ilfattoquotidiano.it": 1306,
+    "ilmeteo.it": 1391,
+    "ilovepdf.com": 1088,
+    "iltalehti.fi": 1410,
+    "imdb.com": 265,
+    "imgsmail.ru": 597,
+    "immobiliare.it": 1502,
+    "indeed.com": 369,
+    "independent.co.uk": 728,
+    "index.hr": 1423,
+    "indiamart.com": 1203,
+    "indianrail.gov.in": 1538,
+    "indiatimes.com": 517,
+    "infobae.com": 1025,
+    "inkuai.com": 1105,
+    "inleed.net": 1412,
+    "inmobi.com": 303,
+    "inner-active.mobi": 351,
+    "inps.it": 1405,
+    "instagram.com": 11,
+    "instructure.com": 1108,
+    "intel.com": 441,
+    "intercom.io": 660,
+    "interia.pl": 1053,
+    "intuit.com": 136,
+    "inven.co.kr": 1160,
+    "investopedia.com": 974,
+    "inxxx.com": 1454,
+    "ioh.co.id": 1493,
+    "ip-api.com": 383,
+    "ipify.org": 406,
+    "ipinfo.io": 451,
+    "iporntv.net": 1468,
+    "irs.gov": 1365,
+    "issuu.com": 371,
+    "it.com": 869,
+    "itmedia.co.jp": 1184,
+    "ivi.ru": 502,
+    "ixxx.com": 1422,
+    "jagran.com": 1446,
+    "jalan.net": 1350,
+    "jd.com": 959,
+    "jetbrains.com": 862,
+    "jimdo.com": 1134,
+    "jotform.com": 643,
+    "joyclub.de": 1511,
+    "jquery.com": 546,
+    "jstor.org": 1323,
+    "jutarnji.hr": 1418,
+    "jw.org": 1182,
+    "kakao.com": 1233,
+    "kaspersky-labs.com": 435,
+    "kaspersky.com": 140,
+    "kaspi.kz": 1489,
+    "kernel.org": 1243,
+    "kick.com": 713,
+    "klaviyo.com": 591,
+    "kleinanzeigen.de": 901,
+    "klikbca.com": 1460,
+    "kontur.ru": 1035,
+    "kslawin.com": 1089,
+    "kwai-pro.com": 411,
+    "kwai.com": 991,
+    "kwai.net": 484,
+    "kwaipros.com": 443,
+    "labs.google": 1272,
+    "ladepeche.fr": 1275,
+    "lanacion.com.ar": 1128,
+    "latimes.com": 918,
+    "launchdarkly.com": 384,
+    "launchpad.net": 272,
+    "leboncoin.fr": 1204,
+    "leiniao.com": 949,
+    "lemonde.fr": 712,
+    "lenovo.com": 792,
+    "leroymerlin.es": 1458,
+    "leroymerlin.fr": 1355,
+    "letsencrypt.org": 1153,
+    "letsporn.com": 1461,
+    "letterboxd.com": 1056,
+    "lg.com": 877,
+    "lge.com": 1111,
+    "lichess.org": 1226,
+    "liftoff.io": 834,
+    "line.me": 423,
+    "linkedin.com": 17,
+    "linktr.ee": 270,
+    "linode.com": 689,
+    "liteapks.com": 1470,
+    "litnet.com": 1264,
+    "livescore.com": 1268,
+    "locaweb.com.br": 1349,
+    "loobygamesonline.com": 1428,
+    "lookmovie2.to": 1327,
+    "lsrelayaccess.com": 207,
+    "ltwebstatic.com": 1083,
+    "luticlip.com": 1535,
+    "luugy.com": 1311,
+    "luxuretv.com": 1449,
+    "lwsdns.com": 928,
+    "macromedia.com": 186,
+    "magnific.com": 1136,
+    "magnit.ru": 1093,
+    "mail.ru": 12,
+    "mailchi.mp": 962,
+    "mailchimp.com": 734,
+    "mangago.me": 1488,
+    "marca.com": 1084,
+    "maricopa.gov": 1076,
+    "markmonitor.com": 501,
+    "markt.de": 1472,
+    "marktplaats.nl": 1232,
+    "mbga.jp": 1386,
+    "media.net": 357,
+    "mediaexpert.pl": 1351,
+    "mediafire.com": 766,
+    "mediatek.com": 504,
+    "medium.com": 199,
+    "meethue.com": 1151,
+    "mega.co.nz": 631,
+    "megafon.ru": 1158,
+    "meraki.com": 247,
+    "merriam-webster.com": 1051,
+    "meta.com": 909,
+    "meteofrance.com": 1324,
+    "mhverifier.ru": 657,
+    "mi.com": 395,
+    "microsoft.com": 6,
+    "miit.gov.cn": 145,
+    "mikrotik.com": 476,
+    "missav.ai": 1509,
+    "missav.live": 1500,
+    "missav.ws": 1372,
+    "missav123.com": 1518,
+    "mit.edu": 227,
+    "miui.com": 225,
+    "miwifi.com": 938,
+    "mixpanel.com": 806,
+    "mmechocaptiveportal.com": 1302,
+    "mobile.de": 376,
+    "mobolize.com": 1152,
+    "moe.video": 1440,
+    "moloco.com": 818,
+    "moneycontrol.com": 1057,
+    "mozilla.com": 317,
+    "mozilla.org": 100,
+    "msftconnecttest.com": 160,
+    "msftncsi.com": 139,
+    "msn.com": 70,
+    "mtgglobals.com": 323,
+    "mts.ru": 171,
+    "mundodeportivo.com": 1263,
+    "musicdel.ir": 1525,
+    "mydramalist.com": 1322,
+    "myfritz.net": 71,
+    "myshopify.com": 335,
+    "myspace.com": 890,
+    "mzstatic.com": 296,
+    "n-tv.de": 1066,
+    "name.com": 341,
+    "namecheap.com": 305,
+    "namecheaphosting.com": 1199,
+    "namu.wiki": 1229,
+    "nasa.gov": 414,
+    "nationalgeographic.com": 980,
+    "nature.com": 300,
+    "nbcnews.com": 889,
+    "nease.net": 490,
+    "nesine.com": 1369,
+    "netangels.ru": 404,
+    "netcraze.io": 1119,
+    "netease.com": 448,
+    "netflix.com": 41,
+    "netflix.net": 551,
+    "netgear.com": 1070,
+    "netkeiba.com": 1330,
+    "netlify.app": 940,
+    "networkadvertising.org": 808,
+    "newrelic.com": 388,
+    "nextcloud.com": 1032,
+    "nflximg.com": 478,
+    "nflxvideo.net": 416,
+    "nfse.gov.br": 1473,
+    "nginx.org": 74,
+    "nike.com": 638,
+    "nikkansports.com": 1385,
+    "nikkei.com": 777,
+    "ninisite.com": 1531,
+    "nintendo.com": 623,
+    "nist.gov": 238,
+    "no-ip.com": 804,
+    "noodlemagazine.com": 1292,
+    "nosv.org": 1413,
+    "note.com": 964,
+    "novinky.cz": 1384,
+    "npr.org": 503,
+    "ntp.org": 68,
+    "nu.nl": 1194,
+    "nvidia.com": 367,
+    "nypost.com": 1139,
+    "nytimes.com": 158,
+    "oecd.org": 1094,
+    "ok.ru": 314,
+    "okcdn.ru": 118,
+    "okdiario.com": 1389,
+    "okta.com": 492,
+    "olx.pl": 1103,
+    "omg10.com": 1432,
+    "one.com": 1060,
+    "one.one": 156,
+    "onesignal.com": 1013,
+    "onet.pl": 931,
+    "onetrust.com": 622,
+    "openai.com": 83,
+    "opendns.com": 358,
+    "openstreetmap.org": 614,
+    "openx.net": 538,
+    "opera.com": 91,
+    "optimizely.com": 693,
+    "oracle.com": 205,
+    "orange.fr": 1147,
+    "oricon.co.jp": 1375,
+    "otomoto.pl": 1414,
+    "otto.de": 990,
+    "ouest-france.fr": 1071,
+    "outbrain.com": 694,
+    "ovhcloud.com": 1334,
+    "oxylabs.io": 783,
+    "ozon.ru": 229,
+    "palmplaystore.com": 559,
+    "paloaltonetworks.com": 391,
+    "pandora.com": 1205,
+    "paramountplus.com": 1185,
+    "parklogic.com": 795,
+    "patreon.com": 608,
+    "paypal.com": 169,
+    "pbs.org": 1055,
+    "pccc.com": 874,
+    "pendo.io": 865,
+    "people.com": 810,
+    "perplexity.ai": 688,
+    "pexels.com": 867,
+    "php.net": 329,
+    "pikabu.ru": 873,
+    "pimpbunny.com": 1167,
+    "pinimg.com": 719,
+    "pinterest.com": 56,
+    "pixabay.com": 465,
+    "pixiv.net": 996,
+    "pki.goog": 230,
+    "playhop.com": 1317,
+    "playstation.com": 603,
+    "plesk.com": 387,
+    "plos.org": 1171,
+    "poki.com": 1049,
+    "polybuzz.ai": 1293,
+    "porkbun.com": 742,
+    "porno365.golf": 1408,
+    "pornone.com": 1326,
+    "pornpics.com": 1215,
+    "postgresql.org": 1271,
+    "ppomppu.co.kr": 1486,
+    "primevideo.com": 673,
+    "princeton.edu": 906,
+    "prnewswire.com": 813,
+    "prodregistryv2.org": 397,
+    "programme-tv.net": 1513,
+    "property24.com": 1407,
+    "protothema.gr": 1415,
+    "psu.edu": 1283,
+    "ptt.cc": 1505,
+    "publicnode.com": 1335,
+    "pushy.io": 619,
+    "pussyspace.com": 1447,
+    "px-cloud.net": 1227,
+    "python.org": 754,
+    "qq.com": 73,
+    "qualtrics.com": 925,
+    "quantserve.com": 723,
+    "quickconnect.to": 412,
+    "quora.com": 493,
+    "rajasthan.gov.in": 1318,
+    "rakuten-sec.co.jp": 1541,
+    "rakuten.co.jp": 570,
+    "rakuten.com": 814,
+    "rambler.ru": 1329,
+    "rat.xxx": 1474,
+    "rbc.ru": 1156,
+    "readthedocs.io": 898,
+    "recaptcha.net": 801,
+    "reddit.com": 109,
+    "redfin.com": 1067,
+    "redhat.com": 661,
+    "registrar-servers.com": 121,
+    "remove.bg": 1225,
+    "repubblica.it": 966,
+    "researchgate.net": 224,
+    "reuters.com": 285,
+    "rfc-editor.org": 1240,
+    "rightmove.co.uk": 1217,
+    "riotgames.com": 1090,
+    "rlcdn.com": 589,
+    "roblox.com": 60,
+    "rocketmoney.dev": 1102,
+    "roku.com": 252,
+    "rtve.es": 1404,
+    "rubiconproject.com": 197,
+    "rule34.xxx": 1200,
+    "rule34video.com": 1379,
+    "run.app": 509,
+    "rustdesk.com": 1295,
+    "rustore.ru": 1342,
+    "rutube.ru": 1234,
+    "ryanair.com": 833,
+    "safety.google": 1118,
+    "sagepub.com": 652,
+    "salesforce.com": 299,
+    "samsung.com": 94,
+    "samsungcloud.com": 318,
+    "samsungosp.com": 927,
+    "savefrom.net": 1236,
+    "scdn.co": 636,
+    "scorecardresearch.com": 263,
+    "sedo.com": 778,
+    "seedtag.com": 930,
+    "segment.io": 1038,
+    "selectel.ru": 361,
+    "sentinelone.net": 961,
+    "sentry.io": 92,
+    "sex-studentki.team": 1378,
+    "sexlog.com": 1529,
+    "sexvid.xxx": 1388,
+    "seznam.cz": 704,
+    "shahvani.com": 1530,
+    "shalltry.com": 328,
+    "share.google": 539,
+    "sharethrough.com": 630,
+    "shein.com": 505,
+    "shop.app": 553,
+    "shopee.co.id": 745,
+    "shopee.com.br": 648,
+    "shopee.ph": 1030,
+    "shopify.com": 179,
+    "siemens.com": 1208,
+    "simpcity.cr": 1496,
+    "sina.com.cn": 460,
+    "singular.net": 784,
+    "skroutz.gr": 1068,
+    "skybridge.click": 586,
+    "skysports.com": 1116,
+    "slack.com": 353,
+    "smartadserver.com": 340,
+    "smartthings.com": 937,
+    "snapchat.com": 130,
+    "sohu.com": 481,
+    "sondakika.com": 1516,
+    "sophos.com": 717,
+    "sotwe.com": 1325,
+    "soundcloud.com": 185,
+    "sourceforge.net": 249,
+    "sozcu.com.tr": 1421,
+    "spamhaus.org": 1026,
+    "speedtest.net": 469,
+    "spiegel.de": 841,
+    "sportybet.com": 1374,
+    "spotify.com": 64,
+    "spotifycdn.com": 891,
+    "springer.com": 291,
+    "squarespace.com": 542,
+    "ssstik.io": 1441,
+    "stackadapt.com": 664,
+    "stanford.edu": 379,
+    "starlink.com": 924,
+    "statcounter.com": 1020,
+    "statista.com": 486,
+    "stbid.ru": 977,
+    "steamcommunity.com": 428,
+    "steampowered.com": 306,
+    "stripe.com": 239,
+    "supabase.co": 1099,
+    "supercell.com": 430,
+    "superhosting.bg": 1130,
+    "superporn.com": 1467,
+    "surveymonkey.com": 672,
+    "suumo.jp": 1316,
+    "svc.ms": 561,
+    "synology.com": 875,
+    "syosetu.com": 1395,
+    "t-online.de": 212,
+    "t.co": 242,
+    "t.me": 103,
+    "tabelog.com": 1100,
+    "taboola.com": 206,
+    "tabor.ru": 1183,
+    "tailscale.com": 954,
+    "tandfonline.com": 558,
+    "taobao.com": 440,
+    "tapad.com": 1347,
+    "target.com": 585,
+    "tbank.ru": 882,
+    "tbs.co.jp": 1181,
+    "teamviewer.com": 583,
+    "techcrunch.com": 655,
+    "ted.com": 791,
+    "telegram.org": 257,
+    "telegraph.co.uk": 610,
+    "tencent.com": 641,
+    "tenki.jp": 1381,
+    "terra.com.br": 1075,
+    "testbook.com": 1484,
+    "tgju.org": 1341,
+    "theatlantic.com": 1031,
+    "theblowers.com": 1456,
+    "theconversation.com": 1096,
+    "theguardian.com": 203,
+    "themeforest.net": 1028,
+    "themoviedb.org": 1284,
+    "thenai.org": 968,
+    "theverge.com": 849,
+    "thisvid.com": 1345,
+    "threads.com": 618,
+    "tiktok.com": 54,
+    "tiktokv.com": 81,
+    "tiktokw.us": 939,
+    "time.com": 568,
+    "tinyurl.com": 293,
+    "tnaflix.com": 1106,
+    "tokyomotion.net": 1528,
+    "tori.fi": 1257,
+    "torob.com": 1490,
+    "toyhou.se": 1448,
+    "tp-link.com": 394,
+    "tplinkcloud.com": 526,
+    "tradingview.com": 363,
+    "translate.goog": 555,
+    "trendmicro.com": 529,
+    "trendyol.com": 971,
+    "tripadvisor.com": 584,
+    "triplinkintl.com": 137,
+    "trustpilot.com": 347,
+    "tsyndicate.com": 994,
+    "tumblr.com": 162,
+    "turkiye.gov.tr": 1360,
+    "twilio.com": 1517,
+    "twitch.tv": 220,
+    "twitter.com": 15,
+    "txnhh.com": 1475,
+    "typeform.com": 1142,
+    "uber.com": 729,
+    "ubnt.com": 1120,
+    "ubuntu.com": 232,
+    "ucla.edu": 1492,
+    "ui.com": 110,
+    "uidai.gov.in": 1401,
+    "uk.com": 665,
+    "ukdevilz.com": 1406,
+    "ultimate-guitar.com": 1115,
+    "ultradns.com": 1377,
+    "umich.edu": 1054,
+    "un.org": 359,
+    "unesco.org": 633,
+    "unity3d.com": 132,
+    "unsplash.com": 419,
+    "uol.com.br": 565,
+    "upenn.edu": 1221,
+    "upskirt.tv": 1483,
+    "us.com": 1146,
+    "usatoday.com": 581,
+    "userapi.com": 231,
+    "usercentrics.eu": 1131,
+    "usercontent.goog": 779,
+    "utorrent.com": 1457,
+    "varzesh3.com": 1356,
+    "vercel-dns-016.com": 475,
+    "vercel-dns-017.com": 650,
+    "vercel-dns.com": 1279,
+    "verisign.com": 724,
+    "vg.no": 1214,
+    "viber.com": 681,
+    "vimeo.com": 88,
+    "visma.com": 802,
+    "visualstudio.com": 536,
+    "vivo.com": 1140,
+    "vivo.com.cn": 830,
+    "vivoglobal.com": 405,
+    "vk.com": 127,
+    "vk.ru": 177,
+    "vkontakte.ru": 702,
+    "vnexpress.net": 1191,
+    "vscode-cdn.net": 1241,
+    "vungle.com": 201,
+    "w3.org": 190,
+    "wa.me": 67,
+    "walmart.com": 410,
+    "warnerbros.com": 987,
+    "washington.edu": 899,
+    "washingtonpost.com": 364,
+    "wattpad.com": 764,
+    "waze.com": 1298,
+    "weather.com": 316,
+    "weathernews.jp": 1357,
+    "webempresa.eu": 738,
+    "webex.com": 167,
+    "webmd.com": 951,
+    "weibo.com": 304,
+    "welt.de": 803,
+    "wetter.com": 1178,
+    "wetteronline.de": 1112,
+    "whatsapp.com": 55,
+    "whatsapp.net": 32,
+    "whitehouse.gov": 1033,
+    "who.int": 266,
+    "wikimedia.org": 254,
+    "wikipedia.org": 30,
+    "wiktionary.org": 1259,
+    "wired.com": 549,
+    "wisc.edu": 1537,
+    "wise.com": 1062,
+    "wix.com": 627,
+    "wixsite.com": 269,
+    "wordpress.com": 101,
+    "wordpress.org": 48,
+    "worldbank.org": 905,
+    "wp.com": 464,
+    "wp.pl": 700,
+    "wpastra.com": 1499,
+    "wpguardian.com": 733,
+    "wpguardian.io": 707,
+    "wps.com": 705,
+    "wsj.com": 372,
+    "www.gov.br": 888,
+    "www.gov.uk": 309,
+    "wyzecam.com": 922,
+    "x.com": 50,
+    "xbox.com": 812,
+    "xerox.com": 967,
+    "xhaccess.com": 1129,
+    "xhamster.com": 645,
+    "xhamster.desi": 1065,
+    "xhamster1.desi": 1253,
+    "xhamster19.com": 1192,
+    "xhamster2.com": 1177,
+    "xhamster46.desi": 970,
+    "xhname.com": 1193,
+    "xhopen.com": 1212,
+    "xhsocial.com": 1281,
+    "xhspot.com": 1238,
+    "xhtotal.com": 1211,
+    "xhtv.today": 1294,
+    "xhwide.com": 1403,
+    "xiaohongshu.com": 1126,
+    "xiaomi.com": 153,
+    "xiaomi.net": 606,
+    "xing.com": 1022,
+    "xnxx-arabic.com": 1507,
+    "xnxx.com": 979,
+    "xnxx.es": 1498,
+    "xnxx.health": 1487,
+    "xnxx.tv": 1429,
+    "xnxx2.com": 1485,
+    "xserver.jp": 1180,
+    "xvideos.com": 883,
+    "xvideos.es": 1494,
+    "xvideos2.com": 1465,
+    "xvv1deos.com": 1466,
+    "xxxbp.tv": 1368,
+    "ya.ru": 722,
+    "yahoo.com": 59,
+    "yale.edu": 1170,
+    "yandex.com": 392,
+    "yandex.net": 87,
+    "yandex.ru": 96,
+    "yastatic.net": 1162,
+    "yieldmo.com": 1166,
+    "youjizz.com": 1340,
+    "youronlinechoices.com": 1024,
+    "youtu.be": 46,
+    "youtube-nocookie.com": 213,
+    "youtube.com": 9,
+    "ys7.com": 887,
+    "zedge.net": 1402,
+    "zendesk.com": 368,
+    "zhihu.com": 1044,
+    "zillow.com": 753,
+    "zoho.com": 822,
+    "zoom.com": 861,
+    "zoom.us": 77
+  },
+  "tranco_list_id": "N2P2W",
+  "year": 2026
+}
