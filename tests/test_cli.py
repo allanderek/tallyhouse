@@ -320,7 +320,11 @@ def test_print_refuses_a_manifest_with_no_collector_version(tmp_path, capsys):
     seed_raw(tmp_path)
     path = tmp_path / "raw" / "2026-09-14" / "manifest.json"
     document = _json.loads(path.read_text())
-    del document["collector_version"]
+    # Unattributable means the OBSERVATIONS carry no provenance. Deleting a
+    # period-level field would no longer prove anything: provenance is derived
+    # from the observations themselves.
+    for observation in document["observations"]:
+        observation.pop("collector_version", None)
     path.write_text(_json.dumps(document))
 
     assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) != 0

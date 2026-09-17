@@ -79,6 +79,12 @@ async def collect_panel(
         record = dict(result)
         body = record.pop("body")
         record["sha256"] = store_body(root, body) if body is not None else None
+        # Stamp provenance on the records THIS run fetched. Records carried
+        # over from a previous run keep the version that actually produced
+        # them: a period collected across two commits is evidence from two
+        # commits, and a single period-level stamp would silently attribute
+        # all of it to whichever run happened to write the manifest last.
+        record["collector_version"] = collector_version
         merged[record["domain"]] = record
 
     records = list(merged.values())

@@ -59,10 +59,18 @@ def write_manifest(
     """
     path = manifest_path(root, period)
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Provenance lives on each observation, not on the period. A record that
+    # already carries a version keeps it — that is what makes a period
+    # collected across several runs tell the truth about which commit produced
+    # which observation.
+    stamped = [
+        {**record, "collector_version": record.get("collector_version") or collector_version}
+        for record in records
+    ]
     document = {
-        "collector_version": collector_version,
+        "last_run_collector_version": collector_version,
         "period": period,
-        "observations": sorted(records, key=lambda r: r["domain"]),
+        "observations": sorted(stamped, key=lambda r: r["domain"]),
     }
     # Write to temp file, then atomically rename to final path.
     # This ensures we never leave invalid JSON on disk.
@@ -82,14 +90,25 @@ def read_manifest(root: Path, period: str) -> list[dict]:
 
 
 def manifest_collector_version(root: Path, period: str) -> str:
-    """The commit of the collector that produced this period's evidence."""
-    version = _load_manifest(root, period).get("collector_version")
-    if not version:
+    """The collector commit(s) that produced this period's evidence.
+
+    Derived from the observations rather than read from a period-level field.
+    A period collected across more than one run holds evidence from more than
+    one commit, and the whole reason this field exists is to say so: a single
+    stamp would attribute every observation to whichever run wrote the manifest
+    last, and a stranger re-deriving the period would have no way to tell which
+    commit to check out for the older half. Several commits are reported joined
+    by "+", in sorted order so the value is stable across runs.
+    """
+    observations = _load_manifest(root, period)["observations"]
+    versions = {record.get("collector_version") for record in observations}
+    if not versions or not all(versions):
         raise ValueError(
-            f"manifest for {period} records no collector_version; the evidence "
-            f"is unattributable and cannot be printed. Re-collect the period."
+            f"manifest for {period} has observations recording no "
+            f"collector_version; that evidence is unattributable and cannot be "
+            f"printed. Re-collect the period."
         )
-    return version
+    return "+".join(sorted(versions))
 
 
 def _load_manifest(root: Path, period: str) -> dict:

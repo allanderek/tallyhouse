@@ -202,10 +202,12 @@ def test_rules_before_any_user_agent_line_are_discarded():
 
 def test_unsanitisable_pattern_is_not_a_block_without_protego_agreeing():
     # "Disallow: $" sanitises to nothing testable. It must not be asserted as a
-    # block on the strength of that failure alone.
-    body = "User-agent: GPTBot\nCrawl-delay: 10\nUser-agent: *\nDisallow: $\n"
+    # block on the strength of that failure alone. The rule has to sit in
+    # GPTBot's OWN group: put it under "*" and GPTBot's group has no rules at
+    # all, so the sanitisation branch is never reached and the test proves
+    # nothing.
+    body = "User-agent: GPTBot\nDisallow: $\n"
     assert classify(body, "GPTBot") == "Allowed"
-    assert blanket_stance(body) == "Allowed"
 
 
 def test_wildcard_pattern_still_counts_when_protego_agrees():

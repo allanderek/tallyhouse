@@ -37,7 +37,10 @@ def test_bodies_are_sharded_by_sha_prefix(tmp_path):
 def test_manifest_roundtrips(tmp_path):
     records = [{"domain": "example.com", "outcome": "Fetched", "sha256": "abc"}]
     write_manifest(tmp_path, "2026-09-14", records, collector_version="abc1234")
-    assert read_manifest(tmp_path, "2026-09-14") == records
+    written = read_manifest(tmp_path, "2026-09-14")
+    # Every observation is stamped with the collector that produced it.
+    assert [{k: v for k, v in r.items() if k != "collector_version"} for r in written] == records
+    assert all(r["collector_version"] == "abc1234" for r in written)
 
 
 def test_manifest_is_sorted_by_domain_for_stable_diffs(tmp_path):

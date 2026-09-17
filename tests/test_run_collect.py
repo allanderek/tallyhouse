@@ -203,3 +203,46 @@ async def test_manifest_records_the_collector_version(tmp_path):
     from tallyhouse.storage import manifest_collector_version
 
     assert manifest_collector_version(tmp_path, "2026-09-14") == "deadbee"
+
+
+async def test_a_period_collected_across_two_runs_reports_both_commits(tmp_path):
+    """A merge run must not re-attribute evidence it did not collect.
+
+    Monday collects at one commit and settles steady.com while flaky.com times
+    out; Tuesday re-runs at another commit and re-fetches only flaky.com. The
+    period then holds evidence from two commits, and saying so is the entire
+    reason the field exists — a single stamp would tell a stranger to check out
+    the Tuesday commit to reproduce Monday's observation.
+    """
+    from tallyhouse.storage import manifest_collector_version
+
+    state = {"fail_flaky": True}
+
+    def handler(request):
+        # Fail every variant of the host, not just the apex — otherwise the
+        # www. fallback succeeds and the domain never lands inconclusive.
+        if "flaky.com" in request.url.host and state["fail_flaky"]:
+            raise httpx.ConnectTimeout("down")
+        return httpx.Response(200, text="User-agent: *\nAllow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        await collect_panel(tmp_path, "2026-09-14", ["steady.com", "flaky.com"],
+                            client=client, attempts=1, collector_version="aaaaaaa")
+
+    first = {r["domain"]: r for r in read_manifest(tmp_path, "2026-09-14")}
+    assert first["steady.com"]["outcome"] == "Fetched"
+    assert first["flaky.com"]["outcome"] == "Timeout"
+
+    state["fail_flaky"] = False
+    async with client_returning(handler) as client:
+        await collect_panel(tmp_path, "2026-09-14", ["steady.com", "flaky.com"],
+                            client=client, attempts=1, collector_version="bbbbbbb")
+
+    second = {r["domain"]: r for r in read_manifest(tmp_path, "2026-09-14")}
+    # Monday's observation keeps Monday's commit; only the re-fetched one moves.
+    assert second["steady.com"]["collector_version"] == "aaaaaaa"
+    assert second["flaky.com"]["collector_version"] == "bbbbbbb"
+    assert second["flaky.com"]["outcome"] == "Fetched"
+
+    assert manifest_collector_version(tmp_path, "2026-09-14") == "aaaaaaa+bbbbbbb"
