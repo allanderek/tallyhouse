@@ -82,10 +82,14 @@ async def qualify(
         results = await asyncio.gather(*(one(c) for c in chunk))
         examined += len(chunk)
         for rank, domain, outcome in sorted(results):
-            if outcome in CONCLUSIVE_OUTCOMES and len(qualified) < size:
-                qualified.append({"rank": rank, "domain": domain})
-            else:
+            if outcome not in CONCLUSIVE_OUTCOMES:
                 excluded.append({"rank": rank, "domain": domain, "outcome": outcome})
+            elif len(qualified) < size:
+                qualified.append({"rank": rank, "domain": domain})
+            # A conclusive domain arriving after the panel is full is surplus,
+            # not excluded. Recording it as an exclusion would overstate how
+            # much of the list is unobservable, in an artifact published
+            # precisely so readers can size that.
         if len(qualified) >= size:
             break
 

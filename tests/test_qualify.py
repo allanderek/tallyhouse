@@ -146,3 +146,18 @@ def test_panel_publishes_the_exclusion_breakdown_and_its_bias(tmp_path):
     # The bias is stated in the artifact, not only in prose elsewhere.
     assert "AI-hostile" in q["known_bias"]
     assert [e["domain"] for e in document["excluded"]] == ["x.com", "y.com", "z.com"]
+
+
+async def test_surplus_conclusive_domains_are_not_recorded_as_exclusions():
+    # Everything answers, so nothing is unobservable. Asking for a panel of 2
+    # from 4 candidates must leave the other 2 as surplus, not as exclusions:
+    # the excluded list is published so readers can size how much of the list
+    # is unobservable, and surplus would inflate that.
+    def handler(request):
+        return httpx.Response(200, text="", headers={"content-type": "text/plain"})
+
+    async with client_returning(handler) as client:
+        qualified, _, excluded = await qualify(candidates(4), client=client, size=2, attempts=1)
+
+    assert len(qualified) == 2
+    assert excluded == []
