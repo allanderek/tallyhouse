@@ -465,3 +465,27 @@ def test_qualify_refuses_a_short_panel(tmp_path, monkeypatch, capsys):
     assert rc != 0
     assert "qualified" in capsys.readouterr().err
     assert not (tmp_path / "panel" / "2026.json").exists()
+
+
+def test_qualify_reports_exclusions_not_the_shortfall(tmp_path, monkeypatch, capsys):
+    import httpx
+    from tallyhouse import cli
+
+    tranco = tmp_path / "top.csv"
+    tranco.write_text("".join(f"{i},d{i}.com\n" for i in range(1, 5)))
+
+    def handler(request):
+        return httpx.Response(200, text="", headers={"content-type": "text/plain"})
+
+    class FakeClient(httpx.AsyncClient):
+        def __init__(self, *a, **kw):
+            super().__init__(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(cli.httpx, "AsyncClient", FakeClient)
+    main(["qualify", "--root", str(tmp_path), "--tranco", str(tranco),
+          "--list-id", "N2P2W", "--year", "2026", "--size", "2"])
+
+    # Everything answered, so nothing was unobservable — even though 2 of the 4
+    # candidates did not make the panel. Reporting the shortfall as exclusions
+    # would overstate the blind spot.
+    assert "0 excluded" in capsys.readouterr().out

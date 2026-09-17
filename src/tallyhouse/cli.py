@@ -206,10 +206,11 @@ def _cmd_qualify(args) -> int:
             examined=examined,
             excluded=excluded,
         )
-        rejected = examined - len(qualified)
+        # Not examined - qualified: a conclusive domain arriving after the
+        # panel is full is surplus, not unobservable.
         print(
             f"panel: {len(qualified)} domains from {examined} candidates "
-            f"({rejected} rejected as unobservable) -> {path}"
+            f"({len(excluded)} excluded as unobservable) -> {path}"
         )
         return 0
     except Exception as exc:
