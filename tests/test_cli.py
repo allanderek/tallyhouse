@@ -583,3 +583,21 @@ def test_print_is_quiet_when_evidence_is_in_window(tmp_path, capsys):
     seed_raw(tmp_path)
     assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
     assert "outside" not in capsys.readouterr().err
+
+
+def test_generate_without_a_compiled_program_explains_how_to_build_it(tmp_path, capsys):
+    rc = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "site"),
+               "--program", str(tmp_path / "missing.js")])
+    assert rc != 0
+    err = capsys.readouterr().err
+    # The failure an operator will hit most often should say what to do next.
+    assert "elm make" in err
+
+
+def test_generate_refuses_when_there_is_nothing_published(tmp_path, capsys):
+    program = tmp_path / "site.js"
+    program.write_text("var Elm = {};")
+    rc = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "site"),
+               "--program", str(program)])
+    assert rc != 0
+    assert "no published prints" in capsys.readouterr().err

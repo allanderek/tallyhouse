@@ -5,3 +5,4 @@ elm-stuff/
 data/derived/
 .superpowers/
 node_modules/
+generate/site.js

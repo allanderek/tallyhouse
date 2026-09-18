@@ -29,6 +29,8 @@ from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
 from tallyhouse.balanced import balanced_panel, write_balanced_panel
 from tallyhouse.qualify import qualify, read_tranco, write_panel
+from tallyhouse.render import RenderError, render_site
+from tallyhouse.site import load_site_data, write_site
 from tallyhouse.storage import manifest_collector_version, manifest_path
 
 # The repository whose commit is the collector's version. Resolved from this
@@ -294,6 +296,38 @@ def _cmd_balanced_panel(args) -> int:
         return 1
 
 
+def _cmd_generate(args) -> int:
+    """Render the site from committed data.
+
+    A pure function of what is in the repository: the generator never opens a
+    socket, and the numbers it shows are read back from the ledger rather than
+    recomputed, so a page cannot disagree with the published record.
+    """
+    try:
+        program = Path(args.program)
+        if not program.exists():
+            print(
+                f"error: {program} does not exist. Build it first with:\n"
+                f"  cd generate && elm make src/Site.elm --optimize --output={program}",
+                file=sys.stderr,
+            )
+            return 1
+        data = load_site_data(Path(args.root))
+        if not data["prints"]:
+            print("error: no published prints to render", file=sys.stderr)
+            return 1
+        files = render_site(program.read_text(), data)
+        written = write_site(files, Path(args.out))
+        print(f"site: {len(written)} files -> {args.out}")
+        return 0
+    except RenderError as exc:
+        print(f"error: the generator failed: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="tallyhouse")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -307,6 +341,12 @@ def main(argv: list[str] | None = None) -> int:
     bal.add_argument("--late", required=True, help="late Tranco rank,domain CSV")
     bal.add_argument("--late-list-id", required=True, dest="late_list_id")
     bal.add_argument("--late-date", required=True, dest="late_date")
+
+    gen = sub.add_parser("generate", help="render the static site from committed data")
+    gen.add_argument("--root", default="data")
+    gen.add_argument("--out", default="site")
+    gen.add_argument("--program", default="generate/site.js",
+                     help="compiled output of `elm make src/Site.elm`")
 
     qual = sub.add_parser("qualify", help="build the frozen annual panel")
     qual.add_argument("--root", default="data")
@@ -346,6 +386,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_qualify(args)
     if args.command == "balanced-panel":
         return _cmd_balanced_panel(args)
+    if args.command == "generate":
+        return _cmd_generate(args)
 
     try:
         parse_period(args.period)
