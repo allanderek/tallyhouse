@@ -4,3 +4,4 @@ elm-stuff/
 *.pyc
 data/derived/
 .superpowers/
+node_modules/

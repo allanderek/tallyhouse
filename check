@@ -1,0 +1,14 @@
+#!/bin/sh
+# Run every test suite in the project. Both halves matter: the pipeline is
+# Python, the site generator is Elm, and a green run of one says nothing about
+# the other.
+set -e
+cd "$(dirname "$0")"
+
+echo "=== python ==="
+python3 -m pytest -q
+
+echo
+echo "=== elm ==="
+# Pinned deliberately: see generate/package.json.
+cd generate && npx --yes elm-test@0.19.1-revision17

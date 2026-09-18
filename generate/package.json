@@ -1,0 +1,11 @@
+{
+  "name": "tallyhouse-generate",
+  "private": true,
+  "description": "Pins elm-test. Bare `npx elm-test` resolves to 0.19.2-1, which demands compiler 0.19.2 and fails against the 0.19.1 toolchain this project uses, with an ELM VERSION MISMATCH that looks like a code error rather than a tooling one.",
+  "devDependencies": {
+    "elm-test": "0.19.1-revision17"
+  },
+  "scripts": {
+    "test": "elm-test"
+  }
+}
