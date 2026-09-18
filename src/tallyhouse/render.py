@@ -16,6 +16,10 @@ Two things the embedding needs, both non-obvious and both found by running it:
 - **A raised stack limit.** QuickJS's default overflows on Elm's list recursion
   at around a thousand elements — which is exactly the panel page. This is a
   property of list length, not page size, so it scales with the panel.
+- **A console stub.** An `elm make --optimize` build never calls `console`, but
+  an unoptimised one does, through `_Debug_log`. Stubbing it costs two lines and
+  means a development build runs here exactly as the optimised one does, rather
+  than failing in a way that tempts you to only ever test the optimised output.
 """
 
 import json
@@ -29,6 +33,7 @@ MEMORY_BYTES = 512 * 1024 * 1024
 # real time to pass, and draining explicitly keeps ordering deterministic.
 SHIM = """
 var __jobs = [];
+var console = { log: function () {}, warn: function () {}, error: function () {} };
 function setTimeout(fn, _delay) { __jobs.push(fn); return __jobs.length; }
 function clearTimeout(_id) {}
 function __drain() { var n = 0; while (__jobs.length) { __jobs.shift()(); n++; } return n; }

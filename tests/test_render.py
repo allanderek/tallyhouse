@@ -81,3 +81,12 @@ def test_deep_recursion_does_not_blow_the_stack():
     function buildDeep(n) { return n === 0 ? "" : "x" + buildDeep(n - 1); }
     """
     assert len(render(program, {})[0]) == 2000
+
+
+def test_an_unoptimised_build_that_logs_still_runs():
+    # `elm make` without --optimize emits calls to console via _Debug_log. The
+    # optimised build never does, so testing only the optimised output would
+    # hide this — and a development build would fail where production works.
+    program = STUB.replace(
+        "var Elm =", "console.log('elm debug'); var Elm =")
+    assert render(program, {"out": "ok"}) == ["ok"]
