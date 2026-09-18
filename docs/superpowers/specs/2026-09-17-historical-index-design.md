@@ -106,11 +106,52 @@ Raw evidence is retained exactly as the live index retains it: bodies
 content-addressed by sha256, a manifest per period. The index is re-derivable
 from committed evidence without re-querying Common Crawl.
 
+## 5a. Coverage, and a second balancing problem
+
+Measured on CC-MAIN-2026-30 over the 611-domain balanced panel:
+
+| outcome | count |
+|---|---|
+| Fetched | 355 |
+| NoRobotsTxt | 22 |
+| TransportError (captured only as a redirect) | 53 |
+| ServerError | 29 |
+| **NotInCrawl** | **152** |
+
+Coverage is **61.7%**, against the live index's 99.7%. Common Crawl does not
+fetch every host's robots.txt in every crawl, and which hosts it reaches varies
+between crawls. That is not transient loss of the kind the provisional threshold
+is designed for — it means **the observable set changes between periods**, so a
+move in the series could be composition rather than behaviour.
+
+That is the same confound the balanced panel was chosen to remove, reappearing
+one level down. The intended remedy is the same idea applied again: a **doubly
+balanced panel**, restricted to domains conclusively observed in *every* crawl in
+the span, so each period compares a genuinely fixed set. The cost is a smaller
+panel, and the size is an empirical question settled by probing several crawls
+before committing to a full backfill.
+
+The first measured value, for reference and not yet as a published print:
+
+    CC-MAIN-2026-30, 611-domain balanced panel, 377 conclusive
+    targeted 27.59%  effective 29.44%  blanket 5.84%
+
+Against the live index's 23.47% for September 2026. The levels are not
+comparable — different panels, different populations — but the direction is
+consistent with the live index's documented exclusion bias: this panel *includes*
+the bot-protected sites the live panel must drop, and it reads higher. That is
+independent evidence for a claim that was previously only an argument.
+
 ## 6. Operational notes
 
-- The CDX index is **flaky**: 502s and 504s were frequent during the spike, and
-  two of four queries in one run failed outright. ~36,000 queries need retry with
-  backoff and a resumable run, and the backfill will take hours.
+- **The CDX HTTP API is unusable for a backfill.** It is rate limited; a few
+  hundred queries during development were enough to be cut off entirely, after
+  which even sequential requests failed. Access is via the columnar Parquet index
+  instead, which has no such gate.
+- Measured cost per crawl: **248s** to locate all 611 panel domains across the
+  300 Parquet parts, plus **17s** to range-fetch the bodies. About 4.5 minutes,
+  so a 36-crawl backfill is roughly 2.7 hours — a one-off, after which the index
+  is re-derivable from committed evidence without touching Common Crawl again.
 - Per-crawl coverage varies and will be lower and noisier than the live index's
   99.7%. The existing coverage and provisional machinery handles this, but the
   threshold must be calibrated separately from the live index's.
