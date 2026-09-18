@@ -116,6 +116,7 @@ suite =
                     Html.document
                         { title = "A & B"
                         , description = "<desc>"
+                        , head = []
                         , body = [ Html.p [] [ Html.text "hi" ] ]
                         }
                         |> Expect.equal
@@ -130,6 +131,82 @@ suite =
                                 , "</head>\n"
                                 , "<body>\n"
                                 , "<p>hi</p>"
+                                , "\n</body>\n"
+                                , "</html>\n"
+                                ]
+                            )
+            , test "an empty head still produces a valid document with charset and viewport intact" <|
+                \_ ->
+                    Html.document
+                        { title = "T"
+                        , description = "D"
+                        , head = []
+                        , body = []
+                        }
+                        |> Expect.equal
+                            (String.concat
+                                [ "<!DOCTYPE html>\n"
+                                , "<html lang=\"en\">\n"
+                                , "<head>\n"
+                                , "<meta charset=\"utf-8\">\n"
+                                , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+                                , "<meta name=\"description\" content=\"D\">\n"
+                                , "<title>T</title>\n"
+                                , "</head>\n"
+                                , "<body>\n"
+                                , "\n</body>\n"
+                                , "</html>\n"
+                                ]
+                            )
+            , test "renders head content after the charset and viewport meta tags and before description and title, never inside body" <|
+                \_ ->
+                    Html.document
+                        { title = "A & B"
+                        , description = "<desc>"
+                        , head = [ Html.node "style" [] [ Html.raw "body{color:blue}" ] ]
+                        , body = [ Html.p [] [ Html.text "hi" ] ]
+                        }
+                        |> Expect.equal
+                            (String.concat
+                                [ "<!DOCTYPE html>\n"
+                                , "<html lang=\"en\">\n"
+                                , "<head>\n"
+                                , "<meta charset=\"utf-8\">\n"
+                                , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+                                , "<style>body{color:blue}</style>"
+                                , "<meta name=\"description\" content=\"&lt;desc&gt;\">\n"
+                                , "<title>A &amp; B</title>\n"
+                                , "</head>\n"
+                                , "<body>\n"
+                                , "<p>hi</p>"
+                                , "\n</body>\n"
+                                , "</html>\n"
+                                ]
+                            )
+            , test "escapes Html.text in head content but passes Html.raw through unescaped, so an inline stylesheet's selectors are not mangled" <|
+                \_ ->
+                    Html.document
+                        { title = "T"
+                        , description = "D"
+                        , head =
+                            [ Html.node "style" [] [ Html.raw "a>b{color:red}" ]
+                            , Html.node "script" [] [ Html.text "1 < 2" ]
+                            ]
+                        , body = []
+                        }
+                        |> Expect.equal
+                            (String.concat
+                                [ "<!DOCTYPE html>\n"
+                                , "<html lang=\"en\">\n"
+                                , "<head>\n"
+                                , "<meta charset=\"utf-8\">\n"
+                                , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+                                , "<style>a>b{color:red}</style>"
+                                , "<script>1 &lt; 2</script>"
+                                , "<meta name=\"description\" content=\"D\">\n"
+                                , "<title>T</title>\n"
+                                , "</head>\n"
+                                , "<body>\n"
                                 , "\n</body>\n"
                                 , "</html>\n"
                                 ]

@@ -178,11 +178,15 @@ renderAttribute ( key, value ) =
 
 
 {-| Render a complete, minimal HTML5 document: doctype, a `utf-8` charset
-meta tag, a responsive viewport meta tag, a `<title>`, a `description` meta
-tag, and the given body. No external assets (stylesheets, scripts, fonts)
-are referenced.
+meta tag, a responsive viewport meta tag, `head` (e.g. an inline
+`<style>`), a `<title>`, a `description` meta tag, and the given body. No
+external assets (stylesheets, scripts, fonts) are referenced.
+
+`head` is rendered after the charset and viewport meta tags, so nothing
+passed there can displace them from the top of `<head>`.
+
 -}
-document : { title : String, description : String, body : List Html } -> String
+document : { title : String, description : String, head : List Html, body : List Html } -> String
 document config =
     String.concat
         [ "<!DOCTYPE html>\n"
@@ -190,6 +194,7 @@ document config =
         , "<head>\n"
         , "<meta charset=\"utf-8\">\n"
         , "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        , String.concat (List.map toString config.head)
         , "<meta name=\"description\" content=\""
         , escape config.description
         , "\">\n"

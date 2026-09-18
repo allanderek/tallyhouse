@@ -34,9 +34,9 @@ homePage flags =
         Html.document
             { title = "Tallyhouse"
             , description = "Tallyhouse is a weekly, reproducible index measuring how many of the top websites tell AI crawlers to stay out."
+            , head = [ stylesheet ]
             , body =
-                [ stylesheet
-                , Html.header []
+                [ Html.header []
                     [ Html.h1 [] [ Html.text "Tallyhouse" ]
                     , Html.p [ Html.attribute "class" "tagline" ] [ Html.text flags.index.question ]
                     ]
@@ -75,10 +75,10 @@ indexPage flags =
         Html.document
             { title = flags.index.title
             , description = flags.index.question
+            , head = [ stylesheet ]
             , body =
                 List.concat
-                    [ [ stylesheet
-                      , pageHeader { title = flags.index.title, subtitle = Just flags.index.question }
+                    [ [ pageHeader { title = flags.index.title, subtitle = Just flags.index.question }
                       , Html.main_ []
                             (List.concat
                                 [ headlineSection flags.panel flags.prints
@@ -321,9 +321,9 @@ aboutPage flags =
         Html.document
             { title = "About Tallyhouse"
             , description = "What Tallyhouse measures, how its panel is built, and why every published number can be reproduced from the committed ledger."
+            , head = [ stylesheet ]
             , body =
-                [ stylesheet
-                , pageHeader { title = "About Tallyhouse", subtitle = Nothing }
+                [ pageHeader { title = "About Tallyhouse", subtitle = Nothing }
                 , Html.main_ []
                     [ Html.section []
                         [ Html.h2 [] [ Html.text "What this measures" ]
