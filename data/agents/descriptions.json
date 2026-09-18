@@ -1,0 +1,101 @@
+{
+  "note": "Editorial descriptions of the tracked crawlers. DELIBERATELY SEPARATE from agents/v1.json: that file defines the agent set and is methodology — changing it bumps the methodology version and forces recomputation of every affected print. These descriptions carry no such weight and can be corrected freely without touching a single published number.",
+  "drafted": "2026-09-18",
+  "status": "DRAFT — written by Claude from general knowledge, awaiting review. Claims about who honours robots.txt are the least reliable and should be checked against each operator's published documentation before this is shown to readers.",
+  "operators": {
+    "OpenAI": "Operates three separately-named tokens for three different jobs, which is why sites so often treat them differently.",
+    "Anthropic": "Publishes ClaudeBot as its crawler; earlier tokens are still named in many robots.txt files.",
+    "Google": "Google-Extended is not a crawler. It is a consent signal governing whether content Googlebot has already fetched may be used to train Google's generative models.",
+    "Apple": "Applebot-Extended is likewise a consent signal, not a crawler: it governs training use of content Applebot has already fetched.",
+    "Common Crawl": "A non-profit web archive operating since 2011, long predating the current AI industry. Its corpus is widely used as training data, which is why blocking it became common only recently.",
+    "ByteDance": "Operator of TikTok. Bytespider has been widely reported as crawling aggressively.",
+    "Perplexity": "An answer engine. Operates a crawler and a user-initiated fetcher.",
+    "Meta": "Crawls for training its Llama models.",
+    "Amazon": "Crawls for product, search and assistant features.",
+    "Cohere": "An enterprise-focused model developer.",
+    "Diffbot": "A commercial web-extraction service that sells structured data and a knowledge graph built from crawled pages.",
+    "Hive": "Operates ImageSift, an image-focused crawler used to build image datasets."
+  },
+  "agents": {
+    "GPTBot": {
+      "operator": "OpenAI",
+      "purpose": "training",
+      "description": "Collects web content to train OpenAI's generative models. This is the token most sites reach for first when they want to refuse AI training, and the most blocked crawler in the panel."
+    },
+    "ChatGPT-User": {
+      "operator": "OpenAI",
+      "purpose": "user-initiated",
+      "description": "Fetches a page because a ChatGPT user asked for it — following a link, or browsing on request. It is not a bulk crawler and the content is not collected for training. Sites that want to be usable by people using AI assistants, but not used as training data, allow this and block GPTBot."
+    },
+    "OAI-SearchBot": {
+      "operator": "OpenAI",
+      "purpose": "search",
+      "description": "Indexes pages so they can appear as results and citations in ChatGPT's search. Blocking it removes a site from those results. It has the most even split in the panel between full and partial blocks, which suggests sites weigh it more like a search engine than like a training crawler."
+    },
+    "ClaudeBot": {
+      "operator": "Anthropic",
+      "purpose": "training",
+      "description": "Anthropic's crawler, collecting web content for training Claude."
+    },
+    "anthropic-ai": {
+      "operator": "Anthropic",
+      "purpose": "training",
+      "description": "An earlier Anthropic token, still named in many robots.txt files. Sites that added it years ago have generally left it in place, so it appears alongside ClaudeBot more often than it is used."
+    },
+    "CCBot": {
+      "operator": "Common Crawl",
+      "purpose": "archive",
+      "description": "Common Crawl's crawler, running since 2011 for a non-profit web archive. Nothing about it changed when AI training became contentious — what changed is that sites began to read it as an AI crawler, because its archive is a common training corpus. It is now among the most blocked agents in the panel despite being the oldest and the only non-commercial one."
+    },
+    "Google-Extended": {
+      "operator": "Google",
+      "purpose": "training-consent",
+      "description": "Not a crawler. Google-Extended is a consent signal: disallowing it tells Google that content it has already fetched with Googlebot may not be used to train Gemini. Blocking it does not reduce crawling and does not affect Google Search ranking, which is precisely why sites unwilling to lose search traffic use it."
+    },
+    "Applebot-Extended": {
+      "operator": "Apple",
+      "purpose": "training-consent",
+      "description": "Not a crawler. Like Google-Extended, it withholds permission for content Applebot has already fetched to be used in training Apple's models, without affecting crawling or Apple's search features."
+    },
+    "Bytespider": {
+      "operator": "ByteDance",
+      "purpose": "training",
+      "description": "ByteDance's crawler. It is blocked at close to the same rate as the best-known AI crawlers, which is notable given how much less public discussion it attracts."
+    },
+    "PerplexityBot": {
+      "operator": "Perplexity",
+      "purpose": "search",
+      "description": "Indexes pages so Perplexity can cite them in answers."
+    },
+    "Perplexity-User": {
+      "operator": "Perplexity",
+      "purpose": "user-initiated",
+      "description": "Fetches a page because a Perplexity user asked for it, rather than as part of a bulk crawl."
+    },
+    "meta-externalagent": {
+      "operator": "Meta",
+      "purpose": "training",
+      "description": "Meta's crawler, collecting web content to train its models."
+    },
+    "Amazonbot": {
+      "operator": "Amazon",
+      "purpose": "mixed",
+      "description": "Amazon's crawler. It serves several purposes, so blocking it affects more than training use."
+    },
+    "cohere-ai": {
+      "operator": "Cohere",
+      "purpose": "training",
+      "description": "Cohere's crawler, collecting content for training its models."
+    },
+    "Diffbot": {
+      "operator": "Diffbot",
+      "purpose": "commercial-extraction",
+      "description": "Crawls pages to build and sell structured data and a knowledge graph. It predates the current wave of model training and is a data business rather than a model developer, but is frequently blocked alongside AI crawlers."
+    },
+    "ImagesiftBot": {
+      "operator": "Hive",
+      "purpose": "images",
+      "description": "Crawls for images rather than text, building image datasets. It is the only agent in the panel that no site in this period blocked partially — sites that block it block it outright, which fits a crawler whose value is the whole image corpus rather than particular pages."
+    }
+  }
+}
