@@ -1,10 +1,17 @@
 import gzip
 import io
-import json
+from datetime import datetime
 
+import duckdb
 import pytest
 
-from tallyhouse.commoncrawl import IndexUnavailable, cdx_lookup, fetch_record, observe
+from tallyhouse.commoncrawl import (
+    IndexUnavailable,
+    fetch_body,
+    locate,
+    robotstxt_parts,
+    to_observation,
+)
 
 
 class FakeResponse(io.BytesIO):
@@ -12,25 +19,10 @@ class FakeResponse(io.BytesIO):
     def __exit__(self, *a): return False
 
 
-def index_line(**over):
-    rec = {"urlkey": "com,example)/robots.txt", "timestamp": "20230126210953",
-           "url": "https://example.com/robots.txt", "status": "200",
-           "filename": "crawl-data/X/robotstxt/y.warc.gz",
-           "offset": "0", "length": "10"}
-    rec.update(over)
-    return ('{"urlkey": "x", ' + json.dumps(rec)[1:]).encode()
-
-
-def warc_bytes(body: bytes) -> bytes:
-    return gzip.compress(b"WARC/1.0\r\nWARC-Type: response\r\n\r\n"
-                         b"HTTP/1.1 200 OK\r\n\r\n" + body)
-
-
-def opener_for(pages):
-    """pages: list of bytes, returned in order; an Exception instance raises."""
+def opener_for(items):
     calls = {"n": 0}
     def opener(req, timeout=None):
-        item = pages[min(calls["n"], len(pages) - 1)]
+        item = items[min(calls["n"], len(items) - 1)]
         calls["n"] += 1
         if isinstance(item, Exception):
             raise item
@@ -39,86 +31,128 @@ def opener_for(pages):
     return opener
 
 
-def test_a_missing_capture_is_not_an_error():
-    opener = opener_for([b'{"message": "No Captures found"}'])
-    assert cdx_lookup("CC-MAIN-2023-06", "x.com/robots.txt", opener=opener) == []
+def make_parquet(tmp_path, rows):
+    """A local Parquet with the columnar index's schema, so the SQL is tested."""
+    con = duckdb.connect()
+    con.execute("""
+        CREATE TABLE idx (
+          url_surtkey VARCHAR, url VARCHAR, url_host_name VARCHAR,
+          url_host_registered_domain VARCHAR, url_path VARCHAR,
+          fetch_time TIMESTAMP, fetch_status INTEGER,
+          warc_filename VARCHAR, warc_record_offset BIGINT, warc_record_length BIGINT
+        )""")
+    for r in rows:
+        con.execute("INSERT INTO idx VALUES (?,?,?,?,?,?,?,?,?,?)", [
+            "k", r["url"], r["host"], r["dom"], r.get("path", "/robots.txt"),
+            datetime.fromisoformat(r["time"]), r["status"], "w.warc.gz", 0, 10,
+        ])
+    path = tmp_path / "part.parquet"
+    con.execute(f"COPY idx TO '{path}' (FORMAT PARQUET)")
+    return str(path)
 
 
-def test_a_flaky_index_is_retried_then_gives_up_loudly():
-    # A transport failure is not the same as "no record": losing records
-    # silently across 36,000 queries would corrupt the series invisibly.
-    opener = opener_for([OSError("502")])
+def row(dom, status, time, host=None, url=None, path="/robots.txt"):
+    host = host or dom
+    return {"dom": dom, "host": host, "status": status, "time": time,
+            "url": url or f"https://{host}/robots.txt", "path": path}
+
+
+def test_paths_are_filtered_to_the_robotstxt_subset(tmp_path):
+    listing = gzip.compress(b"a/subset=warc/p.parquet\nb/subset=robotstxt/q.parquet\n")
+    parts = robotstxt_parts("CC-X", opener=opener_for([listing]))
+    assert len(parts) == 1 and "subset=robotstxt" in parts[0]
+
+
+def test_paths_are_cached_so_a_backfill_refetches_nothing(tmp_path):
+    listing = gzip.compress(b"b/subset=robotstxt/q.parquet\n")
+    opener = opener_for([listing])
+    robotstxt_parts("CC-X", cache=tmp_path, opener=opener)
+    robotstxt_parts("CC-X", cache=tmp_path, opener=opener)
+    assert opener.calls["n"] == 1
+
+
+def test_unreachable_index_paths_fail_loudly(tmp_path):
     with pytest.raises(IndexUnavailable):
-        cdx_lookup("CC-MAIN-2023-06", "x.com/robots.txt", opener=opener, sleep=lambda _: None)
-    assert opener.calls["n"] == 4
+        robotstxt_parts("CC-X", opener=opener_for([OSError("503")]))
 
 
-def test_a_transient_failure_then_success_is_recovered():
-    opener = opener_for([OSError("504"), index_line()])
-    recs = cdx_lookup("CC-MAIN-2023-06", "x.com/robots.txt", opener=opener, sleep=lambda _: None)
-    assert recs[0]["status"] == "200"
+def test_a_200_is_preferred_over_a_newer_redirect(tmp_path):
+    # The apex 301 is newer, but the readable file is what we want.
+    parts = [make_parquet(tmp_path, [
+        row("a.com", 301, "2026-07-10T10:00:00"),
+        row("a.com", 200, "2026-07-10T09:00:00", host="www.a.com"),
+    ])]
+    got = locate(duckdb.connect(), parts, ["a.com"])
+    assert got["a.com"]["status"] == "200"
+    assert got["a.com"]["url"] == "https://www.a.com/robots.txt"
 
 
-def test_fetch_record_extracts_the_body_from_the_warc():
-    opener = opener_for([warc_bytes(b"User-agent: *\nDisallow: /\n")])
-    body = fetch_record({"filename": "f", "offset": "0", "length": "10"}, opener=opener)
+def test_a_conclusive_absence_beats_a_redirect(tmp_path):
+    parts = [make_parquet(tmp_path, [
+        row("a.com", 301, "2026-07-10T10:00:00"),
+        row("a.com", 404, "2026-07-10T09:00:00"),
+    ])]
+    assert locate(duckdb.connect(), parts, ["a.com"])["a.com"]["status"] == "404"
+
+
+def test_the_newest_is_chosen_within_a_class(tmp_path):
+    parts = [make_parquet(tmp_path, [
+        row("a.com", 200, "2026-07-10T09:00:00", url="https://a.com/old"),
+        row("a.com", 200, "2026-07-10T22:00:00", url="https://a.com/new"),
+    ])]
+    assert locate(duckdb.connect(), parts, ["a.com"])["a.com"]["url"].endswith("/new")
+
+
+def test_only_apex_and_www_hosts_count(tmp_path):
+    # en.wikipedia.org shares a registered domain but is a different site's
+    # policy; the live collector would never fetch it, so neither does this.
+    parts = [make_parquet(tmp_path, [
+        row("wikipedia.org", 200, "2026-07-10T09:00:00", host="en.wikipedia.org"),
+    ])]
+    assert locate(duckdb.connect(), parts, ["wikipedia.org"]) == {}
+
+
+def test_one_row_per_domain(tmp_path):
+    parts = [make_parquet(tmp_path, [
+        row("a.com", 200, "2026-07-10T09:00:00"),
+        row("a.com", 200, "2026-07-10T10:00:00"),
+        row("b.com", 200, "2026-07-10T09:00:00"),
+    ])]
+    got = locate(duckdb.connect(), parts, ["a.com", "b.com"])
+    assert sorted(got) == ["a.com", "b.com"]
+
+
+def test_non_robots_paths_are_ignored(tmp_path):
+    parts = [make_parquet(tmp_path, [row("a.com", 200, "2026-07-10T09:00:00", path="/")]) ]
+    assert locate(duckdb.connect(), parts, ["a.com"]) == {}
+
+
+def test_fetch_body_extracts_from_the_warc():
+    warc = gzip.compress(b"WARC/1.0\r\nWARC-Type: response\r\n\r\n"
+                         b"HTTP/1.1 200 OK\r\n\r\nUser-agent: *\nDisallow: /\n")
+    body = fetch_body({"filename": "f", "offset": 0, "length": 10},
+                      opener=opener_for([warc]))
     assert body == b"User-agent: *\nDisallow: /\n"
 
 
-def test_a_captured_robots_txt_is_fetched():
-    opener = opener_for([index_line(), warc_bytes(b"User-agent: GPTBot\nDisallow: /\n")])
-    rec = observe("CC-MAIN-2023-06", "example.com", opener=opener)
-    assert rec["outcome"] == "Fetched"
-    assert rec["body"] == b"User-agent: GPTBot\nDisallow: /\n"
-    # The honest fetched_at is when Common Crawl saw it, not when we ran.
-    assert rec["fetched_at"] == "2023-01-26T21:09:53Z"
-    assert rec["crawl"] == "CC-MAIN-2023-06"
-
-
 def test_a_domain_absent_from_the_crawl_is_not_in_crawl():
-    opener = opener_for([b'{"message": "No Captures found"}'])
-    rec = observe("CC-MAIN-2023-06", "x.com", opener=opener)
+    obs = to_observation("a.com", "CC-X", None, None)
     # Absence of evidence about the CRAWL, not about the site.
-    assert rec["outcome"] == "NotInCrawl"
-    assert rec["body"] is None
+    assert obs["outcome"] == "NotInCrawl" and obs["body"] is None
 
 
-def test_a_404_record_is_conclusive():
-    opener = opener_for([index_line(status="404")])
-    assert observe("CC-MAIN-2023-06", "x.com", opener=opener)["outcome"] == "NoRobotsTxt"
+def test_outcomes_map_to_the_live_vocabulary():
+    def out(status):
+        rec = {"url": "u", "status": status, "fetch_time": "2026-07-10T09:00:00Z"}
+        return to_observation("a.com", "CC-X", rec, b"x" if status == "200" else None)["outcome"]
+    assert out("200") == "Fetched"
+    assert out("404") == "NoRobotsTxt"
+    assert out("301") == "TransportError"
+    assert out("403") == "ServerError"
 
 
-def test_a_200_is_selected_from_among_redirect_captures():
-    # One query returns every capture under the urlkey. Chasing the `redirect`
-    # field does not work — CDX urlkeys ignore the scheme, so an http->https
-    # redirect points back at the same key — so the 200 is selected instead.
-    page = (index_line(status="301", timestamp="20230126210000")
-            + b"\n"
-            + index_line(status="200", url="https://www.example.com/robots.txt",
-                         timestamp="20230126211000"))
-    opener = opener_for([page, warc_bytes(b"User-agent: *\nAllow: /\n")])
-    rec = observe("CC-MAIN-2023-06", "example.com", opener=opener)
-    assert rec["outcome"] == "Fetched"
-    assert rec["final_url"] == "https://www.example.com/robots.txt"
-
-
-def test_a_200_beats_a_404_even_when_the_404_is_newer():
-    page = (index_line(status="404", timestamp="20230126990000")
-            + b"\n" + index_line(status="200", timestamp="20230126210000"))
-    opener = opener_for([page, warc_bytes(b"User-agent: *\nAllow: /\n")])
-    assert observe("CC-MAIN-2023-06", "example.com", opener=opener)["outcome"] == "Fetched"
-
-
-def test_captured_only_as_a_redirect_is_inconclusive():
-    opener = opener_for([index_line(status="301")])
-    rec = observe("CC-MAIN-2023-06", "a.com", opener=opener)
-    assert rec["outcome"] == "TransportError"
-
-
-def test_the_www_variant_is_tried_when_the_apex_has_no_200():
-    # Apex returns only redirects; www. carries the real file.
-    apex = index_line(status="301")
-    www = index_line(status="200", url="https://www.example.com/robots.txt")
-    opener = opener_for([apex, www, warc_bytes(b"User-agent: *\nAllow: /\n")])
-    rec = observe("CC-MAIN-2023-06", "example.com", opener=opener)
-    assert rec["outcome"] == "Fetched"
+def test_fetched_at_is_when_common_crawl_saw_it():
+    rec = {"url": "u", "status": "200", "fetch_time": "2023-01-26T21:09:53Z"}
+    obs = to_observation("a.com", "CC-X", rec, b"body")
+    assert obs["fetched_at"] == "2023-01-26T21:09:53Z"
+    assert obs["crawl"] == "CC-X"
