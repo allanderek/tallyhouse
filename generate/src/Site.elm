@@ -1,4 +1,4 @@
-port module Site exposing (main)
+port module Site exposing (main, render)
 
 {-| Renders the Tallyhouse site.
 
@@ -36,18 +36,32 @@ main =
         }
 
 
-{-| Flags are decoded once, up front. A decode failure here means the data
-Python assembled does not match the shape this program expects, which is a
-bug worth failing loudly for rather than papering over with a fallback page.
--}
 init : Decode.Value -> ( Model, Cmd Msg )
 init flagsValue =
+    ( (), emit (render flagsValue) )
+
+
+{-| The pure heart of the program: flags in, the JSON string to emit out.
+Kept separate from `init` so it can be exercised directly in tests, without
+a port or a running worker.
+
+A decode failure means the data Python assembled does not match the shape
+this program expects — a bug worth failing loudly for. It cannot fail loudly
+by crashing the program, though: `--optimize` refuses to build with any use
+of `Debug`, and the documented production path uses `--optimize`. Emitting a
+JSON error object instead keeps the failure loud (Python's harness treats an
+`{"error": ...}` payload as a hard failure carrying this message) while
+staying optimisable.
+
+-}
+render : Decode.Value -> String
+render flagsValue =
     case Decode.decodeValue Data.decodeFlags flagsValue of
         Ok flags ->
-            ( (), emit (encodePages (Pages.pages flags)) )
+            encodePages (Pages.pages flags)
 
         Err error ->
-            Debug.todo (Decode.errorToString error)
+            encodeError error
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -73,3 +87,9 @@ encodePage page =
         [ ( "path", Encode.string page.path )
         , ( "content", Encode.string page.content )
         ]
+
+
+encodeError : Decode.Error -> String
+encodeError error =
+    Encode.encode 0
+        (Encode.object [ ( "error", Encode.string (Decode.errorToString error) ) ])
