@@ -5,6 +5,7 @@ Each `Page` is a relative path (no leading slash) and the rendered HTML
 document to write there; `Site` collects them and sends them out its port.
 -}
 
+import Chart
 import Data exposing (Flags, Panel, Qualification, Row)
 import Html exposing (Html)
 
@@ -82,6 +83,7 @@ indexPage flags =
                       , Html.main_ []
                             (List.concat
                                 [ headlineSection flags.panel flags.prints
+                                , Chart.view flags.prints flags.series
                                 , seriesSection flags.series period
                                 , [ Html.section [ Html.attribute "class" "history" ]
                                         [ Html.h2 [] [ Html.text "Every published print" ]
@@ -452,6 +454,15 @@ css =
         , "th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }"
         , "th { border-bottom: 2px solid #999; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: #444; }"
         , ".series-table { margin-bottom: 1.5rem; }"
+        , ".trend-chart { display: block; width: 100%; height: auto; margin-top: 0.5rem; }"
+        , ".chart-axis-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; fill: #555; font-variant-numeric: tabular-nums; }"
+        , ".chart-endpoint-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }"
+        , ".chart-legend { list-style: none; padding: 0; margin: 0.75rem 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }"
+        , ".chart-legend li { display: flex; align-items: center; gap: 0.4rem; }"
+        , ".chart-swatch { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 50%; flex: none; }"
+        , ".chart-swatch-targeted { background: #2a78d6; }"
+        , ".chart-swatch-effective { background: #eb6834; }"
+        , ".chart-swatch-provisional { background: none; border: 2px solid #888; box-sizing: border-box; }"
         , "footer { margin-top: 3rem; border-top: 1px solid #ddd; padding-top: 1rem; }"
         , "code { background: #f0f0ee; padding: 0.1rem 0.3rem; border-radius: 2px; }"
         ]
