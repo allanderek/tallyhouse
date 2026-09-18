@@ -63,6 +63,14 @@ agentAccessibilityContent flags =
         |> String.concat
 
 
+aboutContent : Flags -> String
+aboutContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "about/index.html")
+        |> List.map .content
+        |> String.concat
+
+
 suite : Test
 suite =
     describe "Pages"
@@ -158,6 +166,38 @@ suite =
                 \_ ->
                     agentAccessibilityContent baseFlags
                         |> String.contains basePanel.qualification.knownBias
+                        |> Expect.equal True
+            ]
+        , describe "the Tranco link on the about page"
+            [ test "links to the Tranco site" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains "<a href=\"https://tranco-list.eu/\">Tranco</a>"
+                        |> Expect.equal True
+            , test "links the panel id to its specific list, using the id from flags" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains
+                            (String.concat
+                                [ "<a href=\"https://tranco-list.eu/list/"
+                                , basePanel.trancoListId
+                                , "\">"
+                                , basePanel.trancoListId
+                                , "</a>"
+                                ]
+                            )
+                        |> Expect.equal True
+            ]
+        , describe "the coverage explanation on the index page"
+            [ test "explains that coverage is the share of the panel conclusively observed" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "share of the panel this period"
+                        |> Expect.equal True
+            , test "explains that excluded sites are dropped from both numerator and denominator" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "excluded from both the numerator and the denominator"
                         |> Expect.equal True
             ]
         ]

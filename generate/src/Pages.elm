@@ -235,6 +235,13 @@ seriesSection allSeries period =
             , Html.code [] [ Html.text "effective" ]
             , Html.text " row below adds those in, so targeted and effective access are not the same number."
             ]
+        , Html.p []
+            [ Html.text "The "
+            , Html.code [] [ Html.text "coverage" ]
+            , Html.text " row is not a share of the web; it is the share of the panel this period's headline figure actually rests on. A site counts as conclusively observed if it served a usable "
+            , Html.code [] [ Html.text "robots.txt" ]
+            , Html.text ", or definitively answered that it has none, with a 404. Sites that timed out, refused the request, or sat behind an anti-automation challenge are excluded from both the numerator and the denominator of the headline — counted as neither compliant nor non-compliant."
+            ]
         , seriesTable "Fixed series" fixed (\row -> Data.seriesLabel (Maybe.withDefault "" row.seriesId))
         , seriesTable "Per-agent series" agents Data.agentName
         ]
@@ -331,7 +338,12 @@ aboutPage flags =
                         , Html.p []
                             [ Html.text "Tallyhouse reads the "
                             , Html.code [] [ Html.text "robots.txt" ]
-                            , Html.text " file published by each site in a fixed panel drawn from the Tranco top-sites list, and checks whether it names one of a fixed list of AI crawlers and disallows it. The headline figure is the share of the panel that does, published weekly."
+                            , Html.text " file published by each site in a fixed panel drawn from the "
+                            , Html.a [ Html.attribute "href" "https://tranco-list.eu/" ] [ Html.text "Tranco" ]
+                            , Html.text " top-sites list, and checks whether it names one of a fixed list of AI crawlers and disallows it. The headline figure is the share of the panel that does, published weekly."
+                            ]
+                        , Html.p []
+                            [ Html.text "Tranco is a research-grade ranking of the most popular domains, built by combining several underlying popularity sources and published daily. Each day's list carries a permanent identifier, so a specific list can be cited and retrieved later — which is what lets a reader check our panel against the exact list we drew it from, rather than take our word for it."
                             ]
                         ]
                     , Html.section []
@@ -342,11 +354,13 @@ aboutPage flags =
                     , Html.section []
                         [ Html.h2 [] [ Html.text "How the panel is built" ]
                         , Html.p []
-                            [ Html.text
+                            [ Html.text "Panel "
+                            , Html.a
+                                [ Html.attribute "href" (String.concat [ "https://tranco-list.eu/list/", flags.panel.trancoListId ]) ]
+                                [ Html.text flags.panel.trancoListId ]
+                            , Html.text
                                 (String.concat
-                                    [ "Panel "
-                                    , flags.panel.trancoListId
-                                    , ", captured "
+                                    [ ", captured "
                                     , flags.panel.captured
                                     , ": "
                                     , flags.panel.qualification.rule
