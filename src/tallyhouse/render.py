@@ -84,6 +84,14 @@ def render_site(program: str, flags) -> dict[str, str]:
     if not emitted:
         raise RenderError("the generator emitted nothing")
     pages = json.loads(emitted[0]) if isinstance(emitted[0], str) else emitted[0]
+
+    # The generator reports a failed flags decode as an object rather than the
+    # usual array of pages. A data-shape bug must stop the build loudly: a page
+    # that renders but is quietly wrong is worse than no page, and `--optimize`
+    # rules out Elm's Debug module as the way to say so.
+    if isinstance(pages, dict):
+        raise RenderError(f"the generator rejected its input: {pages.get('error', pages)}")
+
     files = {}
     for page in pages:
         path, content = page["path"], page["content"]

@@ -90,3 +90,12 @@ def test_an_unoptimised_build_that_logs_still_runs():
     program = STUB.replace(
         "var Elm =", "console.log('elm debug'); var Elm =")
     assert render(program, {"out": "ok"}) == ["ok"]
+
+
+def test_a_rejected_decode_stops_the_build_with_its_message():
+    # Elm reports a failed flags decode as an object, not an array of pages.
+    # Rendering a silently wrong page would be worse than failing.
+    program = STUB.replace("config.flags.out", '\'{"error":"Problem with field \\\'period\\\'"}\'')
+    with pytest.raises(RenderError) as excinfo:
+        render_site(program, {})
+    assert "period" in str(excinfo.value)
