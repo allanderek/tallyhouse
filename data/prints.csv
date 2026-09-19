@@ -1,2 +1,3 @@
 index_id,period,vintage,value,denominator,coverage,provisional,methodology_version,collector_version,computed_at,reason
 agent-accessibility,2026-09-14,1,23.4704,997,99.7,false,agents=1;protego=0.6.2,f5c2b39,2026-09-17T15:56:22Z,
+agent-accessibility,2026-09-14,2,23.9719,997,99.7,false,agents=2;protego=0.6.2,f5c2b39,2026-09-19T12:13:19Z,"methodology v2: agent set expanded from 16 to 45 tokens after an audit found v1 incomplete (Anthropic tracked 1 of 4 live tokens; Meta's fetcher, Cohere's training crawler and Mistral absent)"
