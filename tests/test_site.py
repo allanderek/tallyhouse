@@ -72,3 +72,90 @@ def test_write_site_creates_nested_directories(tmp_path):
     written = write_site({"index.html": "a", "about/crawler/index.html": "b"}, tmp_path)
     assert (tmp_path / "about" / "crawler" / "index.html").read_text() == "b"
     assert len(written) == 2
+
+
+def _agent_fixture(tmp_path, agents, operators, purposes=None):
+    d = tmp_path / "agents"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "descriptions.json").write_text(json.dumps({
+        "agents": agents, "operators": operators,
+        "purposes": purposes or {"training": "bulk crawl"},
+    }))
+
+
+def test_stance_counts_are_aggregated_per_agent(tmp_path):
+    from tallyhouse.site import load_agent_data
+    _agent_fixture(tmp_path,
+                   {"GPTBot": {"operator": "OpenAI", "purpose": "training", "description": "d"}},
+                   {"OpenAI": "desc"})
+    verdicts = [{"domain": "a.com", "agent": "GPTBot", "stance": "FullBlock"},
+                {"domain": "b.com", "agent": "GPTBot", "stance": "FullBlock"},
+                {"domain": "c.com", "agent": "GPTBot", "stance": "Unmentioned"}]
+    got = load_agent_data(tmp_path, verdicts)["agents"]["GPTBot"]
+    assert got["stances"] == {"FullBlock": 2, "PartialBlock": 0, "Allowed": 0, "Unmentioned": 1}
+    assert got["series_id"] == "agent:GPTBot"
+    assert got["slug"] == "gptbot"
+
+
+def test_an_agent_with_no_verdicts_still_appears_with_zeroes(tmp_path):
+    from tallyhouse.site import load_agent_data
+    _agent_fixture(tmp_path,
+                   {"NewBot": {"operator": "X", "purpose": "training", "description": "d"}},
+                   {"X": "desc"})
+    got = load_agent_data(tmp_path, [])["agents"]["NewBot"]
+    # A newly tracked crawler must not vanish from the site because nothing
+    # blocked it yet — that absence is itself a fact worth showing.
+    assert got["stances"]["FullBlock"] == 0
+
+
+def test_divergent_domains_are_those_treating_an_operators_tokens_differently(tmp_path):
+    from tallyhouse.site import load_agent_data
+    _agent_fixture(tmp_path, {
+        "A-Train": {"operator": "Acme", "purpose": "training", "description": "d"},
+        "A-User": {"operator": "Acme", "purpose": "training", "description": "d"},
+    }, {"Acme": "desc"})
+    verdicts = [
+        # splits the two tokens -> divergent
+        {"domain": "split.com", "agent": "A-Train", "stance": "FullBlock"},
+        {"domain": "split.com", "agent": "A-User", "stance": "Unmentioned"},
+        # treats them alike -> not divergent
+        {"domain": "same.com", "agent": "A-Train", "stance": "FullBlock"},
+        {"domain": "same.com", "agent": "A-User", "stance": "FullBlock"},
+    ]
+    op = load_agent_data(tmp_path, verdicts)["operators"]["Acme"]
+    assert op["divergent_count"] == 1
+    assert [d["domain"] for d in op["divergent_examples"]] == ["split.com"]
+
+
+def test_a_single_token_operator_has_no_divergence(tmp_path):
+    from tallyhouse.site import load_agent_data
+    _agent_fixture(tmp_path,
+                   {"Solo": {"operator": "Lone", "purpose": "training", "description": "d"}},
+                   {"Lone": "desc"})
+    verdicts = [{"domain": "a.com", "agent": "Solo", "stance": "FullBlock"}]
+    assert load_agent_data(tmp_path, verdicts)["operators"]["Lone"]["divergent_count"] == 0
+
+
+def test_divergent_examples_are_capped_but_the_count_is_not(tmp_path):
+    from tallyhouse.site import load_agent_data
+    _agent_fixture(tmp_path, {
+        "T1": {"operator": "Acme", "purpose": "training", "description": "d"},
+        "T2": {"operator": "Acme", "purpose": "training", "description": "d"},
+    }, {"Acme": "desc"})
+    verdicts = []
+    for i in range(40):
+        verdicts += [{"domain": f"d{i:02}.com", "agent": "T1", "stance": "FullBlock"},
+                     {"domain": f"d{i:02}.com", "agent": "T2", "stance": "Allowed"}]
+    op = load_agent_data(tmp_path, verdicts)["operators"]["Acme"]
+    # The page shows a sample; the headline count must still be the true total.
+    assert op["divergent_count"] == 40
+    assert len(op["divergent_examples"]) == 25
+
+
+def test_site_data_renders_without_crawler_descriptions(tmp_path):
+    # The site must build from prints alone. Descriptions are editorial; a
+    # missing file should not stop a number being published.
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"}, meta(value="23.4"))
+    data = load_site_data(tmp_path)
+    assert data["prints"] and data["agents"] == {} and data["operators"] == {}
