@@ -324,6 +324,18 @@ suite =
                             )
                         |> Expect.equal True
             ]
+        , describe "related work on the about page"
+            [ test "links to the Agentic Web Index" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains "<a href=\"https://knownagents.com/insights\">"
+                        |> Expect.equal True
+            , test "quotes Known Agents' sampling caveat" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains "Participating websites are not a random sample, and the qualifying set changes over time, so results show observed directional trends rather than a census of global web traffic."
+                        |> Expect.equal True
+            ]
         , describe "the coverage explanation on the index page"
             [ test "explains that coverage is the share of the panel conclusively observed" <|
                 \_ ->

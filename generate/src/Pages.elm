@@ -389,6 +389,28 @@ aboutPage flags =
                             ]
                         , Html.p [ Html.attribute "class" "meta" ] [ Html.text flags.panel.qualification.knownBias ]
                         ]
+                    , Html.section []
+                        [ Html.h2 [] [ Html.text "Related work" ]
+                        , Html.p []
+                            [ Html.text "Tallyhouse is not the only project measuring this ground. "
+                            , Html.a [ Html.attribute "href" "https://knownagents.com/insights" ] [ Html.text "The Agentic Web Index" ]
+                            , Html.text ", published by Known Agents, tracks the same crawlers from the opposite side: not what a site's "
+                            , Html.code [] [ Html.text "robots.txt" ]
+                            , Html.text " says, but what a crawler actually does when it requests a page."
+                            ]
+                        , Html.p []
+                            [ Html.text "Known Agents draws on server-side traffic from more than 5,000 websites running its analytics, which lets it observe agent-versus-human traffic, bot spoofing, and, where Tallyhouse cannot follow, robots.txt compliance: whether a crawler honours the rule it was given. Tallyhouse reads the rule from outside; it has no way to see whether anyone obeys it. A reader who wants to know whether a crawler actually obeys a disallow, rather than whether one was published, should look there." ]
+                        , Html.p []
+                            [ Html.text "The two panels are built for different questions, and neither design is wrong for its own. Known Agents' sample is self-selected, drawn from sites that adopted its product, and it says so plainly: "
+                            , Html.text "\"Participating websites are not a random sample, and the qualifying set changes over time, so results show observed directional trends rather than a census of global web traffic.\""
+                            , Html.text " Tallyhouse's panel is fixed for the year and drawn from an external ranking with a citable list identifier, so a change in the headline number cannot be a change in who is being measured. That is a difference in design goal, not a defect in theirs: a daily operational index and a slow, reproducible one are built to answer different questions."
+                            ]
+                        , Html.p []
+                            [ Html.text "Known Agents publishes no raw data downloads; Tallyhouse publishes the collected "
+                            , Html.code [] [ Html.text "robots.txt" ]
+                            , Html.text " bodies, the ledger, and the code behind every figure, so a stranger can re-derive any number published here. Known Agents updates daily; Tallyhouse prints weekly and freezes each print. Together the two say more than either alone: they measure what crawlers do, we measure what sites ask for."
+                            ]
+                        ]
                     ]
                 , siteFooter
                 ]
