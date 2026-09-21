@@ -55,6 +55,9 @@ wellFormedFlags =
                   )
                 ]
           )
+        , ( "agents", Encode.object [] )
+        , ( "operators", Encode.object [] )
+        , ( "purposes", Encode.object [] )
         ]
 
 
@@ -70,7 +73,14 @@ suite =
             \_ ->
                 Site.render wellFormedFlags
                     |> Decode.decodeString (Decode.list (Decode.field "path" Decode.string))
-                    |> Expect.equal (Ok [ "index.html", "agent-accessibility/index.html", "about/index.html" ])
+                    |> Expect.equal
+                        (Ok
+                            [ "index.html"
+                            , "agent-accessibility/index.html"
+                            , "agent-accessibility/agents/index.html"
+                            , "about/index.html"
+                            ]
+                        )
         , test "malformed flags render a JSON error object instead of pages" <|
             \_ ->
                 Site.render malformedFlags

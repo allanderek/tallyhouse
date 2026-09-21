@@ -1,20 +1,27 @@
 module Data exposing
-    ( Flags
+    ( Agent
+    , DivergentDomain
+    , Flags
     , IndexInfo
+    , Operator
     , Panel
     , Qualification
     , Row
+    , Stances
     , agentName
     , currentPeriod
     , decodeFlags
     , findByPeriod
+    , findBySeriesAndPeriod
     , formatFixed2
     , formatPercent
     , isAgentSeries
     , isProvisional
     , latestByPeriod
     , latestPrint
+    , purposeLabel
     , seriesLabel
+    , stancesTotal
     )
 
 {-| The shapes of the site data, and the pure helpers the pages are built
@@ -133,23 +140,125 @@ decodePanel =
         (Decode.field "qualification" decodeQualification)
 
 
+{-| The four ways a site can treat one crawler token in robots.txt, each
+holding a domain count. `Unmentioned` is not consent: the file simply never
+names the token, which does not rule out a blanket rule catching it anyway.
+-}
+type alias Stances =
+    { fullBlock : Int
+    , partialBlock : Int
+    , allowed : Int
+    , unmentioned : Int
+    }
+
+
+decodeStances : Decoder Stances
+decodeStances =
+    Decode.map4 Stances
+        (Decode.field "FullBlock" Decode.int)
+        (Decode.field "PartialBlock" Decode.int)
+        (Decode.field "Allowed" Decode.int)
+        (Decode.field "Unmentioned" Decode.int)
+
+
+{-| Total domains counted across all four stances for one crawler.
+-}
+stancesTotal : Stances -> Int
+stancesTotal stances =
+    stances.fullBlock + stances.partialBlock + stances.allowed + stances.unmentioned
+
+
+{-| One tracked crawler or consent token. `seriesId` names the row in
+`Flags.series` carrying its published rate; the rate is never recomputed
+from `stances`, which is descriptive only.
+-}
+type alias Agent =
+    { token : String
+    , slug : String
+    , operator : String
+    , purpose : String
+    , description : String
+    , seriesId : String
+    , stances : Stances
+    }
+
+
+decodeAgent : Decoder Agent
+decodeAgent =
+    Decode.map7 Agent
+        (Decode.field "token" Decode.string)
+        (Decode.field "slug" Decode.string)
+        (Decode.field "operator" Decode.string)
+        (Decode.field "purpose" Decode.string)
+        (Decode.field "description" Decode.string)
+        (Decode.field "series_id" Decode.string)
+        (Decode.field "stances" decodeStances)
+
+
+{-| One domain that does not treat an operator's tokens alike, e.g. training
+disallowed while search is allowed. `stances` maps each of the operator's
+token names to that domain's stance for it.
+-}
+type alias DivergentDomain =
+    { domain : String
+    , stances : Dict String String
+    }
+
+
+decodeDivergentDomain : Decoder DivergentDomain
+decodeDivergentDomain =
+    Decode.map2 DivergentDomain
+        (Decode.field "domain" Decode.string)
+        (Decode.field "stances" (Decode.dict Decode.string))
+
+
+{-| The operator behind one or more tokens. `divergentExamples` is a capped
+sample; `divergentCount` is the true total, always shown alongside the
+sample when it is capped, so a reader is never left wondering how many were
+left out.
+-}
+type alias Operator =
+    { name : String
+    , description : String
+    , tokens : List String
+    , divergentCount : Int
+    , divergentExamples : List DivergentDomain
+    }
+
+
+decodeOperator : Decoder Operator
+decodeOperator =
+    Decode.map5 Operator
+        (Decode.field "name" Decode.string)
+        (Decode.field "description" Decode.string)
+        (Decode.field "tokens" (Decode.list Decode.string))
+        (Decode.field "divergent_count" Decode.int)
+        (Decode.field "divergent_examples" (Decode.list decodeDivergentDomain))
+
+
 type alias Flags =
     { index : IndexInfo
     , prints : List Row
     , superseded : List Row
     , series : List Row
     , panel : Panel
+    , agents : Dict String Agent
+    , operators : Dict String Operator
+    , purposes : Dict String String
     }
 
 
 decodeFlags : Decoder Flags
 decodeFlags =
-    Decode.map5 Flags
+    Decode.map8 Flags
         (Decode.field "index" decodeIndex)
         (Decode.field "prints" (Decode.list decodeRow))
         (Decode.field "superseded" (Decode.list decodeRow))
         (Decode.field "series" (Decode.list decodeRow))
         (Decode.field "panel" decodePanel)
+        (Decode.field "agents" (Decode.dict decodeAgent))
+        (Decode.field "operators" (Decode.dict decodeOperator))
+        (Decode.field "purposes" (Decode.dict Decode.string))
 
 
 
@@ -240,6 +349,52 @@ findByPeriod period rows =
     rows
         |> List.filter (\row -> row.period == period)
         |> List.head
+
+
+{-| The row for one series id and one period, e.g. `agent:GPTBot` for the
+current period — the published rate for one crawler.
+-}
+findBySeriesAndPeriod : String -> String -> List Row -> Maybe Row
+findBySeriesAndPeriod seriesId period rows =
+    rows
+        |> List.filter (\row -> row.seriesId == Just seriesId && row.period == period)
+        |> List.head
+
+
+{-| A human label for an agent's `purpose` category.
+-}
+purposeLabel : String -> String
+purposeLabel purpose =
+    case purpose of
+        "training" ->
+            "Training"
+
+        "user-initiated" ->
+            "User-initiated"
+
+        "search" ->
+            "Search"
+
+        "training-consent" ->
+            "Training consent"
+
+        "data-broker" ->
+            "Data broker"
+
+        "archive" ->
+            "Archive"
+
+        "images" ->
+            "Images"
+
+        "mixed" ->
+            "Mixed"
+
+        "uncertain" ->
+            "Uncertain"
+
+        other ->
+            other
 
 
 {-| Reduce a list that may hold several vintages of the same period down to

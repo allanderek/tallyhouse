@@ -312,6 +312,21 @@ def _cmd_generate(args) -> int:
                 file=sys.stderr,
             )
             return 1
+        # A compiled program older than its sources renders a stale site with
+        # no error at all — the same silently-wrong-output failure this project
+        # refuses elsewhere. The fix is one command, so say it.
+        sources = sorted(Path("generate/src").rglob("*.elm")) if Path("generate/src").exists() else []
+        newest = max((f.stat().st_mtime for f in sources), default=0)
+        if sources and program.stat().st_mtime < newest:
+            stale = [f.name for f in sources if f.stat().st_mtime > program.stat().st_mtime]
+            print(
+                f"error: {program} is older than {', '.join(stale)}. It would render a "
+                f"stale site. Rebuild with:\n"
+                f"  cd generate && elm make src/Site.elm --optimize --output={program.name}",
+                file=sys.stderr,
+            )
+            return 1
+
         data = load_site_data(Path(args.root))
         if not data["prints"]:
             print("error: no published prints to render", file=sys.stderr)

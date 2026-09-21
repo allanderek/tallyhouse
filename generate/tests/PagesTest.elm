@@ -1,6 +1,7 @@
 module PagesTest exposing (suite)
 
-import Data exposing (Flags, Panel, Row)
+import Data exposing (Agent, Flags, Operator, Panel, Row, Stances)
+import Dict
 import Expect
 import Pages
 import Set
@@ -38,6 +39,103 @@ basePanel =
     }
 
 
+baseStances : Stances
+baseStances =
+    { fullBlock = 10, partialBlock = 2, allowed = 3, unmentioned = 5 }
+
+
+gptBot : Agent
+gptBot =
+    { token = "GPTBot"
+    , slug = "gptbot"
+    , operator = "OpenAI"
+    , purpose = "training"
+    , description = "Collects web content to train OpenAI generative models."
+    , seriesId = "agent:GPTBot"
+    , stances = baseStances
+    }
+
+
+oaiSearchBot : Agent
+oaiSearchBot =
+    { token = "OAI-SearchBot"
+    , slug = "oai-searchbot"
+    , operator = "OpenAI"
+    , purpose = "search"
+    , description = "Indexes pages for ChatGPT search answers."
+    , seriesId = "agent:OAI-SearchBot"
+    , stances = baseStances
+    }
+
+
+googleExtended : Agent
+googleExtended =
+    { token = "Google-Extended"
+    , slug = "google-extended"
+    , operator = "Google"
+    , purpose = "training-consent"
+    , description = "Not a crawler. Withholds permission to train on content Googlebot already fetched."
+    , seriesId = "agent:Google-Extended"
+    , stances = baseStances
+    }
+
+
+claudeWeb : Agent
+claudeWeb =
+    { token = "Claude-Web"
+    , slug = "claude-web"
+    , operator = "Anthropic"
+    , purpose = "uncertain"
+    , description = "Named in many robots.txt files but observed traffic appears minimal."
+    , seriesId = "agent:Claude-Web"
+    , stances = baseStances
+    }
+
+
+openAiOperator : Operator
+openAiOperator =
+    { name = "OpenAI"
+    , description = "Operates separately-named tokens for separate jobs."
+    , tokens = [ "GPTBot", "OAI-SearchBot" ]
+    , divergentCount = 3
+    , divergentExamples =
+        [ { domain = "example.com"
+          , stances = Dict.fromList [ ( "GPTBot", "FullBlock" ), ( "OAI-SearchBot", "Unmentioned" ) ]
+          }
+        ]
+    }
+
+
+googleOperator : Operator
+googleOperator =
+    { name = "Google"
+    , description = "Only Google-Extended is a consent signal."
+    , tokens = [ "Google-Extended" ]
+    , divergentCount = 0
+    , divergentExamples = []
+    }
+
+
+anthropicOperator : Operator
+anthropicOperator =
+    { name = "Anthropic"
+    , description = "Tracks Anthropic's crawlers and consent tokens."
+    , tokens = [ "Claude-Web" ]
+    , divergentCount = 0
+    , divergentExamples = []
+    }
+
+
+basePurposes : Dict.Dict String String
+basePurposes =
+    Dict.fromList
+        [ ( "training", "Bulk crawling to build model training data." )
+        , ( "search", "Indexes pages so an answer engine can retrieve and cite them." )
+        , ( "training-consent", "Not a crawler at all. A signal withholding permission to train on content already fetched by a conventional crawler." )
+        , ( "uncertain", "Purpose not established. The token is tracked without claiming to know what it is for." )
+        ]
+
+
 baseFlags : Flags
 baseFlags =
     { index =
@@ -50,9 +148,42 @@ baseFlags =
     , series =
         [ { baseRow | value = "16.349", seriesId = Just "agent:GPTBot" }
         , { baseRow | value = "5.8175", seriesId = Just "blanket" }
+        , { baseRow | value = "8.1234", seriesId = Just "agent:OAI-SearchBot" }
+        , { baseRow | value = "12.5000", seriesId = Just "agent:Google-Extended" }
+        , { baseRow | value = "7.3000", seriesId = Just "agent:Claude-Web" }
         ]
     , panel = basePanel
+    , agents =
+        Dict.fromList
+            [ ( "GPTBot", gptBot )
+            , ( "OAI-SearchBot", oaiSearchBot )
+            , ( "Google-Extended", googleExtended )
+            , ( "Claude-Web", claudeWeb )
+            ]
+    , operators =
+        Dict.fromList
+            [ ( "OpenAI", openAiOperator )
+            , ( "Google", googleOperator )
+            , ( "Anthropic", anthropicOperator )
+            ]
+    , purposes = basePurposes
     }
+
+
+agentContent : Flags -> String -> String
+agentContent flags slug =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == String.concat [ "agent-accessibility/agent/", slug, "/index.html" ])
+        |> List.map .content
+        |> String.concat
+
+
+agentsIndexContent : Flags -> String
+agentsIndexContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "agent-accessibility/agents/index.html")
+        |> List.map .content
+        |> String.concat
 
 
 agentAccessibilityContent : Flags -> String
@@ -75,13 +206,18 @@ suite : Test
 suite =
     describe "Pages"
         [ describe "emitted paths"
-            [ test "emits exactly the three expected relative paths" <|
+            [ test "emits the expected relative paths, including one page per agent" <|
                 \_ ->
                     Pages.pages baseFlags
                         |> List.map .path
                         |> Expect.equal
                             [ "index.html"
                             , "agent-accessibility/index.html"
+                            , "agent-accessibility/agents/index.html"
+                            , "agent-accessibility/agent/claude-web/index.html"
+                            , "agent-accessibility/agent/gptbot/index.html"
+                            , "agent-accessibility/agent/google-extended/index.html"
+                            , "agent-accessibility/agent/oai-searchbot/index.html"
                             , "about/index.html"
                             ]
             , test "no path is emitted twice" <|
@@ -199,5 +335,129 @@ suite =
                     agentAccessibilityContent baseFlags
                         |> String.contains "excluded from both the numerator and the denominator"
                         |> Expect.equal True
+            ]
+        , describe "the agent directory"
+            [ test "lists every tracked agent, grouped by operator" <|
+                \_ ->
+                    let
+                        content =
+                            agentsIndexContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "OpenAI" >> Expect.equal True
+                        , String.contains "Google" >> Expect.equal True
+                        , String.contains "Anthropic" >> Expect.equal True
+                        , String.contains "GPTBot" >> Expect.equal True
+                        , String.contains "OAI-SearchBot" >> Expect.equal True
+                        , String.contains "Google-Extended" >> Expect.equal True
+                        , String.contains "Claude-Web" >> Expect.equal True
+                        ]
+                        content
+            , test "links each agent to its own page" <|
+                \_ ->
+                    agentsIndexContent baseFlags
+                        |> String.contains "../agent/gptbot/index.html"
+                        |> Expect.equal True
+            , test "shows a multi-token operator's divergent domain count" <|
+                \_ ->
+                    agentsIndexContent baseFlags
+                        |> String.contains "3 domains in the panel set OpenAI&#39;s tokens differently"
+                        |> Expect.equal True
+            ]
+        , describe "a per-agent page"
+            [ test "carries the token, operator, purpose and description" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains "GPTBot" >> Expect.equal True
+                        , String.contains "OpenAI" >> Expect.equal True
+                        , String.contains "Training" >> Expect.equal True
+                        , String.contains gptBot.description >> Expect.equal True
+                        , String.contains "Bulk crawling to build model training data." >> Expect.equal True
+                        ]
+                        content
+            , test "shows the published rate for the current period" <|
+                \_ ->
+                    agentContent baseFlags "gptbot"
+                        |> String.contains "16.35%"
+                        |> Expect.equal True
+            , test "explains all four stances, including that unmentioned is not consent" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains "FullBlock" >> Expect.equal True
+                        , String.contains "PartialBlock" >> Expect.equal True
+                        , String.contains "Allowed" >> Expect.equal True
+                        , String.contains "Unmentioned" >> Expect.equal True
+                        , String.contains "This is not consent" >> Expect.equal True
+                        ]
+                        content
+            , test "shows sibling tokens from the same operator, with their own rates" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains "OAI-SearchBot" >> Expect.equal True
+                        , String.contains "8.12%" >> Expect.equal True
+                        , String.contains "../oai-searchbot/index.html" >> Expect.equal True
+                        ]
+                        content
+            , test "a single-token operator's page has no siblings section" <|
+                \_ ->
+                    agentContent baseFlags "google-extended"
+                        |> String.contains "other tokens"
+                        |> Expect.equal False
+            , test "renders the divergence table and states the true total when the sample is capped" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains "example.com" >> Expect.equal True
+                        , String.contains "3 domains in the panel treat OpenAI&#39;s tokens differently" >> Expect.equal True
+                        , String.contains "The first 1 are shown below" >> Expect.equal True
+                        ]
+                        content
+            , test "a single-token operator's page has no divergence table" <|
+                \_ ->
+                    agentContent baseFlags "google-extended"
+                        |> String.contains "treat these tokens differently"
+                        |> Expect.equal False
+            , test "a training-consent token states plainly that it is not a crawler" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "google-extended"
+                    in
+                    Expect.all
+                        [ String.contains "Not a crawler" >> Expect.equal True
+                        , String.contains "does not fetch pages" >> Expect.equal True
+                        ]
+                        content
+            , test "an uncertain-purpose token says its purpose is not established" <|
+                \_ ->
+                    agentContent baseFlags "claude-web"
+                        |> String.contains "not because its purpose is known with confidence"
+                        |> Expect.equal True
+            , test "links back to the directory and the index page" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains "../../agents/index.html" >> Expect.equal True
+                        , String.contains "../../index.html" >> Expect.equal True
+                        ]
+                        content
             ]
         ]

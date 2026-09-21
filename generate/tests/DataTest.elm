@@ -1,6 +1,7 @@
 module DataTest exposing (suite)
 
 import Data exposing (Row)
+import Dict
 import Expect
 import Json.Decode as Decode
 import Test exposing (Test, describe, test)
@@ -36,6 +37,28 @@ sampleJson =
             , "rule": "first N domains of the Tranco list returning a conclusive robots.txt observation during the sweep"
             }
         }
+    , "agents":
+        { "GPTBot":
+            { "token": "GPTBot"
+            , "slug": "gptbot"
+            , "operator": "OpenAI"
+            , "purpose": "training"
+            , "description": "Collects web content to train OpenAI's generative models."
+            , "series_id": "agent:GPTBot"
+            , "stances": { "FullBlock": 126, "PartialBlock": 37, "Allowed": 33, "Unmentioned": 801 }
+            }
+        }
+    , "operators":
+        { "OpenAI":
+            { "name": "OpenAI"
+            , "description": "Operates three separately-named tokens for three different jobs."
+            , "tokens": [ "GPTBot" ]
+            , "divergent_count": 0
+            , "divergent_examples": []
+            }
+        }
+    , "purposes":
+        { "training": "Bulk crawling to build model training data." }
     }
     """
 
@@ -90,6 +113,21 @@ suite =
                     Decode.decodeString Data.decodeFlags sampleJson
                         |> Result.map (\flags -> flags.panel.size)
                         |> Expect.equal (Ok 1000)
+            , test "an agent's stance counts decode as integers" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> Dict.get "GPTBot" flags.agents |> Maybe.map .stances)
+                        |> Expect.equal (Ok (Just { fullBlock = 126, partialBlock = 37, allowed = 33, unmentioned = 801 }))
+            , test "an operator's tokens and divergent examples decode" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> Dict.get "OpenAI" flags.operators |> Maybe.map .tokens)
+                        |> Expect.equal (Ok (Just [ "GPTBot" ]))
+            , test "purposes decode as a map from category to explanation" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> Dict.get "training" flags.purposes)
+                        |> Expect.equal (Ok (Just "Bulk crawling to build model training data."))
             ]
         , describe "isProvisional"
             [ test "\"true\" is provisional" <|
@@ -165,6 +203,17 @@ suite =
                         |> List.map .value
                         |> List.sort
                         |> Expect.equal [ "new", "only" ]
+            ]
+        , describe "purposeLabel"
+            [ test "labels known purpose categories" <|
+                \_ ->
+                    [ "training", "training-consent", "uncertain" ]
+                        |> List.map Data.purposeLabel
+                        |> Expect.equal [ "Training", "Training consent", "Uncertain" ]
+            , test "falls back to the raw string for an unknown category" <|
+                \_ ->
+                    Data.purposeLabel "something-new"
+                        |> Expect.equal "something-new"
             ]
         , describe "formatPercent"
             [ test "rounds to two decimal places and appends a percent sign" <|

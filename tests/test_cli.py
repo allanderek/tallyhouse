@@ -601,3 +601,39 @@ def test_generate_refuses_when_there_is_nothing_published(tmp_path, capsys):
                "--program", str(program)])
     assert rc != 0
     assert "no published prints" in capsys.readouterr().err
+
+
+def test_generate_refuses_a_program_older_than_its_sources(tmp_path, capsys, monkeypatch):
+    import os, time
+    monkeypatch.chdir(tmp_path)
+    src = tmp_path / "generate" / "src"
+    src.mkdir(parents=True)
+    program = tmp_path / "site.js"
+    program.write_text("var Elm = {};")
+    time.sleep(0.01)
+    (src / "Site.elm").write_text("module Site exposing (..)")
+
+    rc = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "out"),
+               "--program", str(program)])
+    # Rendering a stale site with no error is the silently-wrong-output failure
+    # this project refuses everywhere else.
+    assert rc != 0
+    err = capsys.readouterr().err
+    assert "stale" in err and "Site.elm" in err and "elm make" in err
+
+
+def test_generate_accepts_a_program_newer_than_its_sources(tmp_path, monkeypatch):
+    import time
+    monkeypatch.chdir(tmp_path)
+    src = tmp_path / "generate" / "src"
+    src.mkdir(parents=True)
+    (src / "Site.elm").write_text("module Site exposing (..)")
+    time.sleep(0.01)
+    program = tmp_path / "site.js"
+    program.write_text("var Elm = {};")
+
+    # Gets past the staleness check and fails later for lack of prints, which
+    # is the correct next objection.
+    rc = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "out"),
+               "--program", str(program)])
+    assert rc != 0

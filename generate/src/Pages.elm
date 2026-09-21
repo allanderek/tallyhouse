@@ -6,7 +6,8 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Flags, Panel, Qualification, Row)
+import Data exposing (Agent, DivergentDomain, Flags, Operator, Panel, Qualification, Row, Stances)
+import Dict exposing (Dict)
 import Html exposing (Html)
 
 
@@ -18,10 +19,14 @@ type alias Page =
 
 pages : Flags -> List Page
 pages flags =
-    [ homePage flags
-    , indexPage flags
-    , aboutPage flags
-    ]
+    List.concat
+        [ [ homePage flags
+          , indexPage flags
+          , agentsIndexPage flags
+          ]
+        , agentPageList flags
+        , [ aboutPage flags ]
+        ]
 
 
 
@@ -79,7 +84,7 @@ indexPage flags =
             , head = [ stylesheet ]
             , body =
                 List.concat
-                    [ [ pageHeader { title = flags.index.title, subtitle = Just flags.index.question }
+                    [ [ pageHeader { title = flags.index.title, subtitle = Just flags.index.question, homeHref = "../index.html" }
                       , Html.main_ []
                             (List.concat
                                 [ headlineSection flags.panel flags.prints
@@ -332,7 +337,7 @@ aboutPage flags =
             , description = "What Tallyhouse measures, how its panel is built, and why every published number can be reproduced from the committed ledger."
             , head = [ stylesheet ]
             , body =
-                [ pageHeader { title = "About Tallyhouse", subtitle = Nothing }
+                [ pageHeader { title = "About Tallyhouse", subtitle = Nothing, homeHref = "../index.html" }
                 , Html.main_ []
                     [ Html.section []
                         [ Html.h2 [] [ Html.text "What this measures" ]
@@ -392,15 +397,417 @@ aboutPage flags =
 
 
 
+-- The agent directory: all 45 tracked tokens, grouped by operator.
+
+
+agentsIndexPage : Flags -> Page
+agentsIndexPage flags =
+    { path = "agent-accessibility/agents/index.html"
+    , content =
+        Html.document
+            { title = "AI Crawlers"
+            , description = "Every AI crawler and consent token Tallyhouse tracks, grouped by the operator that runs it, with the published block rate for each."
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = "AI Crawlers"
+                            , subtitle = Just "All tracked tokens, grouped by operator."
+                            , homeHref = "../../index.html"
+                            }
+                      , Html.main_ []
+                            (List.concat
+                                [ [ Html.p []
+                                        [ Html.text "An operator often runs several tokens for different jobs — training, search, or a fetch a user asked for — and sites choose to treat them differently on purpose. "
+                                        , Html.a [ Html.attribute "href" "../index.html" ] [ Html.text "The headline figure" ]
+                                        , Html.text " counts a targeted block once no matter how many tokens are involved; these pages show what was actually chosen, token by token."
+                                        ]
+                                  ]
+                                , operatorSections flags
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+operatorSections : Flags -> List Html
+operatorSections flags =
+    let
+        period =
+            Maybe.withDefault "" (Data.currentPeriod flags.prints)
+    in
+    List.map (operatorSection flags period) (Dict.values flags.operators)
+
+
+operatorSection : Flags -> String -> Operator -> Html
+operatorSection flags period operator =
+    Html.section [ Html.attribute "class" "operator" ]
+        (List.concat
+            [ [ Html.h2 [] [ Html.text operator.name ]
+              , Html.p [] [ Html.text operator.description ]
+              ]
+            , divergenceCallout operator
+            , [ Html.table []
+                    [ Html.thead []
+                        [ Html.tr []
+                            [ Html.th [] [ Html.text "Token" ]
+                            , Html.th [] [ Html.text "Purpose" ]
+                            , Html.th [] [ Html.text "Published rate" ]
+                            ]
+                        ]
+                    , Html.tbody [] (List.filterMap (directoryRow flags period) operator.tokens)
+                    ]
+              ]
+            ]
+        )
+
+
+divergenceCallout : Operator -> List Html
+divergenceCallout operator =
+    case operator.divergentCount > 0 of
+        False ->
+            []
+
+        True ->
+            [ Html.p [ Html.attribute "class" "meta" ]
+                [ Html.text
+                    (String.concat
+                        [ String.fromInt operator.divergentCount
+                        , " domains in the panel set "
+                        , operator.name
+                        , "'s tokens differently from one another."
+                        ]
+                    )
+                ]
+            ]
+
+
+directoryRow : Flags -> String -> String -> Maybe Html
+directoryRow flags period token =
+    Dict.get token flags.agents
+        |> Maybe.map
+            (\agent ->
+                Html.tr []
+                    [ Html.td [] [ Html.a [ Html.attribute "href" (String.concat [ "../agent/", agent.slug, "/index.html" ]) ] [ Html.text agent.token ] ]
+                    , Html.td [] [ Html.text (Data.purposeLabel agent.purpose) ]
+                    , Html.td [] [ Html.text (publishedRate flags period agent) ]
+                    ]
+            )
+
+
+{-| An agent's published rate for the given period, formatted as a
+percentage, or an em dash when the current period has none.
+-}
+publishedRate : Flags -> String -> Agent -> String
+publishedRate flags period agent =
+    Data.findBySeriesAndPeriod agent.seriesId period flags.series
+        |> Maybe.map (\row -> Data.formatPercent row.value)
+        |> Maybe.withDefault "—"
+
+
+
+-- One page per tracked token.
+
+
+agentPageList : Flags -> List Page
+agentPageList flags =
+    flags.agents
+        |> Dict.values
+        |> List.map (agentPage flags)
+
+
+agentPage : Flags -> Agent -> Page
+agentPage flags agent =
+    { path = String.concat [ "agent-accessibility/agent/", agent.slug, "/index.html" ]
+    , content =
+        Html.document
+            { title = agent.token
+            , description = agent.description
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = agent.token
+                            , subtitle = Just (String.concat [ agent.operator, " — ", Data.purposeLabel agent.purpose ])
+                            , homeHref = "../../../index.html"
+                            }
+                      , Html.main_ []
+                            (List.concat
+                                [ [ agentNav ]
+                                , purposeNotice agent
+                                , [ purposeParagraph flags.purposes agent
+                                  , Html.p [] [ Html.text agent.description ]
+                                  ]
+                                , agentRateSection flags agent
+                                , stanceSection agent
+                                , siblingsSection flags agent
+                                , divergenceSection flags agent
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+agentNav : Html
+agentNav =
+    Html.p [ Html.attribute "class" "meta" ]
+        [ Html.a [ Html.attribute "href" "../../agents/index.html" ] [ Html.text "All crawlers" ]
+        , Html.text " · "
+        , Html.a [ Html.attribute "href" "../../index.html" ] [ Html.text "Agent Accessibility Index" ]
+        ]
+
+
+purposeParagraph : Dict String String -> Agent -> Html
+purposeParagraph purposes agent =
+    Html.p []
+        [ Html.node "strong" [] [ Html.text "Purpose: " ]
+        , Html.text (Data.purposeLabel agent.purpose)
+        , Html.text ". "
+        , Html.text (Maybe.withDefault "" (Dict.get agent.purpose purposes))
+        ]
+
+
+{-| An unmissable callout for the two cases readers most often get wrong:
+`Google-Extended` and `Applebot-Extended` are not crawlers at all, and
+`Claude-Web`'s purpose is not established with confidence.
+-}
+purposeNotice : Agent -> List Html
+purposeNotice agent =
+    case agent.purpose of
+        "training-consent" ->
+            [ Html.section [ Html.attribute "class" "callout notice" ]
+                [ Html.h2 [] [ Html.text "Not a crawler" ]
+                , Html.p []
+                    [ Html.node "strong" [] [ Html.text agent.token ]
+                    , Html.text " does not fetch pages. Disallowing it does not reduce crawling — it only withholds permission to train on content a conventional crawler already fetched."
+                    ]
+                ]
+            ]
+
+        "uncertain" ->
+            [ Html.section [ Html.attribute "class" "callout notice" ]
+                [ Html.h2 [] [ Html.text "Purpose not established" ]
+                , Html.p [] [ Html.text "This token is tracked because sites still act on it, not because its purpose is known with confidence." ]
+                ]
+            ]
+
+        _ ->
+            []
+
+
+agentRateSection : Flags -> Agent -> List Html
+agentRateSection flags agent =
+    let
+        period =
+            Maybe.withDefault "" (Data.currentPeriod flags.prints)
+    in
+    [ Html.section [ Html.attribute "class" "headline" ]
+        (agentRateContent period (Data.findBySeriesAndPeriod agent.seriesId period flags.series))
+    ]
+
+
+agentRateContent : String -> Maybe Row -> List Html
+agentRateContent period maybeRow =
+    case maybeRow of
+        Nothing ->
+            [ Html.p [] [ Html.text "No published rate yet for this period." ] ]
+
+        Just row ->
+            List.concat
+                [ provisionalBadge row
+                , [ Html.p [ Html.attribute "class" "headline-value" ] [ Html.text (Data.formatPercent row.value) ]
+                  , Html.p [ Html.attribute "class" "headline-caption" ]
+                        [ Html.text
+                            (String.concat
+                                [ "of the panel names this token in robots.txt and disallows it, for the week of "
+                                , row.period
+                                , "."
+                                ]
+                            )
+                        ]
+                  ]
+                ]
+
+
+type alias StanceRow =
+    { label : String
+    , count : Int
+    , explanation : String
+    }
+
+
+stanceRows : Stances -> List StanceRow
+stanceRows stances =
+    [ { label = "FullBlock", count = stances.fullBlock, explanation = "Every path is disallowed for this token." }
+    , { label = "PartialBlock", count = stances.partialBlock, explanation = "Some paths are disallowed for this token; others are not." }
+    , { label = "Allowed", count = stances.allowed, explanation = "The token is named and explicitly allowed." }
+    , { label = "Unmentioned", count = stances.unmentioned, explanation = "The file never names this token. This is not consent — the site may still close it off with a blanket rule for every crawler." }
+    ]
+
+
+stanceSection : Agent -> List Html
+stanceSection agent =
+    [ Html.section [ Html.attribute "class" "stances" ]
+        [ Html.h2 [] [ Html.text "How sites treat this token" ]
+        , Html.table []
+            [ Html.thead []
+                [ Html.tr []
+                    [ Html.th [] [ Html.text "Stance" ]
+                    , Html.th [] [ Html.text "Domains" ]
+                    , Html.th [] [ Html.text "What it means" ]
+                    ]
+                ]
+            , Html.tbody [] (List.map stanceTableRow (stanceRows agent.stances))
+            ]
+        ]
+    ]
+
+
+stanceTableRow : StanceRow -> Html
+stanceTableRow row =
+    Html.tr []
+        [ Html.td [] [ Html.text row.label ]
+        , Html.td [] [ Html.text (String.fromInt row.count) ]
+        , Html.td [] [ Html.text row.explanation ]
+        ]
+
+
+siblingsSection : Flags -> Agent -> List Html
+siblingsSection flags agent =
+    case Dict.get agent.operator flags.operators of
+        Nothing ->
+            []
+
+        Just operator ->
+            siblingsSectionFor flags agent operator (List.filter (\token -> token /= agent.token) operator.tokens)
+
+
+siblingsSectionFor : Flags -> Agent -> Operator -> List String -> List Html
+siblingsSectionFor flags agent operator siblingTokens =
+    case siblingTokens of
+        [] ->
+            []
+
+        _ ->
+            let
+                period =
+                    Maybe.withDefault "" (Data.currentPeriod flags.prints)
+            in
+            [ Html.section [ Html.attribute "class" "siblings" ]
+                [ Html.h2 [] [ Html.text (String.concat [ operator.name, "'s other tokens" ]) ]
+                , Html.p [] [ Html.text operator.description ]
+                , Html.table []
+                    [ Html.thead []
+                        [ Html.tr []
+                            [ Html.th [] [ Html.text "Token" ]
+                            , Html.th [] [ Html.text "Purpose" ]
+                            , Html.th [] [ Html.text "Published rate" ]
+                            ]
+                        ]
+                    , Html.tbody [] (List.filterMap (siblingRow flags period) siblingTokens)
+                    ]
+                ]
+            ]
+
+
+siblingRow : Flags -> String -> String -> Maybe Html
+siblingRow flags period token =
+    Dict.get token flags.agents
+        |> Maybe.map
+            (\sibling ->
+                Html.tr []
+                    [ Html.td [] [ Html.a [ Html.attribute "href" (String.concat [ "../", sibling.slug, "/index.html" ]) ] [ Html.text sibling.token ] ]
+                    , Html.td [] [ Html.text (Data.purposeLabel sibling.purpose) ]
+                    , Html.td [] [ Html.text (publishedRate flags period sibling) ]
+                    ]
+            )
+
+
+divergenceSection : Flags -> Agent -> List Html
+divergenceSection flags agent =
+    case Dict.get agent.operator flags.operators of
+        Nothing ->
+            []
+
+        Just operator ->
+            divergenceSectionFor operator operator.divergentExamples
+
+
+divergenceSectionFor : Operator -> List DivergentDomain -> List Html
+divergenceSectionFor operator examples =
+    case examples of
+        [] ->
+            []
+
+        _ ->
+            [ Html.section [ Html.attribute "class" "divergence" ]
+                [ Html.h2 [] [ Html.text "Sites that treat these tokens differently" ]
+                , Html.p [] [ Html.text (divergenceCaption operator examples) ]
+                , Html.div [ Html.attribute "class" "table-scroll" ]
+                    [ Html.table []
+                        [ Html.thead [] [ divergenceHeaderRow operator.tokens ]
+                        , Html.tbody [] (List.map (divergenceTableRow operator.tokens) examples)
+                        ]
+                    ]
+                ]
+            ]
+
+
+divergenceCaption : Operator -> List DivergentDomain -> String
+divergenceCaption operator examples =
+    let
+        shown =
+            List.length examples
+    in
+    case operator.divergentCount > shown of
+        True ->
+            String.concat
+                [ String.fromInt operator.divergentCount
+                , " domains in the panel treat "
+                , operator.name
+                , "'s tokens differently from one another. The first "
+                , String.fromInt shown
+                , " are shown below."
+                ]
+
+        False ->
+            String.concat
+                [ String.fromInt operator.divergentCount
+                , " domains in the panel treat "
+                , operator.name
+                , "'s tokens differently from one another."
+                ]
+
+
+divergenceHeaderRow : List String -> Html
+divergenceHeaderRow tokens =
+    Html.tr [] (Html.th [] [ Html.text "Domain" ] :: List.map (\token -> Html.th [] [ Html.text token ]) tokens)
+
+
+divergenceTableRow : List String -> DivergentDomain -> Html
+divergenceTableRow tokens example =
+    Html.tr []
+        (Html.td [] [ Html.text example.domain ]
+            :: List.map (\token -> Html.td [] [ Html.text (Maybe.withDefault "—" (Dict.get token example.stances)) ]) tokens
+        )
+
+
+
 -- Shared chrome.
 
 
-pageHeader : { title : String, subtitle : Maybe String } -> Html
+pageHeader : { title : String, subtitle : Maybe String, homeHref : String } -> Html
 pageHeader config =
     Html.header []
         (List.concat
             [ [ Html.p [ Html.attribute "class" "home-link" ]
-                    [ Html.a [ Html.attribute "href" "../index.html" ] [ Html.text "Tallyhouse" ] ]
+                    [ Html.a [ Html.attribute "href" config.homeHref ] [ Html.text "Tallyhouse" ] ]
               , Html.h1 [] [ Html.text config.title ]
               ]
             , subtitleHtml config.subtitle
@@ -450,10 +857,13 @@ css =
         , ".callout { margin: 2rem 0; padding: 1.25rem 1.5rem; border-left: 4px solid #888; background: #f4f4f2; }"
         , ".callout.bias { border-left-color: #b5442e; }"
         , ".callout.superseded { border-left-color: #8a6d00; }"
+        , ".callout.notice { border-left-color: #1a4d8f; }"
         , "table { border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; font-size: 0.95rem; }"
         , "th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }"
         , "th { border-bottom: 2px solid #999; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: #444; }"
         , ".series-table { margin-bottom: 1.5rem; }"
+        , ".operator { margin: 2rem 0; }"
+        , ".table-scroll { overflow-x: auto; }"
         , ".trend-chart { display: block; width: 100%; height: auto; margin-top: 0.5rem; }"
         , ".chart-axis-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; fill: #555; font-variant-numeric: tabular-nums; }"
         , ".chart-endpoint-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }"
