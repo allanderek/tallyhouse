@@ -13,7 +13,8 @@
     "data-broker": "Crawls in order to sell the resulting datasets, which are widely used as AI training and retrieval data.",
     "archive": "Crawls to build a public web archive; the corpus is separately used for training.",
     "images": "Crawls images rather than text.",
-    "mixed": "Serves several purposes, so blocking it affects more than AI use."
+    "mixed": "Serves several purposes, so blocking it affects more than AI use.",
+    "uncertain": "Purpose not established. The token is named and blocked widely enough to track, but we cannot say with confidence what it is for \u2014 so the index counts it without claiming to know."
   },
   "operators": {
     "OpenAI": "Operates three separately-named tokens for three different jobs, which is why sites so often treat them differently.",
