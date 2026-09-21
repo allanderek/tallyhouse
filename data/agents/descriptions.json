@@ -1,66 +1,145 @@
 {
-  "note": "Editorial descriptions of the tracked crawlers. DELIBERATELY SEPARATE from agents/v1.json: that file defines the agent set and is methodology — changing it bumps the methodology version and forces recomputation of every affected print. These descriptions carry no such weight and can be corrected freely without touching a single published number.",
-  "drafted": "2026-09-18",
-  "status": "DRAFT — written by Claude from general knowledge, awaiting review. Claims about who honours robots.txt are the least reliable and should be checked against each operator's published documentation before this is shown to readers.",
+  "note": "Editorial descriptions of the tracked crawlers. DELIBERATELY SEPARATE from agents/v2.json: that file defines the agent set and is methodology \u2014 changing it bumps the methodology version and forces recomputation. These descriptions carry no such weight and can be corrected freely without touching a published number.",
+  "revised": "2026-09-21",
+  "status": "Reviewed. Operator and purpose confirmed by the site owner for omgili/omgilibot (Webz.io), Timpibot (training, not search), PanguBot (Huawei), Brightbot (Bright Data) and Devin (a coding agent that fetches on request, not a crawler). Claude-Web is retained with stated uncertainty.",
+  "sources": [
+    "https://knownagents.com/ \u2014 observed traffic per agent, useful for telling a live token from one that is merely still named in robots.txt files"
+  ],
+  "purposes": {
+    "training": "Bulk crawling to build model training data.",
+    "user-initiated": "Fetches a specific page because a user asked, rather than crawling broadly. Blocking this stops people using an assistant to read the site; it does not prevent training.",
+    "search": "Indexes pages so an answer engine can retrieve and cite them.",
+    "training-consent": "Not a crawler at all. A signal withholding permission to train on content already fetched by a conventional crawler.",
+    "data-broker": "Crawls in order to sell the resulting datasets, which are widely used as AI training and retrieval data.",
+    "archive": "Crawls to build a public web archive; the corpus is separately used for training.",
+    "images": "Crawls images rather than text.",
+    "mixed": "Serves several purposes, so blocking it affects more than AI use."
+  },
   "operators": {
     "OpenAI": "Operates three separately-named tokens for three different jobs, which is why sites so often treat them differently.",
-    "Anthropic": "Publishes ClaudeBot as its crawler; earlier tokens are still named in many robots.txt files.",
-    "Google": "Google-Extended is not a crawler. It is a consent signal governing whether content Googlebot has already fetched may be used to train Google's generative models.",
-    "Apple": "Applebot-Extended is likewise a consent signal, not a crawler: it governs training use of content Applebot has already fetched.",
+    "Anthropic": "Publishes separate tokens for training, search and user-initiated fetches, mirroring OpenAI's split. Two older tokens are still widely named in robots.txt files.",
+    "Google": "The most fragmented operator in the set, with five tokens. Only Google-Extended is a consent signal; the others are crawlers serving distinct products.",
+    "Apple": "Applebot-Extended is a consent signal, not a crawler: it governs training use of content Applebot has already fetched.",
+    "Meta": "Publishes separate tokens for training, user-initiated fetches and indexing.",
     "Common Crawl": "A non-profit web archive operating since 2011, long predating the current AI industry. Its corpus is widely used as training data, which is why blocking it became common only recently.",
     "ByteDance": "Operator of TikTok. Bytespider has been widely reported as crawling aggressively.",
-    "Perplexity": "An answer engine. Operates a crawler and a user-initiated fetcher.",
-    "Meta": "Crawls for training its Llama models.",
+    "Perplexity": "An answer engine, operating a crawler and a user-initiated fetcher.",
+    "Cohere": "An enterprise-focused model developer, now publishing an explicitly-named training crawler alongside an older token.",
+    "Mistral": "A European model developer.",
+    "DeepSeek": "A Chinese model developer.",
+    "Zhipu AI": "A Chinese model developer, publisher of the ChatGLM models.",
     "Amazon": "Crawls for product, search and assistant features.",
-    "Cohere": "An enterprise-focused model developer.",
-    "Diffbot": "A commercial web-extraction service that sells structured data and a knowledge graph built from crawled pages.",
+    "DuckDuckGo": "A privacy-focused search engine, now also serving AI-assisted answers.",
+    "You.com": "An answer engine.",
+    "Phind": "An answer engine aimed at developers.",
+    "Tavily": "Sells a search API that supplies web results to other companies' AI agents.",
+    "Cognition": "Builds Devin, an AI software engineering agent.",
+    "iAsk": "An answer engine.",
+    "Wrtn": "A Korean AI assistant.",
+    "SB Intuitions": "A SoftBank subsidiary building Japanese-language models.",
+    "Timpi": "Runs a decentralised crawling network gathering training data.",
+    "Huawei": "Publisher of the PanGu model family.",
+    "Allen Institute for AI": "A non-profit research institute that publishes its models and training corpora openly, which makes its crawlers unusual among those in this set.",
+    "Diffbot": "A commercial web-extraction service selling structured data and a knowledge graph built from crawled pages.",
+    "Webz.io": "A data broker selling web datasets, widely used as AI training and retrieval data.",
+    "Bright Data": "A data broker selling web datasets.",
     "Hive": "Operates ImageSift, an image-focused crawler used to build image datasets."
   },
   "agents": {
     "GPTBot": {
       "operator": "OpenAI",
       "purpose": "training",
-      "description": "Collects web content to train OpenAI's generative models. This is the token most sites reach for first when they want to refuse AI training, and the most blocked crawler in the panel."
+      "description": "Collects web content to train OpenAI's generative models. The token most sites reach for first when refusing AI training, and among the most blocked in the panel."
     },
     "ChatGPT-User": {
       "operator": "OpenAI",
       "purpose": "user-initiated",
-      "description": "Fetches a page because a ChatGPT user asked for it — following a link, or browsing on request. It is not a bulk crawler and the content is not collected for training. Sites that want to be usable by people using AI assistants, but not used as training data, allow this and block GPTBot."
+      "description": "Fetches a page because a ChatGPT user asked for it. Not a bulk crawler and not collected for training. Sites wanting to remain usable by people using AI assistants, without being training data, allow this and block GPTBot."
     },
     "OAI-SearchBot": {
       "operator": "OpenAI",
       "purpose": "search",
-      "description": "Indexes pages so they can appear as results and citations in ChatGPT's search. Blocking it removes a site from those results. It has the most even split in the panel between full and partial blocks, which suggests sites weigh it more like a search engine than like a training crawler."
+      "description": "Indexes pages so they can appear as results and citations in ChatGPT search. It has the most even split in the panel between full and partial blocks, suggesting sites weigh it more like a search engine than a training crawler."
     },
     "ClaudeBot": {
       "operator": "Anthropic",
       "purpose": "training",
       "description": "Anthropic's crawler, collecting web content for training Claude."
     },
+    "Claude-SearchBot": {
+      "operator": "Anthropic",
+      "purpose": "search",
+      "description": "Indexes pages so Claude can cite them when answering with search."
+    },
+    "Claude-User": {
+      "operator": "Anthropic",
+      "purpose": "user-initiated",
+      "description": "Fetches a page because a Claude user asked for it, rather than as part of a bulk crawl."
+    },
+    "Claude-Web": {
+      "operator": "Anthropic",
+      "purpose": "uncertain",
+      "description": "Named in many robots.txt files and blocked by 84 panel sites, but observed traffic appears minimal, so it may be superseded by the current tokens. Retained because sites clearly still act on it."
+    },
     "anthropic-ai": {
       "operator": "Anthropic",
       "purpose": "training",
-      "description": "An earlier Anthropic token, still named in many robots.txt files. Sites that added it years ago have generally left it in place, so it appears alongside ClaudeBot more often than it is used."
-    },
-    "CCBot": {
-      "operator": "Common Crawl",
-      "purpose": "archive",
-      "description": "Common Crawl's crawler, running since 2011 for a non-profit web archive. Nothing about it changed when AI training became contentious — what changed is that sites began to read it as an AI crawler, because its archive is a common training corpus. It is now among the most blocked agents in the panel despite being the oldest and the only non-commercial one."
+      "description": "An older Anthropic token, still widely named. Anthropic now publishes separate tokens for training, search and user fetches, so this one increasingly reflects files written before that split rather than current crawling."
     },
     "Google-Extended": {
       "operator": "Google",
       "purpose": "training-consent",
-      "description": "Not a crawler. Google-Extended is a consent signal: disallowing it tells Google that content it has already fetched with Googlebot may not be used to train Gemini. Blocking it does not reduce crawling and does not affect Google Search ranking, which is precisely why sites unwilling to lose search traffic use it."
+      "description": "Not a crawler. A consent signal: disallowing it tells Google that content already fetched by Googlebot may not train Gemini. It does not reduce crawling and does not affect Search ranking, which is why sites unwilling to lose search traffic use it."
+    },
+    "Google-CloudVertexBot": {
+      "operator": "Google",
+      "purpose": "training",
+      "description": "Crawls on behalf of Vertex AI customers building grounded generative applications."
+    },
+    "Gemini-Deep-Research": {
+      "operator": "Google",
+      "purpose": "user-initiated",
+      "description": "Fetches pages while Gemini carries out a multi-step research task for a user."
+    },
+    "Google-NotebookLM": {
+      "operator": "Google",
+      "purpose": "user-initiated",
+      "description": "Fetches a page a NotebookLM user has pointed it at, rather than crawling broadly."
+    },
+    "GoogleAgent-Mariner": {
+      "operator": "Google",
+      "purpose": "user-initiated",
+      "description": "Fetches pages while Google's agentic browsing acts on a user's behalf."
     },
     "Applebot-Extended": {
       "operator": "Apple",
       "purpose": "training-consent",
       "description": "Not a crawler. Like Google-Extended, it withholds permission for content Applebot has already fetched to be used in training Apple's models, without affecting crawling or Apple's search features."
     },
+    "meta-externalagent": {
+      "operator": "Meta",
+      "purpose": "training",
+      "description": "Meta's crawler, collecting web content to train its models."
+    },
+    "meta-externalfetcher": {
+      "operator": "Meta",
+      "purpose": "user-initiated",
+      "description": "Fetches a page because a Meta AI user asked for it, rather than as part of a bulk crawl."
+    },
+    "meta-webindexer": {
+      "operator": "Meta",
+      "purpose": "search",
+      "description": "Indexes pages for retrieval within Meta's products."
+    },
+    "CCBot": {
+      "operator": "Common Crawl",
+      "purpose": "archive",
+      "description": "Common Crawl's crawler, running since 2011 for a non-profit web archive. Nothing about it changed when AI training became contentious; what changed is that sites began reading it as an AI crawler, because its archive is a common training corpus. It is now among the most blocked agents in the panel despite being the oldest and the only non-commercial one."
+    },
     "Bytespider": {
       "operator": "ByteDance",
       "purpose": "training",
-      "description": "ByteDance's crawler. It is blocked at close to the same rate as the best-known AI crawlers, which is notable given how much less public discussion it attracts."
+      "description": "ByteDance's crawler. Blocked at close to the same rate as the best-known AI crawlers, which is notable given how much less public discussion it attracts."
     },
     "PerplexityBot": {
       "operator": "Perplexity",
@@ -70,32 +149,127 @@
     "Perplexity-User": {
       "operator": "Perplexity",
       "purpose": "user-initiated",
-      "description": "Fetches a page because a Perplexity user asked for it, rather than as part of a bulk crawl."
-    },
-    "meta-externalagent": {
-      "operator": "Meta",
-      "purpose": "training",
-      "description": "Meta's crawler, collecting web content to train its models."
-    },
-    "Amazonbot": {
-      "operator": "Amazon",
-      "purpose": "mixed",
-      "description": "Amazon's crawler. It serves several purposes, so blocking it affects more than training use."
+      "description": "Fetches a page because a Perplexity user asked for it."
     },
     "cohere-ai": {
       "operator": "Cohere",
       "purpose": "training",
-      "description": "Cohere's crawler, collecting content for training its models."
+      "description": "An older Cohere token; the company now also publishes a separately-named training crawler."
+    },
+    "cohere-training-data-crawler": {
+      "operator": "Cohere",
+      "purpose": "training",
+      "description": "Cohere's crawler for collecting model training data, named explicitly for that purpose."
+    },
+    "MistralAI-User": {
+      "operator": "Mistral",
+      "purpose": "user-initiated",
+      "description": "Fetches a page because a Mistral user asked for it."
+    },
+    "DeepSeekBot": {
+      "operator": "DeepSeek",
+      "purpose": "training",
+      "description": "DeepSeek's crawler, collecting content for training its models."
+    },
+    "ChatGLM-Spider": {
+      "operator": "Zhipu AI",
+      "purpose": "training",
+      "description": "Zhipu AI's crawler, collecting content for training its ChatGLM models."
+    },
+    "Amazonbot": {
+      "operator": "Amazon",
+      "purpose": "mixed",
+      "description": "Amazon's crawler, serving several purposes, so blocking it affects more than training use."
+    },
+    "DuckAssistBot": {
+      "operator": "DuckDuckGo",
+      "purpose": "user-initiated",
+      "description": "Fetches pages to support DuckDuckGo's AI-assisted answers."
+    },
+    "YouBot": {
+      "operator": "You.com",
+      "purpose": "search",
+      "description": "Indexes pages so You.com can cite them in answers."
+    },
+    "PhindBot": {
+      "operator": "Phind",
+      "purpose": "search",
+      "description": "Indexes pages so Phind can cite them when answering developer questions."
+    },
+    "TavilyBot": {
+      "operator": "Tavily",
+      "purpose": "search",
+      "description": "Crawls to serve Tavily's search API, which supplies web results to other companies' AI agents."
+    },
+    "Devin": {
+      "operator": "Cognition",
+      "purpose": "user-initiated",
+      "description": "Not a crawler. Devin is an AI coding agent that fetches specific pages when a user's task requires it \u2014 documentation, an issue, a reference \u2014 rather than crawling broadly."
+    },
+    "iaskspider": {
+      "operator": "iAsk",
+      "purpose": "search",
+      "description": "Indexes pages for the iAsk answer engine."
+    },
+    "WrtnBot": {
+      "operator": "Wrtn",
+      "purpose": "user-initiated",
+      "description": "Fetches pages for Wrtn's AI assistant."
+    },
+    "SBIntuitionsBot": {
+      "operator": "SB Intuitions",
+      "purpose": "training",
+      "description": "SB Intuitions, a SoftBank subsidiary, collecting content for training Japanese-language models."
+    },
+    "Timpibot": {
+      "operator": "Timpi",
+      "purpose": "training",
+      "description": "Downloads websites to build training data for AI models. Timpi runs a decentralised crawling network, so the collection is distributed, but the purpose is a training corpus rather than a search index."
+    },
+    "PanguBot": {
+      "operator": "Huawei",
+      "purpose": "training",
+      "description": "Huawei's crawler, collecting content for training its PanGu models."
+    },
+    "AI2Bot": {
+      "operator": "Allen Institute for AI",
+      "purpose": "training",
+      "description": "The Allen Institute's crawler. A non-profit research institute that publishes both its models and its training corpora openly."
+    },
+    "AI2Bot-Dolma": {
+      "operator": "Allen Institute for AI",
+      "purpose": "training",
+      "description": "Collects content for Dolma, the Allen Institute's openly published training corpus."
     },
     "Diffbot": {
       "operator": "Diffbot",
-      "purpose": "commercial-extraction",
+      "purpose": "data-broker",
       "description": "Crawls pages to build and sell structured data and a knowledge graph. It predates the current wave of model training and is a data business rather than a model developer, but is frequently blocked alongside AI crawlers."
+    },
+    "omgili": {
+      "operator": "Webz.io",
+      "purpose": "data-broker",
+      "description": "An older Webz.io token. Webz.io crawls the web and sells the resulting datasets, which are widely used as AI training and retrieval data. The most-blocked untracked token found in the audit, at 96 panel sites."
+    },
+    "omgilibot": {
+      "operator": "Webz.io",
+      "purpose": "data-broker",
+      "description": "A Webz.io token, sibling to omgili; both are still widely named in robots.txt."
+    },
+    "webzio-extended": {
+      "operator": "Webz.io",
+      "purpose": "data-broker",
+      "description": "Webz.io's token for extended data collection, named in the same files as its older omgili tokens."
+    },
+    "Brightbot": {
+      "operator": "Bright Data",
+      "purpose": "data-broker",
+      "description": "Bright Data crawls the web and sells the resulting datasets. Like Diffbot and Webz.io it is a data business rather than a model developer, and is blocked alongside AI crawlers for the same reason."
     },
     "ImagesiftBot": {
       "operator": "Hive",
       "purpose": "images",
-      "description": "Crawls for images rather than text, building image datasets. It is the only agent in the panel that no site in this period blocked partially — sites that block it block it outright, which fits a crawler whose value is the whole image corpus rather than particular pages."
+      "description": "Crawls for images rather than text, building image datasets. The only agent in the panel that no site blocked partially in this period \u2014 sites that block it block it outright, fitting a crawler whose value is the whole image corpus rather than particular pages."
     }
   }
 }
