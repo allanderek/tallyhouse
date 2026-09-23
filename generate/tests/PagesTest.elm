@@ -202,6 +202,14 @@ aboutContent flags =
         |> String.concat
 
 
+crawlerContent : Flags -> String
+crawlerContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "about/crawler/index.html")
+        |> List.map .content
+        |> String.concat
+
+
 suite : Test
 suite =
     describe "Pages"
@@ -219,6 +227,7 @@ suite =
                             , "agent-accessibility/agent/google-extended/index.html"
                             , "agent-accessibility/agent/oai-searchbot/index.html"
                             , "about/index.html"
+                            , "about/crawler/index.html"
                             ]
             , test "no path is emitted twice" <|
                 \_ ->
@@ -471,5 +480,33 @@ suite =
                         , String.contains "../../index.html" >> Expect.equal True
                         ]
                         content
+            ]
+        , describe "the crawler page"
+            [ test "is present at about/crawler/index.html" <|
+                \_ ->
+                    Pages.pages baseFlags
+                        |> List.map .path
+                        |> List.member "about/crawler/index.html"
+                        |> Expect.equal True
+            , test "names the user-agent token" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "TallyhouseIndexBot"
+                        |> Expect.equal True
+            , test "states that only robots.txt is fetched" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "It requests exactly one file from your site"
+                        |> Expect.equal True
+            , test "links home two directories up" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "../../index.html"
+                        |> Expect.equal True
+            , test "has no root-relative links" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "href=\"/index.html\""
+                        |> Expect.equal False
             ]
         ]

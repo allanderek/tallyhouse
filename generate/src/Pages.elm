@@ -25,7 +25,7 @@ pages flags =
           , agentsIndexPage flags
           ]
         , agentPageList flags
-        , [ aboutPage flags ]
+        , [ aboutPage flags, crawlerPage flags ]
         ]
 
 
@@ -409,6 +409,83 @@ aboutPage flags =
                             [ Html.text "Known Agents publishes no raw data downloads; Tallyhouse publishes the collected "
                             , Html.code [] [ Html.text "robots.txt" ]
                             , Html.text " bodies, the ledger, and the code behind every figure, so a stranger can re-derive any number published here. Known Agents updates daily; Tallyhouse prints weekly and freezes each print. Together the two say more than either alone: they measure what crawlers do, we measure what sites ask for."
+                            ]
+                        ]
+                    ]
+                , siteFooter
+                ]
+            }
+    }
+
+
+
+-- The crawler's own about page.
+
+
+crawlerPage : Flags -> Page
+crawlerPage flags =
+    { path = "about/crawler/index.html"
+    , content =
+        Html.document
+            { title = "The Tallyhouse crawler"
+            , description = "What TallyhouseIndexBot fetches, how often, and how to ask it to stop."
+            , head = [ stylesheet ]
+            , body =
+                [ pageHeader { title = "The Tallyhouse crawler", subtitle = Nothing, homeHref = "../../index.html" }
+                , Html.main_ []
+                    [ Html.section []
+                        [ Html.h2 [] [ Html.text "What it is" ]
+                        , Html.p []
+                            [ Html.text "TallyhouseIndexBot is the crawler behind Tallyhouse, an index of how many of the most popular websites tell AI crawlers to stay out. It identifies itself as "
+                            , Html.code [] [ Html.text "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)" ]
+                            , Html.text " and it does not pretend to be anything else."
+                            ]
+                        ]
+                    , Html.section []
+                        [ Html.h2 [] [ Html.text "What it fetches" ]
+                        , Html.p []
+                            [ Html.text "It requests exactly one file from your site: "
+                            , Html.code [] [ Html.text "/robots.txt" ]
+                            , Html.text ". It never requests any other page, never follows links, and never downloads images, scripts or stylesheets. If the apex domain does not answer it tries the "
+                            , Html.code [] [ Html.text "www." ]
+                            , Html.text " host, and if HTTPS does not answer it tries HTTP. That is the whole of its behaviour."
+                            ]
+                        , Html.p []
+                            [ Html.text
+                                (String.concat
+                                    [ "It fetches once per week, at most three attempts with backoff if a request fails, and reads at most 512 KB of the file. Across the whole panel of "
+                                    , String.fromInt flags.panel.size
+                                    , " sites it holds no more than eight connections open at a time, so the load on any one site is a single small request a week."
+                                    ]
+                                )
+                            ]
+                        ]
+                    , Html.section []
+                        [ Html.h2 [] [ Html.text "What it will not do" ]
+                        , Html.p []
+                            [ Html.text "It does not attempt to look like a browser. It sends its own user-agent, makes no effort to match a browser's TLS or HTTP fingerprint, and does not run JavaScript." ]
+                        , Html.p []
+                            [ Html.text "It never tries to get past an anti-automation challenge. If a site answers with a challenge instead of the file, Tallyhouse records that it could not read the policy and moves on. Those sites are published as an \"unreadable\" figure rather than guessed at, because a site that would not show us its robots.txt has not told us anything about its policy either way." ]
+                        ]
+                    , Html.section []
+                        [ Html.h2 [] [ Html.text "Asking it to stop" ]
+                        , Html.p []
+                            [ Html.text "Under RFC 9309 a crawler is always allowed to fetch "
+                            , Html.code [] [ Html.text "/robots.txt" ]
+                            , Html.text " itself — otherwise no crawler could ever learn the rules — so a "
+                            , Html.code [] [ Html.text "Disallow" ]
+                            , Html.text " rule cannot be the way to turn this one off. If you would rather your site were not in the panel, open an issue at "
+                            , Html.a [ Html.attribute "href" "https://github.com/allanderek/tallyhouse/issues" ] [ Html.text "the project repository" ]
+                            , Html.text " and it will be removed. Removals are recorded in the panel file alongside the reason, because the panel is the denominator of every published figure and a silent change to it would make the numbers unreproducible."
+                            ]
+                        ]
+                    , Html.section []
+                        [ Html.h2 [] [ Html.text "Why it exists" ]
+                        , Html.p []
+                            [ Html.text "Tallyhouse publishes what sites ask of AI crawlers, weekly, from a committed ledger that anyone can re-derive. Reading robots.txt is the only way to learn what a site asks, and asking is the only thing this crawler does." ]
+                        , Html.p []
+                            [ Html.a [ Html.attribute "href" "../index.html" ] [ Html.text "More about how the index is built" ]
+                            , Html.text "."
                             ]
                         ]
                     ]

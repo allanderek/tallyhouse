@@ -79,6 +79,7 @@ suite =
                             , "agent-accessibility/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "about/index.html"
+                            , "about/crawler/index.html"
                             ]
                         )
         , test "malformed flags render a JSON error object instead of pages" <|
