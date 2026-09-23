@@ -151,6 +151,7 @@ def backfill(
     sleep=None,
     delay: int = 60,
     workers: int = 12,
+    crawl_attempts: int = 2,
     log=print,
 ) -> list[dict]:
     """Collect every outstanding crawl in the series, one at a time."""
@@ -175,11 +176,24 @@ def backfill(
         log(f"{crawl} -> {period}: starting")
         try:
             parts = parts_with_retry(crawl, parts_for=parts_for, sleep=sleep)
-            result = collect_crawl(
-                root, crawl, period, domains,
-                connection=connect(), parts=parts,
-                collector_version=collector_version, fetch=fetch, workers=workers,
-            )
+            # Locating a crawl is four minutes of querying, and a single
+            # transient refusal near the end would otherwise discard all of it.
+            # Retrying the whole crawl is expensive but rare, and a hole in the
+            # series costs more than the repeated query does.
+            for attempt in range(1, crawl_attempts + 1):
+                try:
+                    result = collect_crawl(
+                        root, crawl, period, domains,
+                        connection=connect(), parts=parts,
+                        collector_version=collector_version, fetch=fetch,
+                        workers=workers,
+                    )
+                    break
+                except Exception as exc:
+                    if attempt == crawl_attempts:
+                        raise
+                    log(f"{crawl} -> {period}: attempt {attempt} failed ({exc}), retrying")
+                    sleep(delay)
         except Exception as exc:
             # Keep going. The series is sixteen independent readings; losing
             # one is a gap the next run fills, while aborting loses the ones

@@ -211,3 +211,35 @@ def test_backfill_survives_one_crawl_failing(tmp_path):
     # The surviving crawl is on disk, and the failed one is simply outstanding.
     assert manifest_path(tmp_path, "2023-09").exists()
     assert [c["crawl"] for c in outstanding(tmp_path, CRAWLS)] == ["CC-MAIN-2023-06"]
+
+
+def test_backfill_retries_a_crawl_that_fails_partway(tmp_path):
+    # Locating a crawl is minutes of querying; one transient refusal near the
+    # end must not discard all of it.
+    attempts = []
+
+    class Flaky(FakeConnection):
+        def fetchall(self):
+            attempts.append(1)
+            if len(attempts) == 1:
+                raise RuntimeError("503 Service Unavailable")
+            return super().fetchall()
+
+    results, _ = run_backfill(
+        tmp_path, [CRAWLS[0]],
+        connect=lambda: Flaky({"a.com": capture("a.com")}),
+    )
+    assert [r["status"] for r in results] == ["collected"]
+    assert len(attempts) == 2
+
+
+def test_backfill_gives_up_on_a_crawl_after_its_last_attempt(tmp_path):
+    class Broken(FakeConnection):
+        def fetchall(self):
+            raise RuntimeError("503 Service Unavailable")
+
+    results, _ = run_backfill(
+        tmp_path, [CRAWLS[0]], connect=lambda: Broken({}), crawl_attempts=2,
+    )
+    assert results[0]["status"] == "failed"
+    assert "503" in results[0]["error"]

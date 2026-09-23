@@ -299,11 +299,23 @@ def _cmd_balanced_panel(args) -> int:
 
 
 def _duckdb_connect(threads: int):
-    """A DuckDB connection able to read Parquet over HTTP range requests."""
+    """A DuckDB connection able to read Parquet over HTTP range requests.
+
+    The retry settings are raised well above DuckDB's defaults, which give up
+    after 0.1s, 0.4s and 1.6s. data.commoncrawl.org answers a sustained query
+    with an occasional 503, and three tries inside two seconds treats a busy
+    archive as a broken one — one such 503 cost a whole crawl on the first run.
+    These give it about four minutes to recover instead, which is the right
+    order of magnitude for a query that takes four minutes itself.
+    """
     import duckdb
 
     connection = duckdb.connect()
-    connection.execute(f"INSTALL httpfs; LOAD httpfs; SET threads={int(threads)};")
+    connection.execute(
+        f"INSTALL httpfs; LOAD httpfs; SET threads={int(threads)};"
+        "SET http_retries=10; SET http_retry_wait_ms=2000;"
+        "SET http_retry_backoff=1.5; SET http_timeout=120000;"
+    )
     return connection
 
 
@@ -356,6 +368,7 @@ def _cmd_backfill(args) -> int:
             parts_for=lambda crawl: robotstxt_parts(crawl, cache=cache),
             delay=args.delay,
             workers=args.workers,
+            crawl_attempts=args.attempts,
         )
         failed = [r for r in results if r["status"] == "failed"]
         collected = [r for r in results if r["status"] == "collected"]
@@ -435,6 +448,8 @@ def main(argv: list[str] | None = None) -> int:
     back.add_argument("--workers", type=int, default=12,
                       help="concurrent WARC range requests within one crawl")
     back.add_argument("--threads", type=int, default=8, help="DuckDB threads")
+    back.add_argument("--attempts", type=int, default=2,
+                      help="attempts per crawl before giving up on it for this run")
     back.add_argument("--cache", default=".cache/ccpaths",
                       help="where to keep downloaded index path lists")
     back.add_argument("--dry-run", action="store_true", dest="dry_run",
