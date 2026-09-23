@@ -141,9 +141,15 @@ def test_a_domain_absent_from_the_crawl_is_not_in_crawl():
     assert obs["outcome"] == "NotInCrawl" and obs["body"] is None
 
 
+def located_record(status="200", fetch_time="2026-07-10T09:00:00Z"):
+    """A record shaped as locate() returns one, WARC coordinates included."""
+    return {"url": "u", "status": status, "fetch_time": fetch_time,
+            "filename": "crawl-data/part.warc.gz", "offset": 17, "length": 400}
+
+
 def test_outcomes_map_to_the_live_vocabulary():
     def out(status):
-        rec = {"url": "u", "status": status, "fetch_time": "2026-07-10T09:00:00Z"}
+        rec = located_record(status)
         return to_observation("a.com", "CC-X", rec, b"x" if status == "200" else None)["outcome"]
     assert out("200") == "Fetched"
     assert out("404") == "NoRobotsTxt"
@@ -151,8 +157,39 @@ def test_outcomes_map_to_the_live_vocabulary():
     assert out("403") == "ServerError"
 
 
+def test_a_capture_whose_body_we_could_not_read_is_not_fetched():
+    """The bug that put a -6.9pp dip in the first published historical series.
+
+    124 of 2024-05's captures lost their body to a transient range-request
+    failure. Recorded as Fetched with no body, derive read each one as an EMPTY
+    robots.txt — so a site that blocked seven AI crawlers was published as
+    blocking nobody. A body we could not read has to be inconclusive.
+    """
+    obs = to_observation("a.com", "CC-X", located_record(), None)
+    assert obs["outcome"] == "BodyUnavailable"
+    from tallyhouse.constants import CONCLUSIVE_OUTCOMES
+    assert obs["outcome"] not in CONCLUSIVE_OUTCOMES
+
+
+def test_an_empty_robots_txt_is_a_real_readable_file():
+    # b"" is not a missing body: it is a file that genuinely allows everyone,
+    # and conflating the two is how the bug above stayed invisible.
+    obs = to_observation("a.com", "CC-X", located_record(), b"")
+    assert obs["outcome"] == "Fetched"
+    assert obs["bytes"] == 0
+
+
 def test_fetched_at_is_when_common_crawl_saw_it():
-    rec = {"url": "u", "status": "200", "fetch_time": "2023-01-26T21:09:53Z"}
+    rec = located_record(fetch_time="2023-01-26T21:09:53Z")
     obs = to_observation("a.com", "CC-X", rec, b"body")
     assert obs["fetched_at"] == "2023-01-26T21:09:53Z"
     assert obs["crawl"] == "CC-X"
+
+
+def test_records_where_in_the_archive_the_evidence_lives():
+    # So a body can be re-fetched without re-running the index query that
+    # located it -- by us repairing a gap, or by a stranger checking our work.
+    obs = to_observation("a.com", "CC-X", located_record(), b"body")
+    assert obs["warc_filename"] == "crawl-data/part.warc.gz"
+    assert obs["warc_offset"] == 17
+    assert obs["warc_length"] == 400

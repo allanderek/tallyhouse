@@ -72,6 +72,9 @@ def collect_crawl(
     collector_version: str,
     fetch=fetch_body,
     workers: int = 12,
+    body_attempts: int = 4,
+    body_backoff: int = 2,
+    sleep=None,
 ) -> dict:
     """Locate and fetch one crawl's robots.txt for the whole panel.
 
@@ -79,20 +82,28 @@ def collect_crawl(
     collected or not collected, never half — which is what lets the next run
     decide what to do by asking whether the file exists.
     """
+    sleep = time.sleep if sleep is None else sleep
     located = locate(connection, parts, domains)
 
     def body_for(domain: str):
         record = located.get(domain)
         if record is None or record["status"] != "200":
             return domain, record, None
-        try:
-            return domain, record, fetch(record)
-        except Exception:
-            # A capture the index promises but the WARC will not give us. The
-            # observation stays, with no body: "we could not read it" is a
-            # different claim from "it was not there", and only the manifest
-            # can tell them apart later.
-            return domain, record, None
+        # Range requests get the same patience as the index query. Without it a
+        # single transient 503 loses a body, and a lost body is not a neutral
+        # gap: it was being recorded as a readable file that blocks nobody.
+        # 124 of 2024-05's 380 captures were lost this way on the first run.
+        for attempt in range(1, body_attempts + 1):
+            try:
+                return domain, record, fetch(record)
+            except Exception:
+                if attempt == body_attempts:
+                    # Still nothing. The observation stays, with no body, and
+                    # to_observation records it as BodyUnavailable rather than
+                    # Fetched: "we could not read it" is a different claim from
+                    # "it allowed everyone".
+                    return domain, record, None
+                sleep(body_backoff * attempt)
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         results = list(pool.map(body_for, domains))
@@ -100,7 +111,10 @@ def collect_crawl(
     records = []
     for domain, record, body in results:
         observation = to_observation(domain, crawl, record, body)
-        observation["sha256"] = store_body(root, body) if body else None
+        # `is not None`, not falsiness: an empty robots.txt is a real file that
+        # really does allow everyone, and storing it under the hash of b"" is
+        # what keeps it distinguishable from a body we never got.
+        observation["sha256"] = store_body(root, body) if body is not None else None
         observation.pop("body")
         observation["collector_version"] = collector_version
         records.append(observation)
@@ -186,7 +200,7 @@ def backfill(
                         root, crawl, period, domains,
                         connection=connect(), parts=parts,
                         collector_version=collector_version, fetch=fetch,
-                        workers=workers,
+                        workers=workers, sleep=sleep,
                     )
                     break
                 except Exception as exc:

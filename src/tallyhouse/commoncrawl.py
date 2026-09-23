@@ -122,7 +122,14 @@ def to_observation(domain: str, crawl: str, record: dict | None, body: bytes | N
     else:
         status = record["status"]
         if status == "200":
-            outcome = "Fetched"
+            # A 200 alone does NOT make this conclusive. `body is None` means
+            # the index promised a capture that the WARC would not give us, and
+            # calling that Fetched is worse than useless: derive reads a Fetched
+            # record with no body as an EMPTY robots.txt, so a failed range
+            # request would publish the site as blocking nobody. Note the test
+            # is `is None`, not falsiness — b"" is a real, valid, empty
+            # robots.txt that genuinely does allow everyone.
+            outcome = "Fetched" if body is not None else "BodyUnavailable"
         elif status in {"404", "410"}:
             outcome = "NoRobotsTxt"
         elif status in {"301", "302", "303", "307", "308"}:
@@ -143,4 +150,10 @@ def to_observation(domain: str, crawl: str, record: dict | None, body: bytes | N
         "fetched_at": record["fetch_time"] if record else None,
         "attempts": 1,
         "crawl": crawl,
+        # Where in the archive this evidence lives. Recorded so a body can be
+        # re-fetched — by us or by a stranger checking our work — without
+        # re-running the four-minute index query that located it.
+        "warc_filename": record["filename"] if record else None,
+        "warc_offset": record["offset"] if record else None,
+        "warc_length": record["length"] if record else None,
     }

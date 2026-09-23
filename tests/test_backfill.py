@@ -122,12 +122,14 @@ def test_collect_crawl_keeps_going_when_one_body_cannot_be_fetched(tmp_path):
     collect_crawl(
         tmp_path, "CC-MAIN-2023-06", "2023-01", ["a.com", "b.com"],
         connection=connection, parts=["p"], collector_version="abc1234", fetch=fetch,
+        sleep=lambda seconds: None,
     )
     records = {r["domain"]: r for r in read_manifest(tmp_path, "2023-01")}
     assert records["a.com"]["sha256"] is not None
     # The index promised a capture we could not read. That is not the same as
     # the file being absent, and derive must see no body rather than an empty one.
     assert records["b.com"]["sha256"] is None
+    assert records["b.com"]["outcome"] == "BodyUnavailable"
 
 
 def test_collect_crawl_writes_nothing_when_it_fails_partway(tmp_path):
@@ -243,3 +245,54 @@ def test_backfill_gives_up_on_a_crawl_after_its_last_attempt(tmp_path):
     )
     assert results[0]["status"] == "failed"
     assert "503" in results[0]["error"]
+
+
+def test_collect_crawl_retries_a_body_fetch_before_giving_up(tmp_path):
+    # A transient range-request failure must not cost the body. Losing one is
+    # not a neutral gap: an unread body was being published as a robots.txt
+    # that blocks nobody.
+    calls, slept = [], []
+
+    def fetch(record):
+        calls.append(1)
+        if len(calls) < 3:
+            raise OSError("503 Service Unavailable")
+        return b"User-agent: GPTBot\nDisallow: /\n"
+
+    collect_crawl(
+        tmp_path, "CC-MAIN-2023-06", "2023-01", ["a.com"],
+        connection=FakeConnection({"a.com": capture("a.com")}), parts=["p"],
+        collector_version="abc1234", fetch=fetch, sleep=slept.append, body_backoff=2,
+    )
+    record = read_manifest(tmp_path, "2023-01")[0]
+    assert record["outcome"] == "Fetched"
+    assert load_body(tmp_path, record["sha256"]).startswith(b"User-agent: GPTBot")
+    assert slept == [2, 4]
+
+
+def test_a_body_that_never_arrives_is_recorded_as_unavailable(tmp_path):
+    collect_crawl(
+        tmp_path, "CC-MAIN-2023-06", "2023-01", ["a.com"],
+        connection=FakeConnection({"a.com": capture("a.com")}), parts=["p"],
+        collector_version="abc1234",
+        fetch=lambda record: (_ for _ in ()).throw(OSError("gone")),
+        sleep=lambda s: None, body_attempts=2,
+    )
+    record = read_manifest(tmp_path, "2023-01")[0]
+    # Not Fetched: derive would read a bodyless Fetched record as an empty
+    # robots.txt and publish the site as blocking nobody.
+    assert record["outcome"] == "BodyUnavailable"
+    assert record["sha256"] is None
+
+
+def test_an_empty_robots_txt_is_stored_rather_than_treated_as_missing(tmp_path):
+    collect_crawl(
+        tmp_path, "CC-MAIN-2023-06", "2023-01", ["a.com"],
+        connection=FakeConnection({"a.com": capture("a.com")}), parts=["p"],
+        collector_version="abc1234", fetch=lambda record: b"",
+    )
+    record = read_manifest(tmp_path, "2023-01")[0]
+    assert record["outcome"] == "Fetched"
+    # An empty file allows everyone, and that is a finding, not a gap.
+    assert record["sha256"] is not None
+    assert load_body(tmp_path, record["sha256"]) == b""
