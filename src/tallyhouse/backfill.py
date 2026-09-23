@@ -1,0 +1,192 @@
+"""Serialised, resumable backfill of the historical index from Common Crawl.
+
+The live index gathers one period at a time and can afford to be a single
+burst of work. The backfill cannot: it reads sixteen crawls, each costing a
+few hundred range requests against a shared public archive, and the archive
+will refuse us if we ask too fast — three of four crawls in an early probe
+came back 403 when they were requested back to back.
+
+So this is built as a command rather than a script. Three properties follow
+from that, and each is load-bearing:
+
+**Serialised.** One crawl at a time, with a delay between them. Nothing here
+is urgent enough to justify hammering data.commoncrawl.org, and the whole
+index is an argument about crawler etiquette.
+
+**Resumable.** A crawl's manifest is written when that crawl completes, and a
+crawl whose manifest already exists is skipped. Being refused therefore costs
+one crawl rather than the whole run, and the fix is to run the same command
+again.
+
+**Survivable.** One crawl failing does not abort the rest. The run reports
+what it got and what it did not, and the missing crawls are simply the ones
+the next run will attempt.
+
+Which crawls constitute the series is NOT an argument to this module — it is
+`data/crawls/historical.json`. Adding or removing a crawl changes the
+published series, which makes it methodology.
+"""
+
+import collections
+import json
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+from tallyhouse.commoncrawl import (
+    IndexUnavailable,
+    fetch_body,
+    locate,
+    robotstxt_parts,
+    to_observation,
+)
+from tallyhouse.storage import manifest_path, store_body, write_manifest
+
+
+def load_crawls(root: Path, name: str = "historical") -> list[dict]:
+    """The crawl series: which crawls, and what period each one stands for."""
+    document = json.loads((root / "crawls" / f"{name}.json").read_text())
+    crawls = document["crawls"]
+    periods = [entry["period"] for entry in crawls]
+    if len(set(periods)) != len(periods):
+        raise ValueError(
+            f"crawl series {name} maps two crawls to the same period; each "
+            f"period is one published point, so the mapping must be injective"
+        )
+    return crawls
+
+
+def outstanding(root: Path, crawls: list[dict]) -> list[dict]:
+    """The crawls not yet collected — what a resumed run would actually do."""
+    return [c for c in crawls if not manifest_path(root, c["period"]).exists()]
+
+
+def collect_crawl(
+    root: Path,
+    crawl: str,
+    period: str,
+    domains: list[str],
+    *,
+    connection,
+    parts: list[str],
+    collector_version: str,
+    fetch=fetch_body,
+    workers: int = 12,
+) -> dict:
+    """Locate and fetch one crawl's robots.txt for the whole panel.
+
+    The manifest is written once, at the end. A crawl is therefore either
+    collected or not collected, never half — which is what lets the next run
+    decide what to do by asking whether the file exists.
+    """
+    located = locate(connection, parts, domains)
+
+    def body_for(domain: str):
+        record = located.get(domain)
+        if record is None or record["status"] != "200":
+            return domain, record, None
+        try:
+            return domain, record, fetch(record)
+        except Exception:
+            # A capture the index promises but the WARC will not give us. The
+            # observation stays, with no body: "we could not read it" is a
+            # different claim from "it was not there", and only the manifest
+            # can tell them apart later.
+            return domain, record, None
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(body_for, domains))
+
+    records = []
+    for domain, record, body in results:
+        observation = to_observation(domain, crawl, record, body)
+        observation["sha256"] = store_body(root, body) if body else None
+        observation.pop("body")
+        observation["collector_version"] = collector_version
+        records.append(observation)
+
+    write_manifest(root, period, records, collector_version=collector_version)
+    return {
+        "crawl": crawl,
+        "period": period,
+        "status": "collected",
+        "located": len(located),
+        "outcomes": dict(collections.Counter(r["outcome"] for r in records)),
+    }
+
+
+def parts_with_retry(
+    crawl: str,
+    *,
+    parts_for=robotstxt_parts,
+    sleep=None,
+    attempts: int = 3,
+    backoff: int = 30,
+) -> list[str]:
+    """Read a crawl's index paths, backing off when the archive refuses us.
+
+    A 403 here is the archive asking us to slow down, not a permanent answer,
+    so waiting is the correct response and retrying immediately is not.
+    """
+    sleep = time.sleep if sleep is None else sleep
+    for attempt in range(1, attempts + 1):
+        try:
+            return parts_for(crawl)
+        except IndexUnavailable:
+            if attempt == attempts:
+                raise
+            sleep(backoff * attempt)
+    raise AssertionError("unreachable")
+
+
+def backfill(
+    root: Path,
+    crawls: list[dict],
+    domains: list[str],
+    *,
+    connect,
+    collector_version: str,
+    parts_for=robotstxt_parts,
+    fetch=fetch_body,
+    sleep=None,
+    delay: int = 60,
+    workers: int = 12,
+    log=print,
+) -> list[dict]:
+    """Collect every outstanding crawl in the series, one at a time."""
+    # Resolved here rather than as a default argument: a default binds
+    # time.sleep at import, which silently ignores a patched clock and makes a
+    # test of the retry path wait for real.
+    sleep = time.sleep if sleep is None else sleep
+    results = []
+    todo = {c["period"] for c in outstanding(root, crawls)}
+    attempted = False
+    for entry in crawls:
+        crawl, period = entry["crawl"], entry["period"]
+        if period not in todo:
+            results.append({**entry, "status": "skipped"})
+            log(f"{crawl} -> {period}: already collected, skipping")
+            continue
+        # Between attempts only. A resumed run that skips eight collected
+        # crawls should not also sit through eight delays for them.
+        if attempted:
+            sleep(delay)
+        attempted = True
+        log(f"{crawl} -> {period}: starting")
+        try:
+            parts = parts_with_retry(crawl, parts_for=parts_for, sleep=sleep)
+            result = collect_crawl(
+                root, crawl, period, domains,
+                connection=connect(), parts=parts,
+                collector_version=collector_version, fetch=fetch, workers=workers,
+            )
+        except Exception as exc:
+            # Keep going. The series is sixteen independent readings; losing
+            # one is a gap the next run fills, while aborting loses the ones
+            # that would have worked.
+            result = {**entry, "status": "failed", "error": f"{type(exc).__name__}: {exc}"}
+            log(f"{crawl} -> {period}: FAILED {result['error']}")
+        else:
+            log(f"{crawl} -> {period}: {result['outcomes']}")
+        results.append(result)
+    return results

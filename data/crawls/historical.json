@@ -1,0 +1,24 @@
+{
+  "index_id": "agent-accessibility-history",
+  "note": "Which crawls constitute the historical series. This is methodology: adding or removing a crawl changes the series, so the list is data rather than a command-line argument.",
+  "selection": "Roughly quarterly from January 2023 to August 2026. Quarterly rather than every crawl because the question is the shape of the rise — a step at GPTBot's launch in August 2023, or a steady climb — and a quarter of the requests answers it. Denser coverage can be added later; the collector is resumable and skips crawls already gathered.",
+  "period_source": "Common Crawl's own name for each crawl; where a crawl spans two months the earlier is used.",
+  "crawls": [
+    {"crawl": "CC-MAIN-2023-06", "period": "2023-01", "name": "January/February 2023"},
+    {"crawl": "CC-MAIN-2023-14", "period": "2023-03", "name": "March/April 2023"},
+    {"crawl": "CC-MAIN-2023-23", "period": "2023-05", "name": "May/June 2023"},
+    {"crawl": "CC-MAIN-2023-40", "period": "2023-09", "name": "September/October 2023"},
+    {"crawl": "CC-MAIN-2023-50", "period": "2023-11", "name": "November/December 2023"},
+    {"crawl": "CC-MAIN-2024-10", "period": "2024-02", "name": "February/March 2024"},
+    {"crawl": "CC-MAIN-2024-22", "period": "2024-05", "name": "May 2024"},
+    {"crawl": "CC-MAIN-2024-33", "period": "2024-08", "name": "August 2024"},
+    {"crawl": "CC-MAIN-2024-46", "period": "2024-11", "name": "November 2024"},
+    {"crawl": "CC-MAIN-2025-05", "period": "2025-01", "name": "January 2025"},
+    {"crawl": "CC-MAIN-2025-18", "period": "2025-04", "name": "April 2025"},
+    {"crawl": "CC-MAIN-2025-30", "period": "2025-07", "name": "July 2025"},
+    {"crawl": "CC-MAIN-2025-43", "period": "2025-10", "name": "October 2025"},
+    {"crawl": "CC-MAIN-2026-12", "period": "2026-03", "name": "March 2026"},
+    {"crawl": "CC-MAIN-2026-25", "period": "2026-06", "name": "June 2026"},
+    {"crawl": "CC-MAIN-2026-34", "period": "2026-08", "name": "August 2026"}
+  ]
+}

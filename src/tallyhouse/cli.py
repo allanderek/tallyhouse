@@ -13,6 +13,7 @@ from pathlib import Path
 
 import httpx
 
+from tallyhouse.commoncrawl import robotstxt_parts
 from tallyhouse.config import load_agents, load_panel, methodology_version
 from tallyhouse.derive import derive_period, write_tables
 from tallyhouse.ledger import LedgerConflict, latest
@@ -27,7 +28,8 @@ from tallyhouse.periods import (
 )
 from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
-from tallyhouse.balanced import balanced_panel, write_balanced_panel
+from tallyhouse.backfill import backfill, load_crawls, outstanding
+from tallyhouse.balanced import balanced_panel, load_balanced_panel, write_balanced_panel
 from tallyhouse.qualify import qualify, read_tranco, write_panel
 from tallyhouse.render import RenderError, render_site
 from tallyhouse.site import load_site_data, write_site
@@ -296,6 +298,79 @@ def _cmd_balanced_panel(args) -> int:
         return 1
 
 
+def _duckdb_connect(threads: int):
+    """A DuckDB connection able to read Parquet over HTTP range requests."""
+    import duckdb
+
+    connection = duckdb.connect()
+    connection.execute(f"INSTALL httpfs; LOAD httpfs; SET threads={int(threads)};")
+    return connection
+
+
+def _cmd_backfill(args) -> int:
+    """Collect the historical series from Common Crawl, one crawl at a time.
+
+    Safe to interrupt and safe to re-run: crawls already collected are skipped,
+    so a run that is refused partway costs one crawl rather than the whole
+    backfill.
+    """
+    try:
+        root = Path(args.root)
+        crawls = load_crawls(root, args.series)
+        if args.crawl:
+            wanted = set(args.crawl)
+            unknown = wanted - {c["crawl"] for c in crawls}
+            if unknown:
+                print(
+                    f"error: {', '.join(sorted(unknown))} not in the {args.series} "
+                    f"series. The series is data/crawls/{args.series}.json; add a "
+                    f"crawl there if it belongs in the published series.",
+                    file=sys.stderr,
+                )
+                return 1
+            crawls = [c for c in crawls if c["crawl"] in wanted]
+        domains = load_balanced_panel(root, args.panel)
+
+        todo = outstanding(root, crawls)
+        print(
+            f"{len(crawls)} crawls in the {args.series} series, {len(todo)} "
+            f"outstanding, {len(domains)} panel domains"
+        )
+        if args.dry_run:
+            for entry in todo:
+                print(f"  would collect {entry['crawl']} -> {entry['period']}")
+            return 0
+        if not todo:
+            return 0
+
+        cache = Path(args.cache)
+        cache.mkdir(parents=True, exist_ok=True)
+        version = collector_version()
+
+        results = backfill(
+            root,
+            crawls,
+            domains,
+            connect=lambda: _duckdb_connect(args.threads),
+            collector_version=version,
+            parts_for=lambda crawl: robotstxt_parts(crawl, cache=cache),
+            delay=args.delay,
+            workers=args.workers,
+        )
+        failed = [r for r in results if r["status"] == "failed"]
+        collected = [r for r in results if r["status"] == "collected"]
+        print(f"backfill: {len(collected)} collected, {len(failed)} failed")
+        for result in failed:
+            print(f"  {result['crawl']}: {result['error']}", file=sys.stderr)
+        # A failed crawl is not a broken run — it is a crawl the next run will
+        # pick up — but the exit status has to say something happened, or cron
+        # will report a partial backfill as a success.
+        return 1 if failed else 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def _cmd_generate(args) -> int:
     """Render the site from committed data.
 
@@ -346,6 +421,24 @@ def _cmd_generate(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="tallyhouse")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    back = sub.add_parser("backfill", help="collect the historical series from Common Crawl")
+    back.add_argument("--root", default="data")
+    back.add_argument("--series", default="historical",
+                      help="crawl series in data/crawls/<series>.json")
+    back.add_argument("--panel", default="historical",
+                      help="balanced panel in data/panel/<panel>.json")
+    back.add_argument("--crawl", action="append",
+                      help="collect only this crawl (repeatable); must be in the series")
+    back.add_argument("--delay", type=int, default=60,
+                      help="seconds to wait between crawls")
+    back.add_argument("--workers", type=int, default=12,
+                      help="concurrent WARC range requests within one crawl")
+    back.add_argument("--threads", type=int, default=8, help="DuckDB threads")
+    back.add_argument("--cache", default=".cache/ccpaths",
+                      help="where to keep downloaded index path lists")
+    back.add_argument("--dry-run", action="store_true", dest="dry_run",
+                      help="report what would be collected and stop")
 
     bal = sub.add_parser("balanced-panel", help="build a balanced panel from two Tranco endpoints")
     bal.add_argument("--root", default="data")
@@ -401,6 +494,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_qualify(args)
     if args.command == "balanced-panel":
         return _cmd_balanced_panel(args)
+    if args.command == "backfill":
+        return _cmd_backfill(args)
     if args.command == "generate":
         return _cmd_generate(args)
 

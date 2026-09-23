@@ -637,3 +637,55 @@ def test_generate_accepts_a_program_newer_than_its_sources(tmp_path, monkeypatch
     rc = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "out"),
                "--program", str(program)])
     assert rc != 0
+
+
+def seed_series(root, crawls=None):
+    crawls = crawls or [{"crawl": "CC-MAIN-2023-06", "period": "2023-01"}]
+    (root / "crawls").mkdir(parents=True, exist_ok=True)
+    (root / "crawls" / "historical.json").write_text(json.dumps({"crawls": crawls}))
+    (root / "panel").mkdir(parents=True, exist_ok=True)
+    (root / "panel" / "historical.json").write_text(
+        json.dumps({"domains": ["a.com", "b.com"]})
+    )
+
+
+def test_backfill_dry_run_reports_what_is_outstanding(tmp_path, capsys):
+    seed_series(tmp_path)
+    assert main(["backfill", "--root", str(tmp_path), "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "1 crawls in the historical series, 1 outstanding, 2 panel domains" in out
+    assert "would collect CC-MAIN-2023-06 -> 2023-01" in out
+
+
+def test_backfill_dry_run_does_not_touch_the_network(tmp_path, monkeypatch):
+    # A dry run is what you use to check the series before committing to a
+    # long run; it must not itself start making requests.
+    seed_series(tmp_path)
+    from tallyhouse import cli as _cli
+    monkeypatch.setattr(_cli, "robotstxt_parts", lambda *a, **k: pytest.fail("fetched"))
+    assert main(["backfill", "--root", str(tmp_path), "--dry-run"]) == 0
+
+
+def test_backfill_refuses_a_crawl_outside_the_series(tmp_path, capsys):
+    # Which crawls make up the series is methodology. Letting --crawl name one
+    # that isn't in the file would put an unrecorded point in the series.
+    seed_series(tmp_path)
+    code = main(["backfill", "--root", str(tmp_path), "--crawl", "CC-MAIN-2099-01"])
+    assert code == 1
+    assert "not in the historical series" in capsys.readouterr().err
+
+
+def test_backfill_reports_failure_in_its_exit_status(tmp_path, capsys, monkeypatch):
+    seed_series(tmp_path)
+    from tallyhouse import cli as _cli
+    from tallyhouse.commoncrawl import IndexUnavailable
+
+    def refuse(*args, **kwargs):
+        raise IndexUnavailable("403 Forbidden")
+
+    monkeypatch.setattr(_cli, "robotstxt_parts", refuse)
+    monkeypatch.setattr(_cli, "collector_version", lambda *a, **k: "abc1234")
+    from tallyhouse import backfill as _backfill
+    monkeypatch.setattr(_backfill.time, "sleep", lambda seconds: None)
+    assert main(["backfill", "--root", str(tmp_path), "--delay", "0"]) == 1
+    assert "403 Forbidden" in capsys.readouterr().err
