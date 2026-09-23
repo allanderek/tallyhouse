@@ -29,7 +29,7 @@ from tallyhouse.periods import (
 )
 from tallyhouse.publish import INDEX_ID, build_print, record_print
 from tallyhouse.run_collect import collect_panel
-from tallyhouse.backfill import backfill, load_crawls, outstanding
+from tallyhouse.backfill import backfill, load_crawls, outstanding, repair_period
 from tallyhouse.balanced import balanced_panel, load_balanced_panel, write_balanced_panel
 from tallyhouse.qualify import qualify, read_tranco, write_panel
 from tallyhouse.render import RenderError, render_site
@@ -388,6 +388,41 @@ def _cmd_backfill(args) -> int:
         return 1
 
 
+def _cmd_repair(args) -> int:
+    """Re-fetch bodies the archive refused, using the coordinates on record.
+
+    Cheaper and safer than re-collecting: no index query, and evidence that was
+    already good is never re-read.
+    """
+    try:
+        root = Path(args.root)
+        crawls = load_crawls(root, args.series)
+        periods = args.period or [
+            c["period"] for c in crawls if manifest_path(root, c["period"]).exists()
+        ]
+        version = collector_version()
+        total = repaired = 0
+        for period in periods:
+            if not manifest_path(root, period).exists():
+                print(f"error: {period} was never collected", file=sys.stderr)
+                return 1
+            result = repair_period(root, period, collector_version=version)
+            total += result["attempted"]
+            repaired += result["repaired"]
+            if result["attempted"]:
+                print(
+                    f"{period}: repaired {result['repaired']} of "
+                    f"{result['attempted']} unread captures"
+                )
+        print(f"repair: {repaired} of {total} unread captures recovered")
+        # Still-unreachable bodies are a real limitation, not a failure: they
+        # stay inconclusive and out of every published rate.
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def _cmd_historical_print(args) -> int:
     """Derive and publish every collected period of the historical series.
 
@@ -508,6 +543,13 @@ def main(argv: list[str] | None = None) -> int:
     bal.add_argument("--late-list-id", required=True, dest="late_list_id")
     bal.add_argument("--late-date", required=True, dest="late_date")
 
+    rep = sub.add_parser("repair",
+                         help="re-fetch bodies the archive refused, from recorded coordinates")
+    rep.add_argument("--root", default="data")
+    rep.add_argument("--series", default="historical")
+    rep.add_argument("--period", action="append",
+                     help="repair only this period (repeatable); default every collected one")
+
     hist = sub.add_parser("historical-print",
                           help="publish the historical series from collected crawls")
     hist.add_argument("--root", default="data")
@@ -563,6 +605,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_balanced_panel(args)
     if args.command == "backfill":
         return _cmd_backfill(args)
+    if args.command == "repair":
+        return _cmd_repair(args)
     if args.command == "historical-print":
         return _cmd_historical_print(args)
     if args.command == "generate":

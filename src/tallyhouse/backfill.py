@@ -40,7 +40,12 @@ from tallyhouse.commoncrawl import (
     robotstxt_parts,
     to_observation,
 )
-from tallyhouse.storage import manifest_path, store_body, write_manifest
+from tallyhouse.storage import (
+    manifest_path,
+    read_manifest,
+    store_body,
+    write_manifest,
+)
 
 
 def load_crawls(root: Path, name: str = "historical") -> list[dict]:
@@ -218,3 +223,70 @@ def backfill(
             log(f"{crawl} -> {period}: {result['outcomes']}")
         results.append(result)
     return results
+
+
+def repair_period(
+    root: Path,
+    period: str,
+    *,
+    collector_version: str,
+    fetch=fetch_body,
+    sleep=None,
+    workers: int = 8,
+    attempts: int = 6,
+    backoff: int = 5,
+) -> dict:
+    """Re-fetch the bodies of observations recorded BodyUnavailable.
+
+    The archive refuses us in bursts, and a burst can cost a whole crawl's
+    bodies: 2023-03 came back with 237 of its 367 captures unread while every
+    other crawl in the series was clean. Re-running the collector would work,
+    but it would also re-run the four-minute index query to rediscover
+    coordinates already written down.
+
+    So this repairs from the manifest instead, using the WARC filename, offset
+    and length recorded on each observation. Only observations that failed are
+    touched; a Fetched record is never re-read, so a repair cannot change
+    evidence that was already good. Patience is higher than the collector's,
+    because reaching here means the archive has already refused us once.
+    """
+    sleep = time.sleep if sleep is None else sleep
+    records = read_manifest(root, period)
+    pending = [
+        r for r in records
+        if r["outcome"] == "BodyUnavailable" and r.get("warc_filename")
+    ]
+
+    def repair(record: dict):
+        coordinates = {
+            "filename": record["warc_filename"],
+            "offset": record["warc_offset"],
+            "length": record["warc_length"],
+        }
+        for attempt in range(1, attempts + 1):
+            try:
+                return record, fetch(coordinates)
+            except Exception:
+                if attempt == attempts:
+                    return record, None
+                sleep(backoff * attempt)
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(repair, pending))
+
+    repaired = 0
+    for record, body in results:
+        if body is None:
+            continue
+        record["outcome"] = "Fetched"
+        record["sha256"] = store_body(root, body)
+        record["bytes"] = len(body)
+        # The body in hand was fetched by THIS commit, so this is the commit a
+        # stranger needs to reproduce the observation, not the one that failed
+        # to fetch it.
+        record["collector_version"] = collector_version
+        repaired += 1
+
+    if repaired:
+        write_manifest(root, period, records, collector_version=collector_version)
+    return {"period": period, "attempted": len(pending), "repaired": repaired}
