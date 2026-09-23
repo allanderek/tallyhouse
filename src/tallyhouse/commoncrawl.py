@@ -30,7 +30,11 @@ PATHS = DATA + "crawl-data/{crawl}/cc-index-table.paths.gz"
 # live collector tries. Deliberately NOT every subdomain sharing a registered
 # domain: en.wikipedia.org's robots.txt is a different site's policy, and the
 # two indices must agree on what "a domain's robots.txt" means.
-_HOSTS = "url_host_name IN ('{domain}', 'www.{domain}')"
+# One flat IN list rather than 611 OR'd two-element INs. Same predicate, but
+# the OR chain makes DuckDB test up to 1222 string equalities per row across
+# ~97M rows; a single list it can hash. Measured over eight parts of
+# CC-MAIN-2023-06: 19.2s to 6.4s, with identical rows out.
+_HOSTS = "url_host_name IN ({hosts})"
 
 # Prefer a readable file, then a conclusive absence, then whatever was seen;
 # newest within each class, so a site that changed mid-crawl is reported as it
@@ -39,7 +43,7 @@ _SELECT = """
 SELECT url_host_registered_domain AS domain, url, fetch_status,
        warc_filename, warc_record_offset, warc_record_length, fetch_time
 FROM read_parquet({parts})
-WHERE url_path = '/robots.txt' AND ({hosts})
+WHERE url_path = '/robots.txt' AND {hosts}
 QUALIFY ROW_NUMBER() OVER (
     PARTITION BY {group}
     ORDER BY CASE WHEN CAST(fetch_status AS INTEGER) = 200 THEN 0
@@ -78,10 +82,13 @@ def locate(connection, parts: list[str], domains: list[str]) -> dict[str, dict]:
     """One best capture per domain, chosen in SQL. Domains absent are omitted."""
     if not domains or not parts:
         return {}
-    hosts = " OR ".join(_HOSTS.format(domain=d.replace("'", "")) for d in domains)
+    wanted = []
+    for domain in domains:
+        clean = domain.replace("'", "")
+        wanted += [f"'{clean}'", f"'www.{clean}'"]
     query = _SELECT.format(
         parts="[" + ",".join(f"'{p}'" for p in parts) + "]",
-        hosts=hosts,
+        hosts=_HOSTS.format(hosts=",".join(wanted)),
         group="url_host_registered_domain",
     )
     rows = connection.execute(query).fetchall()

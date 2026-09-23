@@ -307,7 +307,10 @@ def _duckdb_connect(threads: int):
     with an occasional 503, and three tries inside two seconds treats a busy
     archive as a broken one — one such 503 cost a whole crawl on the first run.
     These give it about four minutes to recover instead, which is the right
-    order of magnitude for a query that takes four minutes itself.
+    order of magnitude for a query that takes minutes itself. http_timeout is
+    deliberately left at DuckDB's default: its documented unit and its actual
+    unit could not be told apart by experiment, and a setting whose meaning is
+    unclear is worse than the default it would replace.
     """
     import duckdb
 
@@ -315,7 +318,7 @@ def _duckdb_connect(threads: int):
     connection.execute(
         f"INSTALL httpfs; LOAD httpfs; SET threads={int(threads)};"
         "SET http_retries=10; SET http_retry_wait_ms=2000;"
-        "SET http_retry_backoff=1.5; SET http_timeout=120000;"
+        "SET http_retry_backoff=1.5;"
     )
     return connection
 
