@@ -22,6 +22,12 @@ from tallyhouse.ledger import LedgerConflict, append_row, would_conflict
 INDEX_ID = "agent-accessibility"
 PROVISIONAL_COVERAGE_THRESHOLD = 97.0
 
+# Distinguishes "caller said nothing" from "caller said no threshold applies".
+# The threshold cannot be a default argument: that would bind the constant at
+# import, and recalibrating it — which spec 6.5 anticipates — would then leave
+# already-published prints flagged forever with no way to correct them.
+_UNSET = object()
+
 
 def build_print(
     tables: dict,
@@ -31,7 +37,24 @@ def build_print(
     methodology_version: str,
     collector_version: str,
     computed_at: str,
+    change_series: str = "change_wow",
+    provisional_threshold: float | None = _UNSET,
 ) -> dict:
+    """Assemble one period's published rows.
+
+    `change_series` names the like-for-like change row. It is an argument
+    because the row's name states a cadence, and a quarterly index whose change
+    row is called change_wow would be publishing a falsehood in a field name.
+
+    `provisional_threshold` of None means no coverage threshold applies. That
+    is not a way to silence the flag: it is for an index reading a closed
+    archive, where no further evidence can arrive and a number can therefore
+    never be restated on coverage grounds. Such a number is final the moment it
+    is computed, however much of the panel it covers — which is what the
+    separately published coverage row is for.
+    """
+    if provisional_threshold is _UNSET:
+        provisional_threshold = PROVISIONAL_COVERAGE_THRESHOLD
     conclusive = conclusive_domains(tables["observations"])
     cov = coverage(tables["observations"], panel_size)
     context = {
@@ -83,21 +106,32 @@ def build_print(
             conclusive,
         )
         if change is not None:
-            series["change_wow"] = row(change, len(prev_conclusive & conclusive))
+            series[change_series] = row(change, len(prev_conclusive & conclusive))
 
     return {
         "headline": headline,
         "series": series,
-        "provisional": cov < PROVISIONAL_COVERAGE_THRESHOLD,
+        "provisional": (
+            False if provisional_threshold is None else cov < provisional_threshold
+        ),
     }
 
 
-def record_print(root: Path, period: str, built: dict, *, reason: str | None = None) -> None:
+def record_print(
+    root: Path,
+    period: str,
+    built: dict,
+    *,
+    reason: str | None = None,
+    index_id: str = INDEX_ID,
+) -> None:
     """Record print to both prints.csv and series.csv with atomicity and idempotency.
 
     Args:
         root: Directory containing the ledger CSV files
         period: Period identifier (e.g., "2026-09-14")
+        index_id: Which index these rows belong to. The two indices share one
+                 ledger; index_id is what keeps their series apart.
         built: Dict from build_print() with headline, series, and provisional flag
         reason: Optional explanation if any value has changed. Required if any row
                 (headline or series) would change from its last published value.
@@ -119,14 +153,14 @@ def record_print(root: Path, period: str, built: dict, *, reason: str | None = N
     conflicts = []
 
     # Check headline
-    headline_key = {"index_id": INDEX_ID, "period": period}
+    headline_key = {"index_id": index_id, "period": period}
     headline_with_provisional = dict(built["headline"], provisional="true" if built["provisional"] else "false")
     if would_conflict(root / "prints.csv", headline_key, headline_with_provisional, reason=reason):
         conflicts.append(("prints", headline_key))
 
     # Check all series
     for series_id, row in sorted(built["series"].items()):
-        series_key = {"index_id": INDEX_ID, "period": period, "series_id": series_id}
+        series_key = {"index_id": index_id, "period": period, "series_id": series_id}
         series_with_provisional = dict(row, provisional="true" if built["provisional"] else "false")
         if would_conflict(root / "series.csv", series_key, series_with_provisional, reason=reason):
             conflicts.append(("series", series_key))
@@ -152,7 +186,7 @@ def record_print(root: Path, period: str, built: dict, *, reason: str | None = N
         series_with_provisional = dict(row, provisional="true" if built["provisional"] else "false")
         append_row(
             root / "series.csv",
-            {"index_id": INDEX_ID, "period": period, "series_id": series_id},
+            {"index_id": index_id, "period": period, "series_id": series_id},
             series_with_provisional,
             reason=reason,
         )

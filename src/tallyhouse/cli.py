@@ -16,6 +16,7 @@ import httpx
 from tallyhouse.commoncrawl import robotstxt_parts
 from tallyhouse.config import load_agents, load_panel, methodology_version
 from tallyhouse.derive import derive_period, write_tables
+from tallyhouse.historical import publish_series
 from tallyhouse.ledger import LedgerConflict, latest
 from tallyhouse.periods import (
     InvalidPeriod,
@@ -384,6 +385,45 @@ def _cmd_backfill(args) -> int:
         return 1
 
 
+def _cmd_historical_print(args) -> int:
+    """Derive and publish every collected period of the historical series.
+
+    Unlike the live index this runs over the whole series at once: the points
+    are not arriving one per week, they are all sitting in raw/ already, and
+    the like-for-like change on each one needs the point before it.
+    """
+    try:
+        root = Path(args.root)
+        crawls = load_crawls(root, args.series)
+        agents = load_agents(root, args.agents)
+        domains = load_balanced_panel(root, args.panel)
+        results = publish_series(
+            root,
+            crawls,
+            agents,
+            panel_size=len(domains),
+            methodology_version=methodology_version(args.agents),
+            computed_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            reason=args.reason,
+        )
+        missing = [r["period"] for r in results if r["status"] != "published"]
+        published = len(results) - len(missing)
+        print(f"historical: {published} of {len(results)} periods published")
+        if missing:
+            print(
+                f"note: {', '.join(missing)} not collected; run `tallyhouse "
+                f"backfill` to fill the gaps, then print again",
+                file=sys.stderr,
+            )
+        return 0
+    except LedgerConflict as exc:
+        print(f"refusing to change a published number: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
 def _cmd_generate(args) -> int:
     """Render the site from committed data.
 
@@ -465,6 +505,15 @@ def main(argv: list[str] | None = None) -> int:
     bal.add_argument("--late-list-id", required=True, dest="late_list_id")
     bal.add_argument("--late-date", required=True, dest="late_date")
 
+    hist = sub.add_parser("historical-print",
+                          help="publish the historical series from collected crawls")
+    hist.add_argument("--root", default="data")
+    hist.add_argument("--series", default="historical")
+    hist.add_argument("--panel", default="historical")
+    hist.add_argument("--agents", type=int, default=2)
+    hist.add_argument("--reason", default=None,
+                      help="required to restate an already-published number")
+
     gen = sub.add_parser("generate", help="render the static site from committed data")
     gen.add_argument("--root", default="data")
     gen.add_argument("--out", default="site")
@@ -511,6 +560,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_balanced_panel(args)
     if args.command == "backfill":
         return _cmd_backfill(args)
+    if args.command == "historical-print":
+        return _cmd_historical_print(args)
     if args.command == "generate":
         return _cmd_generate(args)
 
