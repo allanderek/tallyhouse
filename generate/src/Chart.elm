@@ -52,9 +52,14 @@ type alias YScale =
 or an honest note in its place when there are fewer than that. A single
 point on axes is worse than no chart at all — the page's hero number
 already carries the one-print case.
+
+`cadence` names how often a period falls, e.g. `"weekly"` or `"quarterly"` —
+it appears only in the chart's accessible title, since that is the one place
+this reusable chart states an assumption about its caller's period length.
+
 -}
-view : List Row -> List Row -> List Html
-view prints series =
+view : { cadence : String } -> List Row -> List Row -> List Html
+view config prints series =
     let
         targetedRaw =
             prints
@@ -82,7 +87,7 @@ view prints series =
                 effective =
                     plot indexByPeriod effectiveRaw
             in
-            [ chartSection targeted effective ]
+            [ chartSection config.cadence targeted effective ]
 
 
 tooFewPointsNote : Html
@@ -289,8 +294,8 @@ roundTo decimals value =
 -- The chart itself.
 
 
-chartSection : List PlottedPoint -> List PlottedPoint -> Html
-chartSection targeted effective =
+chartSection : String -> List PlottedPoint -> List PlottedPoint -> Html
+chartSection cadence targeted effective =
     let
         periodCount =
             List.length targeted
@@ -309,20 +314,20 @@ chartSection targeted effective =
     in
     Html.section [ Html.attribute "class" "trend" ]
         [ Html.h2 [] [ Html.text "Trend" ]
-        , chartFigure periodCount yScale targeted effective firstPeriod lastPeriod
+        , chartFigure cadence periodCount yScale targeted effective firstPeriod lastPeriod
         , legend hasProvisional
         ]
 
 
-chartFigure : Int -> YScale -> List PlottedPoint -> List PlottedPoint -> String -> String -> Html
-chartFigure periodCount yScale targeted effective firstPeriod lastPeriod =
+chartFigure : String -> Int -> YScale -> List PlottedPoint -> List PlottedPoint -> String -> String -> Html
+chartFigure cadence periodCount yScale targeted effective firstPeriod lastPeriod =
     Html.node "svg"
         [ Html.attribute "viewBox" (String.concat [ "0 0 ", svgFloat viewboxWidth, " ", svgFloat viewboxHeight ])
         , Html.attribute "class" "trend-chart"
         , Html.attribute "role" "img"
         ]
         (List.concat
-            [ [ Html.node "title" [] [ Html.text (chartTitle periodCount firstPeriod lastPeriod) ]
+            [ [ Html.node "title" [] [ Html.text (chartTitle cadence periodCount firstPeriod lastPeriod) ]
               , Html.node "desc" [] [ Html.text (trendDescription targeted effective) ]
               ]
             , List.map (gridlineRow yScale) (yTicks yScale)
@@ -335,12 +340,14 @@ chartFigure periodCount yScale targeted effective firstPeriod lastPeriod =
         )
 
 
-chartTitle : Int -> String -> String -> String
-chartTitle periodCount firstPeriod lastPeriod =
+chartTitle : String -> Int -> String -> String -> String
+chartTitle cadence periodCount firstPeriod lastPeriod =
     String.concat
         [ "Targeted and effective access over time, "
         , String.fromInt periodCount
-        , " weekly periods from "
+        , " "
+        , cadence
+        , " periods from "
         , firstPeriod
         , " to "
         , lastPeriod
@@ -367,11 +374,11 @@ describeTrend label points =
                 , trendWord first.value last.value
                 , " from "
                 , Data.formatFixed2 first.value
-                , "% in the week of "
+                , "% at "
                 , first.period
                 , " to "
                 , Data.formatFixed2 last.value
-                , "% in the week of "
+                , "% at "
                 , last.period
                 , "."
                 ]

@@ -1,10 +1,10 @@
 {
   "construction": {
     "churn": "389 of 1000 early entries absent at the later endpoint",
-    "known_bias": "members were prominent at both endpoints, so the panel is biased toward durably significant sites; sites that rose or fell within the span are absent",
+    "known_bias": "Members were prominent at both endpoints, so the panel is biased toward durably significant sites; sites that rose or fell within the span are absent",
     "not_comparable": "a different population from the live index panel, so levels are not comparable between the two indices",
     "retained": 611,
-    "rule": "domains present in the Tranco top-N at BOTH endpoints"
+    "rule": "those present in the Tranco top 1000 at both endpoints"
   },
   "domains": [
     "google.com",

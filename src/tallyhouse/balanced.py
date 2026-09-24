@@ -57,11 +57,14 @@ def write_balanced_panel(
             {"tranco_list_id": late_list_id, "date": late_date, "size": late_size},
         ],
         "construction": {
-            "rule": "domains present in the Tranco top-N at BOTH endpoints",
+            # Written to read as prose after "<n> domains: ", because that is
+            # where the site puts it. A label like "top-N at BOTH endpoints"
+            # renders as "domains: domains ... top-N ..." on the page.
+            "rule": f"those present in the Tranco top {early_size} at both endpoints",
             "retained": len(entries),
             "churn": f"{early_size - len(entries)} of {early_size} early entries "
                      f"absent at the later endpoint",
-            "known_bias": "members were prominent at both endpoints, so the panel "
+            "known_bias": "Members were prominent at both endpoints, so the panel "
                           "is biased toward durably significant sites; sites that "
                           "rose or fell within the span are absent",
             "not_comparable": "a different population from the live index panel, "

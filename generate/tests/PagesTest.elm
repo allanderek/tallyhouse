@@ -1,6 +1,6 @@
 module PagesTest exposing (suite)
 
-import Data exposing (Agent, Flags, Operator, Panel, Row, Stances)
+import Data exposing (Agent, Flags, History, Operator, Panel, Row, Stances)
 import Dict
 import Expect
 import Pages
@@ -136,6 +136,64 @@ basePurposes =
         ]
 
 
+historyBaseRow : Row
+historyBaseRow =
+    { baseRow | period = "2023-01", value = "1.2800", denominator = "390", coverage = "63.8000" }
+
+
+historyEarliestPrint : Row
+historyEarliestPrint =
+    historyBaseRow
+
+
+historyMidPrint : Row
+historyMidPrint =
+    { historyBaseRow | period = "2023-09", value = "15.9300", denominator = "408", coverage = "66.7000" }
+
+
+historyLatestPrint : Row
+historyLatestPrint =
+    { historyBaseRow | period = "2026-08", value = "27.8500", denominator = "377", coverage = "61.7000" }
+
+
+baseHistory : History
+baseHistory =
+    { id = "agent-accessibility-history"
+    , title = "Three years of AI-crawler blocking"
+    , question = "When did the top websites start telling AI crawlers to stay out?"
+    , prints = [ historyEarliestPrint, historyMidPrint, historyLatestPrint ]
+    , superseded = []
+    , series =
+        [ { historyMidPrint | value = "13.6500", seriesId = Just "change_since_previous" }
+        , { historyLatestPrint | value = "1.1000", seriesId = Just "change_since_previous" }
+        , { historyEarliestPrint | value = "63.8000", seriesId = Just "coverage" }
+        , { historyMidPrint | value = "66.7000", seriesId = Just "coverage" }
+        , { historyLatestPrint | value = "61.7000", seriesId = Just "coverage" }
+        , { historyLatestPrint | value = "29.0000", seriesId = Just "effective" }
+        ]
+    , panel =
+        { size = 611
+        , endpoints =
+            [ { trancoListId = "K2K4W", date = "2023-02-01", size = 1000 }
+            , { trancoListId = "N2P2W", date = "2026-09-16", size = 1000 }
+            ]
+        , construction =
+            { rule = "domains present in the Tranco top-N at BOTH endpoints"
+            , churn = "389 of 1000 early entries absent at the later endpoint"
+            , knownBias = "members were prominent at both endpoints, so the panel is biased toward durably significant sites"
+            , notComparable = "a different population from the live index panel, so levels are not comparable between the two indices"
+            , retained = 611
+            }
+        }
+    , crawls =
+        [ { crawl = "CC-MAIN-2023-06", period = "2023-01", name = "January/February 2023" }
+        , { crawl = "CC-MAIN-2023-40", period = "2023-09", name = "September/October 2023" }
+        , { crawl = "CC-MAIN-2026-34", period = "2026-08", name = "August 2026" }
+        ]
+    , selection = "Roughly quarterly from January 2023 to August 2026. Test fixture selection text."
+    }
+
+
 baseFlags : Flags
 baseFlags =
     { index =
@@ -167,6 +225,7 @@ baseFlags =
             , ( "Anthropic", anthropicOperator )
             ]
     , purposes = basePurposes
+    , history = baseHistory
     }
 
 
@@ -190,6 +249,22 @@ agentAccessibilityContent : Flags -> String
 agentAccessibilityContent flags =
     Pages.pages flags
         |> List.filter (\page -> page.path == "agent-accessibility/index.html")
+        |> List.map .content
+        |> String.concat
+
+
+homeContent : Flags -> String
+homeContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "index.html")
+        |> List.map .content
+        |> String.concat
+
+
+historyContent : Flags -> String
+historyContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "agent-accessibility-history/index.html")
         |> List.map .content
         |> String.concat
 
@@ -221,6 +296,7 @@ suite =
                         |> Expect.equal
                             [ "index.html"
                             , "agent-accessibility/index.html"
+                            , "agent-accessibility-history/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "agent-accessibility/agent/claude-web/index.html"
                             , "agent-accessibility/agent/gptbot/index.html"
@@ -507,6 +583,154 @@ suite =
                 \_ ->
                     crawlerContent baseFlags
                         |> String.contains "href=\"/index.html\""
+                        |> Expect.equal False
+            ]
+        , describe "the home page's lead prose"
+            [ test "carries the historical series' latest value, computed rather than hardcoded" <|
+                \_ ->
+                    homeContent baseFlags
+                        |> String.contains "27.85%"
+                        |> Expect.equal True
+            , test "names the biggest-move period from the fixture" <|
+                \_ ->
+                    homeContent baseFlags
+                        |> String.contains "2023-09"
+                        |> Expect.equal True
+            , test "carries the size of the biggest move, in points" <|
+                \_ ->
+                    homeContent baseFlags
+                        |> String.contains "13.65"
+                        |> Expect.equal True
+            , test "carries the earliest print's period and value" <|
+                \_ ->
+                    let
+                        content =
+                            homeContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "2023-01" >> Expect.equal True
+                        , String.contains "1.28%" >> Expect.equal True
+                        ]
+                        content
+            , test "links to both the weekly and historical indices" <|
+                \_ ->
+                    let
+                        content =
+                            homeContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "href=\"agent-accessibility/index.html\"" >> Expect.equal True
+                        , String.contains "href=\"agent-accessibility-history/index.html\"" >> Expect.equal True
+                        ]
+                        content
+            , test "carries the live index's own, different headline value" <|
+                \_ ->
+                    homeContent baseFlags
+                        |> String.contains "23.47%"
+                        |> Expect.equal True
+            , test "cautions that the two panels are not comparable" <|
+                \_ ->
+                    homeContent baseFlags
+                        |> String.contains baseHistory.panel.construction.notComparable
+                        |> Expect.equal True
+            ]
+        , describe "the historical index page"
+            [ test "exists at agent-accessibility-history/index.html" <|
+                \_ ->
+                    Pages.pages baseFlags
+                        |> List.map .path
+                        |> List.member "agent-accessibility-history/index.html"
+                        |> Expect.equal True
+            , test "lists every fixture period" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "2023-01" >> Expect.equal True
+                        , String.contains "2023-09" >> Expect.equal True
+                        , String.contains "2026-08" >> Expect.equal True
+                        ]
+                        content
+            , test "shows the latest period's own headline value, not the live index's" <|
+                \_ ->
+                    historyContent baseFlags
+                        |> String.contains "27.85%"
+                        |> Expect.equal True
+            , test "shows the coverage range computed from the fixture's coverage rows" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "61.70%" >> Expect.equal True
+                        , String.contains "66.70%" >> Expect.equal True
+                        ]
+                        content
+            , test "links both Tranco endpoint list ids" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "<a href=\"https://tranco-list.eu/list/K2K4W\">" >> Expect.equal True
+                        , String.contains "<a href=\"https://tranco-list.eu/list/N2P2W\">" >> Expect.equal True
+                        ]
+                        content
+            , test "names every crawl in the selection list" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "CC-MAIN-2023-06" >> Expect.equal True
+                        , String.contains "September/October 2023" >> Expect.equal True
+                        ]
+                        content
+            , test "labels the table's value and denominator columns for a reader, not a ledger" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "<th>Targeted</th>" >> Expect.equal True
+                        , String.contains "<th>Conclusive domains</th>" >> Expect.equal True
+                        , String.contains "<th>Value</th>" >> Expect.equal False
+                        , String.contains "<th>Denominator</th>" >> Expect.equal False
+                        ]
+                        content
+            , test "signs a positive change with an explicit +" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "+13.65" >> Expect.equal True
+                        , String.contains "+1.10" >> Expect.equal True
+                        ]
+                        content
+            , test "leaves the first period's change cell empty" <|
+                \_ ->
+                    historyContent baseFlags
+                        |> String.contains "<td>2023-01</td><td>January/February 2023</td><td>1.28%</td><td></td><td>390</td><td>63.80%</td>"
+                        |> Expect.equal True
+            ]
+        , describe "the live index page still renders on its own"
+            [ test "shows its own headline value, distinct from the historical series" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "23.47%"
+                        |> Expect.equal True
+            , test "does not show the historical index's latest value" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "27.85%"
                         |> Expect.equal False
             ]
         ]

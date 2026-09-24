@@ -1,16 +1,23 @@
 module Data exposing
     ( Agent
+    , Crawl
+    , CrawlEndpoint
     , DivergentDomain
     , Flags
+    , History
+    , HistoryPanel
     , IndexInfo
     , Operator
     , Panel
+    , PanelConstruction
     , Qualification
     , Row
     , Stances
     , agentName
+    , biggestMove
     , currentPeriod
     , decodeFlags
+    , earliestPrint
     , findByPeriod
     , findBySeriesAndPeriod
     , formatFixed2
@@ -236,6 +243,118 @@ decodeOperator =
         (Decode.field "divergent_examples" (Decode.list decodeDivergentDomain))
 
 
+{-| One endpoint of the historical panel's construction: a Tranco list this
+project drew a membership snapshot from, so a reader can go check who was on
+the list at that date rather than trust the retained count on its own.
+-}
+type alias CrawlEndpoint =
+    { trancoListId : String
+    , date : String
+    , size : Int
+    }
+
+
+decodeCrawlEndpoint : Decoder CrawlEndpoint
+decodeCrawlEndpoint =
+    Decode.map3 CrawlEndpoint
+        (Decode.field "tranco_list_id" Decode.string)
+        (Decode.field "date" Decode.string)
+        (Decode.field "size" Decode.int)
+
+
+{-| How the historical panel was assembled, and its stated limits.
+`notComparable` is the sentence that must appear anywhere the live and
+historical indices are mentioned together: they measure different
+populations, so a level on one is not a level on the other.
+-}
+type alias PanelConstruction =
+    { rule : String
+    , churn : String
+    , knownBias : String
+    , notComparable : String
+    , retained : Int
+    }
+
+
+decodePanelConstruction : Decoder PanelConstruction
+decodePanelConstruction =
+    Decode.map5 PanelConstruction
+        (Decode.field "rule" Decode.string)
+        (Decode.field "churn" Decode.string)
+        (Decode.field "known_bias" Decode.string)
+        (Decode.field "not_comparable" Decode.string)
+        (Decode.field "retained" Decode.int)
+
+
+{-| The historical index's panel: the 611 domains present at both ends of a
+three-year span, rather than a single dated snapshot the way the live
+index's panel is.
+-}
+type alias HistoryPanel =
+    { size : Int
+    , endpoints : List CrawlEndpoint
+    , construction : PanelConstruction
+    }
+
+
+decodeHistoryPanel : Decoder HistoryPanel
+decodeHistoryPanel =
+    Decode.map3 HistoryPanel
+        (Decode.field "size" Decode.int)
+        (Decode.field "endpoints" (Decode.list decodeCrawlEndpoint))
+        (Decode.field "construction" decodePanelConstruction)
+
+
+{-| One Common Crawl archive this index reads from: its own crawl id, the
+quarter-ish period it stands for, and a human name for that window.
+-}
+type alias Crawl =
+    { crawl : String
+    , period : String
+    , name : String
+    }
+
+
+decodeCrawl : Decoder Crawl
+decodeCrawl =
+    Decode.map3 Crawl
+        (Decode.field "crawl" Decode.string)
+        (Decode.field "period" Decode.string)
+        (Decode.field "name" Decode.string)
+
+
+{-| The three-year quarterly series read from Common Crawl's archive — a
+second index alongside the live weekly one, over a different panel and
+gathered a different way, so it carries its own title, question and panel
+rather than borrowing the live index's.
+-}
+type alias History =
+    { id : String
+    , title : String
+    , question : String
+    , prints : List Row
+    , superseded : List Row
+    , series : List Row
+    , panel : HistoryPanel
+    , crawls : List Crawl
+    , selection : String
+    }
+
+
+decodeHistory : Decoder History
+decodeHistory =
+    Decode.succeed History
+        |> andMap (Decode.field "id" Decode.string)
+        |> andMap (Decode.field "title" Decode.string)
+        |> andMap (Decode.field "question" Decode.string)
+        |> andMap (Decode.field "prints" (Decode.list decodeRow))
+        |> andMap (Decode.field "superseded" (Decode.list decodeRow))
+        |> andMap (Decode.field "series" (Decode.list decodeRow))
+        |> andMap (Decode.field "panel" decodeHistoryPanel)
+        |> andMap (Decode.field "crawls" (Decode.list decodeCrawl))
+        |> andMap (Decode.field "selection" Decode.string)
+
+
 type alias Flags =
     { index : IndexInfo
     , prints : List Row
@@ -245,20 +364,22 @@ type alias Flags =
     , agents : Dict String Agent
     , operators : Dict String Operator
     , purposes : Dict String String
+    , history : History
     }
 
 
 decodeFlags : Decoder Flags
 decodeFlags =
-    Decode.map8 Flags
-        (Decode.field "index" decodeIndex)
-        (Decode.field "prints" (Decode.list decodeRow))
-        (Decode.field "superseded" (Decode.list decodeRow))
-        (Decode.field "series" (Decode.list decodeRow))
-        (Decode.field "panel" decodePanel)
-        (Decode.field "agents" (Decode.dict decodeAgent))
-        (Decode.field "operators" (Decode.dict decodeOperator))
-        (Decode.field "purposes" (Decode.dict Decode.string))
+    Decode.succeed Flags
+        |> andMap (Decode.field "index" decodeIndex)
+        |> andMap (Decode.field "prints" (Decode.list decodeRow))
+        |> andMap (Decode.field "superseded" (Decode.list decodeRow))
+        |> andMap (Decode.field "series" (Decode.list decodeRow))
+        |> andMap (Decode.field "panel" decodePanel)
+        |> andMap (Decode.field "agents" (Decode.dict decodeAgent))
+        |> andMap (Decode.field "operators" (Decode.dict decodeOperator))
+        |> andMap (Decode.field "purposes" (Decode.dict Decode.string))
+        |> andMap (Decode.field "history" decodeHistory)
 
 
 
@@ -342,6 +463,40 @@ latestPrint rows =
 
         Just period ->
             findByPeriod period rows
+
+
+{-| The earliest of the given rows by period, comparing period strings rather
+than trusting the list's own order. `Nothing` if the list is empty. Used on a
+historical series, which arrives already ordered, so this is a belt-and-braces
+check rather than a substitute for sorting it.
+-}
+earliestPrint : List Row -> Maybe Row
+earliestPrint rows =
+    rows
+        |> List.sortBy .period
+        |> List.head
+
+
+{-| Of the rows whose `seriesId` is `Just "change_since_previous"`, the one
+with the greatest numeric `value` — the single biggest step in a historical
+series. `Nothing` if there are none, so nobody has to hardcode which period
+that step fell on.
+-}
+biggestMove : List Row -> Maybe Row
+biggestMove rows =
+    rows
+        |> List.filter (\row -> row.seriesId == Just "change_since_previous")
+        |> List.filterMap withNumericValue
+        |> List.sortBy Tuple.first
+        |> List.reverse
+        |> List.head
+        |> Maybe.map Tuple.second
+
+
+withNumericValue : Row -> Maybe ( Float, Row )
+withNumericValue row =
+    String.toFloat row.value
+        |> Maybe.map (\value -> ( value, row ))
 
 
 findByPeriod : String -> List Row -> Maybe Row
@@ -436,14 +591,26 @@ formatFixed2 value =
         rounded =
             round (value * 100)
 
+        sign =
+            case rounded < 0 of
+                True ->
+                    "-"
+
+                False ->
+                    ""
+
+        magnitude =
+            abs rounded
+
         whole =
-            rounded // 100
+            magnitude // 100
 
         fractional =
-            abs (rounded - whole * 100)
+            magnitude - whole * 100
     in
     String.concat
-        [ String.fromInt whole
+        [ sign
+        , String.fromInt whole
         , "."
         , String.padLeft 2 '0' (String.fromInt fractional)
         ]

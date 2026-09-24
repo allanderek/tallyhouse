@@ -58,6 +58,48 @@ wellFormedFlags =
         , ( "agents", Encode.object [] )
         , ( "operators", Encode.object [] )
         , ( "purposes", Encode.object [] )
+        , ( "history"
+          , Encode.object
+                [ ( "id", Encode.string "agent-accessibility-history" )
+                , ( "title", Encode.string "Three years of AI-crawler blocking" )
+                , ( "question", Encode.string "When did the top websites start telling AI crawlers to stay out?" )
+                , ( "prints"
+                  , Encode.list identity
+                        [ Encode.object
+                            [ ( "period", Encode.string "2023-01" )
+                            , ( "vintage", Encode.string "1" )
+                            , ( "value", Encode.string "1.2821" )
+                            , ( "denominator", Encode.string "390" )
+                            , ( "coverage", Encode.string "63.8298" )
+                            , ( "provisional", Encode.string "false" )
+                            , ( "methodology_version", Encode.string "agents=1;protego=0.6.2" )
+                            , ( "collector_version", Encode.string "f5c2b39" )
+                            , ( "computed_at", Encode.string "2026-09-17T15:56:22Z" )
+                            , ( "reason", Encode.string "" )
+                            ]
+                        ]
+                  )
+                , ( "superseded", Encode.list identity [] )
+                , ( "series", Encode.list identity [] )
+                , ( "panel"
+                  , Encode.object
+                        [ ( "size", Encode.int 611 )
+                        , ( "endpoints", Encode.list identity [] )
+                        , ( "construction"
+                          , Encode.object
+                                [ ( "rule", Encode.string "domains present in the Tranco top-N at BOTH endpoints" )
+                                , ( "churn", Encode.string "389 of 1000 early entries absent at the later endpoint" )
+                                , ( "known_bias", Encode.string "members were prominent at both endpoints" )
+                                , ( "not_comparable", Encode.string "a different population from the live index panel" )
+                                , ( "retained", Encode.int 611 )
+                                ]
+                          )
+                        ]
+                  )
+                , ( "crawls", Encode.list identity [] )
+                , ( "selection", Encode.string "Roughly quarterly from January 2023 to August 2026." )
+                ]
+          )
         ]
 
 
@@ -77,6 +119,7 @@ suite =
                         (Ok
                             [ "index.html"
                             , "agent-accessibility/index.html"
+                            , "agent-accessibility-history/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"

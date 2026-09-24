@@ -98,7 +98,7 @@ weekOf n =
 
 render : List Row -> List Row -> String
 render prints series =
-    Chart.view prints series
+    Chart.view { cadence = "weekly" } prints series
         |> List.map Html.toString
         |> String.concat
 

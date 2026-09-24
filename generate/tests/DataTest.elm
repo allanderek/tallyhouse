@@ -59,6 +59,38 @@ sampleJson =
         }
     , "purposes":
         { "training": "Bulk crawling to build model training data." }
+    , "history":
+        { "id": "agent-accessibility-history"
+        , "title": "Three years of AI-crawler blocking"
+        , "question": "When did the top websites start telling AI crawlers to stay out?"
+        , "prints":
+            [ { "period": "2023-01", "vintage": "1", "value": "1.2821", "denominator": "390", "coverage": "63.8298", "provisional": "false", "methodology_version": "agents=1;protego=0.6.2", "collector_version": "f5c2b39", "computed_at": "2026-09-17T15:56:22Z", "reason": "" }
+            , { "period": "2026-08", "vintage": "1", "value": "27.8515", "denominator": "377", "coverage": "61.7021", "provisional": "false", "methodology_version": "agents=1;protego=0.6.2", "collector_version": "f5c2b39", "computed_at": "2026-09-17T15:56:22Z", "reason": "" }
+            ]
+        , "superseded": []
+        , "series":
+            [ { "period": "2026-08", "vintage": "1", "value": "1.1019", "denominator": "377", "coverage": "61.7021", "provisional": "false", "methodology_version": "agents=1;protego=0.6.2", "collector_version": "f5c2b39", "computed_at": "2026-09-17T15:56:22Z", "reason": "", "series_id": "change_since_previous" }
+            ]
+        , "panel":
+            { "size": 611
+            , "endpoints":
+                [ { "tranco_list_id": "K2K4W", "date": "2023-02-01", "size": 1000 }
+                , { "tranco_list_id": "N2P2W", "date": "2026-09-16", "size": 1000 }
+                ]
+            , "construction":
+                { "rule": "domains present in the Tranco top-N at BOTH endpoints"
+                , "churn": "389 of 1000 early entries absent at the later endpoint"
+                , "known_bias": "members were prominent at both endpoints, so the panel is biased toward durably significant sites"
+                , "not_comparable": "a different population from the live index panel, so levels are not comparable between the two indices"
+                , "retained": 611
+                }
+            }
+        , "crawls":
+            [ { "crawl": "CC-MAIN-2023-06", "period": "2023-01", "name": "January/February 2023" }
+            , { "crawl": "CC-MAIN-2026-34", "period": "2026-08", "name": "August 2026" }
+            ]
+        , "selection": "Roughly quarterly from January 2023 to August 2026."
+        }
     }
     """
 
@@ -128,6 +160,32 @@ suite =
                     Decode.decodeString Data.decodeFlags sampleJson
                         |> Result.map (\flags -> Dict.get "training" flags.purposes)
                         |> Expect.equal (Ok (Just "Bulk crawling to build model training data."))
+            , test "the historical index decodes its own title, prints and panel" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map
+                            (\flags ->
+                                ( flags.history.title
+                                , List.map .period flags.history.prints
+                                , flags.history.panel.size
+                                )
+                            )
+                        |> Expect.equal (Ok ( "Three years of AI-crawler blocking", [ "2023-01", "2026-08" ], 611 ))
+            , test "the historical panel's endpoints decode, tranco id and all" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.map .trancoListId flags.history.panel.endpoints)
+                        |> Expect.equal (Ok [ "K2K4W", "N2P2W" ])
+            , test "the historical panel's retained count decodes as a number" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> flags.history.panel.construction.retained)
+                        |> Expect.equal (Ok 611)
+            , test "the crawls decode, matching a period to a crawl name" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.map .name flags.history.crawls)
+                        |> Expect.equal (Ok [ "January/February 2023", "August 2026" ])
             ]
         , describe "isProvisional"
             [ test "\"true\" is provisional" <|
@@ -228,5 +286,48 @@ suite =
                 \_ ->
                     Data.formatPercent "n/a"
                         |> Expect.equal "n/a"
+            ]
+        , describe "formatFixed2"
+            [ test "keeps the sign of a negative value smaller than one in magnitude" <|
+                \_ ->
+                    Data.formatFixed2 -0.2611
+                        |> Expect.equal "-0.26"
+            , test "keeps the sign of a negative value larger than one in magnitude" <|
+                \_ ->
+                    Data.formatFixed2 -1.2853
+                        |> Expect.equal "-1.29"
+            ]
+        , describe "biggestMove"
+            [ test "picks the change_since_previous row with the greatest value" <|
+                \_ ->
+                    [ { baseRow | period = "2023-03", value = "0.5182", seriesId = Just "change_since_previous" }
+                    , { baseRow | period = "2023-09", value = "13.6483", seriesId = Just "change_since_previous" }
+                    , { baseRow | period = "2025-04", value = "-1.2853", seriesId = Just "change_since_previous" }
+                    , { baseRow | period = "2023-09", value = "999", seriesId = Just "effective" }
+                    ]
+                        |> Data.biggestMove
+                        |> Maybe.map .period
+                        |> Expect.equal (Just "2023-09")
+            , test "is Nothing for an empty list" <|
+                \_ ->
+                    Data.biggestMove []
+                        |> Expect.equal Nothing
+            , test "is Nothing when there are no change_since_previous rows" <|
+                \_ ->
+                    [ { baseRow | seriesId = Just "effective" }, { baseRow | seriesId = Just "blanket" } ]
+                        |> Data.biggestMove
+                        |> Expect.equal Nothing
+            ]
+        , describe "earliestPrint"
+            [ test "picks the earliest period, not merely the list head" <|
+                \_ ->
+                    [ { baseRow | period = "2026-08" }, { baseRow | period = "2023-01" }, { baseRow | period = "2024-05" } ]
+                        |> Data.earliestPrint
+                        |> Maybe.map .period
+                        |> Expect.equal (Just "2023-01")
+            , test "is Nothing for an empty list" <|
+                \_ ->
+                    Data.earliestPrint []
+                        |> Expect.equal Nothing
             ]
         ]

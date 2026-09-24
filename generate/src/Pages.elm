@@ -6,7 +6,7 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Agent, DivergentDomain, Flags, Operator, Panel, Qualification, Row, Stances)
+import Data exposing (Agent, Crawl, CrawlEndpoint, DivergentDomain, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
 import Dict exposing (Dict)
 import Html exposing (Html)
 
@@ -22,6 +22,7 @@ pages flags =
     List.concat
         [ [ homePage flags
           , indexPage flags
+          , historyPage flags
           , agentsIndexPage flags
           ]
         , agentPageList flags
@@ -39,31 +40,149 @@ homePage flags =
     , content =
         Html.document
             { title = "Tallyhouse"
-            , description = "Tallyhouse is a weekly, reproducible index measuring how many of the top websites tell AI crawlers to stay out."
+            , description = "Tallyhouse tracks how many of the top websites tell AI crawlers to stay out: a three-year historical series, and a weekly reproducible index."
             , head = [ stylesheet ]
             , body =
-                [ Html.header []
-                    [ Html.h1 [] [ Html.text "Tallyhouse" ]
-                    , Html.p [ Html.attribute "class" "tagline" ] [ Html.text flags.index.question ]
+                List.concat
+                    [ [ Html.header []
+                            [ Html.h1 [] [ Html.text "Tallyhouse" ]
+                            , Html.p [ Html.attribute "class" "tagline" ] [ Html.text flags.index.question ]
+                            ]
+                      , Html.main_ []
+                            (List.concat
+                                [ leadSection flags.history
+                                , Chart.view { cadence = "quarterly" } flags.history.prints flags.history.series
+                                , onwardSection flags
+                                , [ comparabilityCaution flags.history.panel.construction ]
+                                , [ Html.p []
+                                        [ Html.a [ Html.attribute "href" "about/index.html" ]
+                                            [ Html.text "How it is built and why the numbers can be trusted" ]
+                                        ]
+                                  ]
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
                     ]
-                , Html.main_ []
-                    [ Html.p []
-                        [ Html.text "Tallyhouse measures how many of the top 1,000 websites name an AI crawler in "
-                        , Html.code [] [ Html.text "robots.txt" ]
-                        , Html.text " and disallow it, and publishes a new figure every week from a committed, append-only ledger."
-                        ]
-                    , Html.p []
-                        [ Html.text "Read the "
-                        , Html.a [ Html.attribute "href" "agent-accessibility/index.html" ] [ Html.text flags.index.title ]
-                        , Html.text ", or see "
-                        , Html.a [ Html.attribute "href" "about/index.html" ] [ Html.text "how it is built and why the numbers can be trusted" ]
-                        , Html.text "."
-                        ]
-                    ]
-                , siteFooter
-                ]
             }
     }
+
+
+{-| The lead prose: what the three-year series shows, with every number read
+from `flags.history` rather than written into the page. The first sentence
+deliberately avoids a fraction that the data itself could contradict — see
+`shareDescription`.
+-}
+leadSection : History -> List Html
+leadSection history =
+    case ( Data.earliestPrint history.prints, Data.latestPrint history.prints, Data.biggestMove history.series ) of
+        ( Just earliest, Just latest, Just move ) ->
+            [ Html.p []
+                [ Html.text "Three years ago almost no major website told AI crawlers to stay out. By "
+                , Html.text latest.period
+                , Html.text ", "
+                , Html.text (shareDescription (rowValue latest))
+                , Html.text " did — and the change was not gradual."
+                ]
+            , Html.p []
+                [ Html.text "A fixed panel of "
+                , Html.text (String.fromInt history.panel.size)
+                , Html.text " long-running popular sites, read from Common Crawl's archive, stood at "
+                , Html.text (Data.formatPercent earliest.value)
+                , Html.text " in "
+                , Html.text earliest.period
+                , Html.text ". The largest single move in the series is "
+                , Html.text move.period
+                , Html.text ", up "
+                , Html.text (Data.formatFixed2 (rowValue move))
+                , Html.text " points on the reading before it — the first snapshot taken after OpenAI launched GPTBot in August 2023. The figure reached "
+                , Html.text (Data.formatPercent latest.value)
+                , Html.text " by "
+                , Html.text latest.period
+                , Html.text "."
+                ]
+            ]
+
+        _ ->
+            [ Html.p [] [ Html.text "The three-year historical series has not been published yet." ] ]
+
+
+{-| A rough, honest fraction of the panel, derived from the actual latest
+figure rather than asserted regardless of it — so this sentence cannot end up
+contradicting the number that follows it, whatever the data turns out to say.
+-}
+shareDescription : Float -> String
+shareDescription value =
+    case value >= 25 of
+        True ->
+            "more than a quarter"
+
+        False ->
+            case value >= 10 of
+                True ->
+                    "more than a tenth"
+
+                False ->
+                    "still a small share"
+
+
+{-| A `Row`'s `value` as a `Float`, falling back to `0` if it does not parse —
+consistent with `formatPercent`'s fallback of showing the raw string rather
+than crashing.
+-}
+rowValue : Row -> Float
+rowValue row =
+    Maybe.withDefault 0 (String.toFloat row.value)
+
+
+onwardSection : Flags -> List Html
+onwardSection flags =
+    [ Html.section []
+        (List.concat
+            [ liveIndexParagraph flags (Data.latestPrint flags.prints)
+            , [ Html.p []
+                    [ Html.text "Read "
+                    , Html.a [ Html.attribute "href" "agent-accessibility-history/index.html" ] [ Html.text flags.history.title ]
+                    , Html.text " for the full three-year series and the method behind it."
+                    ]
+              ]
+            ]
+        )
+    ]
+
+
+liveIndexParagraph : Flags -> Maybe Row -> List Html
+liveIndexParagraph flags maybeLatest =
+    case maybeLatest of
+        Nothing ->
+            [ Html.p []
+                [ Html.text "The weekly "
+                , Html.a [ Html.attribute "href" "agent-accessibility/index.html" ] [ Html.text flags.index.title ]
+                , Html.text " has not published a print yet."
+                ]
+            ]
+
+        Just latest ->
+            [ Html.p []
+                [ Html.text "The weekly "
+                , Html.a [ Html.attribute "href" "agent-accessibility/index.html" ] [ Html.text flags.index.title ]
+                , Html.text " currently reads "
+                , Html.text (Data.formatPercent latest.value)
+                , Html.text " for the week of "
+                , Html.text latest.period
+                , Html.text "."
+                ]
+            ]
+
+
+{-| The two indices read different panels, so a level on one is never a level
+on the other. `notComparable` is the ledger's own account of that limit, read
+back rather than restated here.
+-}
+comparabilityCaution : PanelConstruction -> Html
+comparabilityCaution construction =
+    Html.p [ Html.attribute "class" "meta" ]
+        [ Html.text (String.concat [ "Note: ", construction.notComparable, "." ]) ]
 
 
 
@@ -88,7 +207,7 @@ indexPage flags =
                       , Html.main_ []
                             (List.concat
                                 [ headlineSection flags.panel flags.prints
-                                , Chart.view flags.prints flags.series
+                                , Chart.view { cadence = "weekly" } flags.prints flags.series
                                 , seriesSection flags.series period
                                 , [ Html.section [ Html.attribute "class" "history" ]
                                         [ Html.h2 [] [ Html.text "Every published print" ]
@@ -322,6 +441,279 @@ restatementRow latestPrints old =
                 , Html.td [] [ Html.text (Data.formatPercent current.value) ]
                 , Html.td [] [ Html.text current.reason ]
                 ]
+
+
+
+-- The historical index: three years of quarterly readings from Common
+-- Crawl's archive, over its own panel and its own page.
+
+
+historyPage : Flags -> Page
+historyPage flags =
+    let
+        history =
+            flags.history
+    in
+    { path = "agent-accessibility-history/index.html"
+    , content =
+        Html.document
+            { title = history.title
+            , description = history.question
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader { title = history.title, subtitle = Just history.question, homeHref = "../index.html" }
+                      , Html.main_ []
+                            (List.concat
+                                [ historyHeroSection history
+                                , Chart.view { cadence = "quarterly" } history.prints history.series
+                                , [ Html.section [ Html.attribute "class" "history" ]
+                                        [ Html.h2 [] [ Html.text "Every published period" ]
+                                        , historyTable history
+                                        ]
+                                  , howItIsReadSection
+                                  , panelSection history.panel
+                                  , coverageSection history.series
+                                  , whyFinalSection
+                                  , crawlsSection history
+                                  ]
+                                , supersededSection history.superseded history.prints
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+historyHeroSection : History -> List Html
+historyHeroSection history =
+    case Data.latestPrint history.prints of
+        Nothing ->
+            [ Html.p [] [ Html.text "No historical reading has been published yet." ] ]
+
+        Just latest ->
+            List.concat
+                [ provisionalBadge latest
+                , [ Html.section [ Html.attribute "class" "headline" ]
+                        [ Html.p [ Html.attribute "class" "headline-value" ] [ Html.text (Data.formatPercent latest.value) ]
+                        , Html.p [ Html.attribute "class" "headline-caption" ]
+                            [ Html.text
+                                (String.concat
+                                    [ "of "
+                                    , latest.denominator
+                                    , " conclusive domains in the panel named at least one AI crawler in robots.txt and disallowed it, as read from Common Crawl's "
+                                    , crawlNameFor history.crawls latest.period
+                                    , " archive."
+                                    ]
+                                )
+                            ]
+                        , Html.p [ Html.attribute "class" "meta" ]
+                            [ Html.text
+                                (String.concat
+                                    [ "Coverage: "
+                                    , Data.formatPercent latest.coverage
+                                    , " of the panel had a conclusive reading for this period."
+                                    ]
+                                )
+                            ]
+                        ]
+                  ]
+                ]
+
+
+{-| The human name Common Crawl gave the crawl that stands for one period, or
+the bare period string if none is on record.
+-}
+crawlNameFor : List Crawl -> String -> String
+crawlNameFor crawls period =
+    crawls
+        |> List.filter (\crawl -> crawl.period == period)
+        |> List.head
+        |> Maybe.map .name
+        |> Maybe.withDefault period
+
+
+historyTable : History -> Html
+historyTable history =
+    Html.table [ Html.attribute "class" "prints" ]
+        [ Html.thead []
+            [ Html.tr []
+                [ Html.th [] [ Html.text "Period" ]
+                , Html.th [] [ Html.text "Crawl" ]
+                , Html.th [] [ Html.text "Targeted" ]
+                , Html.th [] [ Html.text "Change" ]
+                , Html.th [] [ Html.text "Conclusive domains" ]
+                , Html.th [] [ Html.text "Coverage" ]
+                ]
+            ]
+        , Html.tbody [] (List.map (historyTableRow history) (List.reverse history.prints))
+        ]
+
+
+historyTableRow : History -> Row -> Html
+historyTableRow history row =
+    Html.tr []
+        [ Html.td [] [ Html.text row.period ]
+        , Html.td [] [ Html.text (crawlNameFor history.crawls row.period) ]
+        , Html.td [] [ Html.text (Data.formatPercent row.value) ]
+        , Html.td [] [ Html.text (changeSince history.series row.period) ]
+        , Html.td [] [ Html.text row.denominator ]
+        , Html.td [] [ Html.text (Data.formatPercent row.coverage) ]
+        ]
+
+
+{-| The change from the previous reading, for the period's row in the
+`change_since_previous` series, or blank for a period with none — the first
+period in the series has no reading before it to compare against.
+-}
+changeSince : List Row -> String -> String
+changeSince series period =
+    Data.findBySeriesAndPeriod "change_since_previous" period series
+        |> Maybe.map (\row -> signedChange (rowValue row))
+        |> Maybe.withDefault ""
+
+
+{-| `Data.formatFixed2`, but with an explicit "+" on positive values — in a
+column with mixed signs, an unsigned positive is indistinguishable from a
+sign that was simply left off. Negative values already carry their own "-"
+from `formatFixed2`. Whether a value counts as positive is judged after the
+same rounding `formatFixed2` applies, so a value that rounds to zero is
+shown bare rather than as "+0.00".
+-}
+signedChange : Float -> String
+signedChange value =
+    case round (value * 100) > 0 of
+        True ->
+            String.concat [ "+", Data.formatFixed2 value ]
+
+        False ->
+            Data.formatFixed2 value
+
+
+howItIsReadSection : Html
+howItIsReadSection =
+    Html.section []
+        [ Html.h2 [] [ Html.text "How it is read" ]
+        , Html.p []
+            [ Html.text "This index reads the "
+            , Html.code [] [ Html.text "robots.txt" ]
+            , Html.text " that Common Crawl captured at the time, rather than anything our own crawler fetched, so it can reach back to before this project existed."
+            ]
+        , Html.p []
+            [ Html.text "It is parsed by the same parser as the live index, so the two indices differ in how evidence is gathered and not at all in how it is read." ]
+        ]
+
+
+panelSection : HistoryPanel -> Html
+panelSection panel =
+    Html.section []
+        [ Html.h2 [] [ Html.text "The panel" ]
+        , Html.p []
+            (List.concat
+                [ [ Html.text
+                        (String.concat
+                            [ String.fromInt panel.size
+                            , " domains: "
+                            , panel.construction.rule
+                            , ", "
+                            ]
+                        )
+                  ]
+                , List.intersperse (Html.text " and ") (List.map endpointLink panel.endpoints)
+                , [ Html.text "." ]
+                ]
+            )
+        , Html.p []
+            [ Html.text
+                (String.concat [ "Membership is fixed across the span: ", panel.construction.churn, "." ])
+            ]
+        , Html.p [ Html.attribute "class" "meta" ]
+            [ Html.text (String.concat [ panel.construction.knownBias, "." ]) ]
+        ]
+
+
+endpointLink : CrawlEndpoint -> Html
+endpointLink endpoint =
+    Html.a
+        [ Html.attribute "href" (String.concat [ "https://tranco-list.eu/list/", endpoint.trancoListId ]) ]
+        [ Html.text (String.concat [ endpoint.trancoListId, " (", endpoint.date, ")" ]) ]
+
+
+coverageSection : List Row -> Html
+coverageSection series =
+    Html.section []
+        [ Html.h2 [] [ Html.text "Coverage" ]
+        , Html.p []
+            [ Html.text "Common Crawl did not capture a robots.txt for every panel domain in every crawl, so each period publishes the share it could read. "
+            , Html.text (coverageRangeSentence series)
+            ]
+        , Html.p [] [ Html.text "Domains it could not read are excluded from the rate rather than assumed permissive." ]
+        ]
+
+
+coverageRangeSentence : List Row -> String
+coverageRangeSentence series =
+    case coverageRange series of
+        Nothing ->
+            "No coverage figures have been published yet."
+
+        Just ( lowest, highest ) ->
+            String.concat
+                [ "Coverage ranges from "
+                , Data.formatFixed2 lowest
+                , "% to "
+                , Data.formatFixed2 highest
+                , "% across the published periods."
+                ]
+
+
+coverageRange : List Row -> Maybe ( Float, Float )
+coverageRange series =
+    let
+        values =
+            series
+                |> List.filter (\row -> row.seriesId == Just "coverage")
+                |> List.filterMap (\row -> String.toFloat row.value)
+    in
+    Maybe.map2 Tuple.pair (List.minimum values) (List.maximum values)
+
+
+whyFinalSection : Html
+whyFinalSection =
+    Html.section []
+        [ Html.h2 [] [ Html.text "Why these figures are final" ]
+        , Html.p []
+            [ Html.text "The live index marks a print provisional when coverage is low, because more evidence can still arrive inside its collection window. Common Crawl's archive is closed, so a historical reading can never be restated on coverage grounds and is final the moment it is computed. Coverage is published per period instead." ]
+        ]
+
+
+crawlsSection : History -> Html
+crawlsSection history =
+    Html.section []
+        [ Html.h2 [] [ Html.text "Which crawls" ]
+        , Html.p [] [ Html.text history.selection ]
+        , Html.table []
+            [ Html.thead []
+                [ Html.tr []
+                    [ Html.th [] [ Html.text "Crawl" ]
+                    , Html.th [] [ Html.text "Name" ]
+                    , Html.th [] [ Html.text "Period" ]
+                    ]
+                ]
+            , Html.tbody [] (List.map crawlRow history.crawls)
+            ]
+        ]
+
+
+crawlRow : Crawl -> Html
+crawlRow crawl =
+    Html.tr []
+        [ Html.td [] [ Html.text crawl.crawl ]
+        , Html.td [] [ Html.text crawl.name ]
+        , Html.td [] [ Html.text crawl.period ]
+        ]
 
 
 
