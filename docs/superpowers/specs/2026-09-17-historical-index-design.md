@@ -144,7 +144,9 @@ published series in §6.1:
     CC-MAIN-2026-30, 611-domain balanced panel, 377 conclusive
     targeted 27.59%  effective 29.44%  blanket 5.84%
 
-Against the live index's 23.47% for September 2026. The levels are not
+Against the live index's 23.47% for September 2026 — that index's vintage 1, as
+it stood on the date of this spike; it was later restated to 23.97% under the
+45-token agent set. The levels are not
 comparable — different panels, different populations — but the direction is
 consistent with the live index's documented exclusion bias: this panel *includes*
 the bot-protected sites the live panel must drop, and it reads higher. That is
@@ -233,8 +235,9 @@ points** over the 381 domains shared with the reading before. From there it
 climbs about two points a quarter to the mid-twenties, plateaus through 2025
 (three consecutive negative changes), and reaches **27.85%** at 2026-08.
 
-Coverage runs 61.7%-68.9% across the series. The live index read 23.47% for
-September 2026 on its own panel; the levels are not comparable, but the
+Coverage runs 61.7%-68.9% across the series. The live index read 23.97% for
+September 2026 on its own panel (vintage 2; vintage 1's 23.47% predates the
+agent-set expansion to 45 tokens); the levels are not comparable, but the
 historical panel *includes* the bot-protected sites the live panel must exclude
 at qualification and reads higher, which is independent evidence for the live
 index's documented exclusion bias.
