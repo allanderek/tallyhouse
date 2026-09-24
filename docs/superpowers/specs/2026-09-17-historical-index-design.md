@@ -1,7 +1,8 @@
 # Historical AI-Blocking Index — Design
 
 **Date:** 2026-09-17
-**Status:** Approved for implementation
+**Status:** Implemented and published 2026-09-23. Section 5.1 records where
+implementation departed from this design, and why.
 **Relationship to the live index:** a separate index on the same spine, not backfill.
 
 ---
@@ -89,22 +90,28 @@ weaker than the live index's bounded window and must be described as such.
 
 For each crawl and each panel domain:
 
-1. Query the CDX index for `<domain>/robots.txt`.
-2. Follow redirect records **within the index** (the index stores the 301, not
-   the target's content; `wikipedia.org/robots.txt` is a 301 in every crawl
-   checked). Bounded hop limit; exceeding it is an inconclusive outcome.
-3. Range-fetch the record and extract the body from the WARC.
-4. Classify with the existing `parse.py` and the same versioned agent set, so
+1. Read the crawl's columnar index and select the **best capture per domain in
+   SQL** — a readable file first, then a conclusive absence, then whatever was
+   seen; newest within each class, so a site that changed mid-crawl is reported
+   as it ended up. One query per crawl, not one per domain.
+2. Range-fetch that record and extract the body from the WARC.
+3. Classify with the existing `parse.py` and the same versioned agent set, so
    the two indices' classification is identical even though their collection is
    not.
 
 Outcomes reuse the live vocabulary. `NoRobotsTxt` for a 404/410 record, `Fetched`
-for a 200, and a distinct `NotInCrawl` for a domain with no record in that crawl
-— which is an absence of evidence about the *crawl*, not about the site.
+for a 200 **whose body we actually hold**, `TransportError` for a capture that is
+only a redirect, `BodyUnavailable` for a capture the WARC would not give us, and a
+distinct `NotInCrawl` for a domain with no record in that crawl — which is an
+absence of evidence about the *crawl*, not about the site. Of these only
+`Fetched` and `NoRobotsTxt` are conclusive.
 
 Raw evidence is retained exactly as the live index retains it: bodies
-content-addressed by sha256, a manifest per period. The index is re-derivable
-from committed evidence without re-querying Common Crawl.
+content-addressed by sha256, a manifest per period. Each observation also
+records the WARC filename, offset and length it came from, so a single body can
+be re-fetched — or verified by a stranger — without re-running the query that
+located it. The index is re-derivable from committed evidence without
+re-querying Common Crawl.
 
 ## 5a. Coverage, and a second balancing problem
 
@@ -131,7 +138,8 @@ the span, so each period compares a genuinely fixed set. The cost is a smaller
 panel, and the size is an empirical question settled by probing several crawls
 before committing to a full backfill.
 
-The first measured value, for reference and not yet as a published print:
+The first measured value, from the feasibility spike and superseded by the
+published series in §6.1:
 
     CC-MAIN-2026-30, 611-domain balanced panel, 377 conclusive
     targeted 27.59%  effective 29.44%  blanket 5.84%
@@ -142,19 +150,94 @@ consistent with the live index's documented exclusion bias: this panel *includes
 the bot-protected sites the live panel must drop, and it reads higher. That is
 independent evidence for a claim that was previously only an argument.
 
+## 5.1 Where implementation departed from this design
+
+**Redirect chasing was abandoned.** Step 2 as designed does not work: the index
+keys captures by a scheme-insensitive urlkey, so following a 301 from
+`http://x/robots.txt` lands on the same urlkey as the record you started from
+and looks like a redirect loop. Selecting the best capture in SQL answers the
+same question in one query and cannot loop.
+
+**The doubly balanced panel (§5a) was not built.** Restricting the panel to
+domains conclusively observed in *every* crawl would have removed the
+changing-observable-set confound, but at a cost the spike numbers made
+unattractive: conclusive counts per crawl run 377-421 out of 611, and the
+intersection across all sixteen would have been far smaller than any of them.
+
+The confound is instead handled where it actually bites, in the change figure.
+`change_since_previous` is computed like-for-like over the domains that two
+**adjacent** readings share, so a move in it cannot be composition even though
+the levels' denominators differ between periods. Coverage is published per
+period so a reader can see the denominator move.
+
+This turned out to be more than a modelling nicety. The first published run
+showed a −6.3 point fall at 2024-05 followed by a +10.0 point rise, which looks
+like real volatility in the levels. The like-for-like change said −6.91 points
+across 405 *shared* domains, which composition cannot explain — so the data had
+to be wrong, and it was: 124 of that crawl's captures had lost their body to a
+transient range-request failure, been recorded as `Fetched` anyway because the
+archive's status was 200, and then been read by `derive` as an *empty*
+robots.txt blocking nobody. The `BodyUnavailable` outcome and retried range
+requests exist because of this. A levels-only series would have shipped.
+
+**Historical prints are never provisional**, contradicting §6's plan to
+calibrate a separate threshold. The flag means "more evidence may arrive inside
+the collection window"; Common Crawl's archive is closed, so a historical
+reading can never be restated on coverage grounds and is final the moment it is
+computed, at whatever coverage it achieved. Coverage is published as its own
+series instead, which is the honest place for it.
+
+**The change series is `change_since_previous`, not a cadence-named row.** The
+published series is roughly quarterly but unevenly spaced — the gaps run two to
+four months — so a field named for a cadence would be stating something false. A
+gap in the series breaks the chain rather than spanning it: a missing crawl
+yields no change row, rather than a two-step move in a field claiming one step.
+
 ## 6. Operational notes
 
 - **The CDX HTTP API is unusable for a backfill.** It is rate limited; a few
   hundred queries during development were enough to be cut off entirely, after
   which even sequential requests failed. Access is via the columnar Parquet index
   instead, which has no such gate.
-- Measured cost per crawl: **248s** to locate all 611 panel domains across the
-  300 Parquet parts, plus **17s** to range-fetch the bodies. About 4.5 minutes,
-  so a 36-crawl backfill is roughly 2.7 hours — a one-off, after which the index
-  is re-derivable from committed evidence without touching Common Crawl again.
-- Per-crawl coverage varies and will be lower and noisier than the live index's
-  99.7%. The existing coverage and provisional machinery handles this, but the
-  threshold must be calibrated separately from the live index's.
+- Measured cost per crawl was **248s** to locate all 611 panel domains across
+  the 300 Parquet parts, plus **17s** to range-fetch the bodies. The locate
+  query was filtering ~97M index rows with 611 OR'd two-element `IN`
+  expressions, up to 1222 string comparisons per row; one flat `IN` list is the
+  same predicate but hashable, and cut it roughly threefold.
+- **The archive refuses us in bursts, and a burst can cost a whole crawl.** Both
+  the index reads and the range requests need patience: DuckDB's httpfs defaults
+  give up after 0.1s, 0.4s and 1.6s, which treats a busy archive as a broken
+  one. One 503 four minutes into a query cost a whole crawl on the first run,
+  and later a burst cost 2023-03 237 of its 367 bodies while every other crawl
+  was clean.
+- The collector is therefore **serialised, delayed between crawls, and
+  resumable**: a crawl's manifest is written only on completion, and a crawl
+  whose manifest exists is skipped, so being refused costs one crawl rather than
+  the run. `tallyhouse repair` re-fetches unread bodies from the coordinates on
+  record, without re-running the index query. It touches only failed captures,
+  so a repair cannot change a number that was already right.
+- Per-crawl coverage varies and is lower than the live index's 99.7%. See §5.1:
+  it is published per period rather than managed with a threshold.
+
+## 6.1 Published result
+
+Sixteen roughly quarterly crawls, 2023-01 to 2026-08, published 2026-09-23.
+Which crawls constitute the series is `data/crawls/historical.json`, because
+adding or removing one changes the published series.
+
+The rise in AI-crawler blocking is a **step, not a climb**. Through the first
+half of 2023 the figure sits between 1.28% and 2.26% — and what there is is
+CCBot, since most tracked crawlers did not yet exist. GPTBot launched in August
+2023, and the very next crawl reads 15.93%, a like-for-like jump of **13.65
+points** over the 381 domains shared with the reading before. From there it
+climbs about two points a quarter to the mid-twenties, plateaus through 2025
+(three consecutive negative changes), and reaches **27.85%** at 2026-08.
+
+Coverage runs 61.7%-68.9% across the series. The live index read 23.47% for
+September 2026 on its own panel; the levels are not comparable, but the
+historical panel *includes* the bot-protected sites the live panel must exclude
+at qualification and reads higher, which is independent evidence for the live
+index's documented exclusion bias.
 
 ## 7. Out of scope
 
