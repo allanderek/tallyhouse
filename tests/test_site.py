@@ -1,7 +1,10 @@
 import json
 
+import pytest
+
 from tallyhouse.ledger import append_row
 from tallyhouse.site import load_site_data, write_site
+from tallyhouse.storage import store_body, write_manifest
 
 
 def meta(**over):
@@ -214,3 +217,111 @@ def test_history_is_present_even_with_nothing_published(tmp_path):
     # must yield an empty series rather than a missing key.
     history = load_site_data(tmp_path)["history"]
     assert history["prints"] == [] and history["panel"]["size"] == 0
+
+
+def seed_evidence(root, period, bodies, *, agents_version=2, agents=("GPTBot", "CCBot")):
+    """Committed raw evidence for one period, plus the agent set to read it with."""
+    (root / "agents").mkdir(parents=True, exist_ok=True)
+    (root / "agents" / f"v{agents_version}.json").write_text(
+        json.dumps({"version": agents_version, "agents": list(agents)})
+    )
+    records = []
+    for domain, body in bodies.items():
+        records.append({
+            "domain": domain, "outcome": "Fetched", "http_status": 200,
+            "final_url": None, "content_type": "text/plain", "bytes": len(body),
+            "sha256": store_body(root, body.encode()),
+            "fetched_at": f"{period}T00:00:00Z", "attempts": 1,
+        })
+    write_manifest(root, period, records, collector_version="abc1234")
+
+
+def test_stance_counts_are_derived_from_committed_evidence(tmp_path):
+    """The crawler pages must not need a gitignored derived/ tree.
+
+    generate is supposed to be a pure function of committed data -- that is the
+    claim the project rests on -- and reading derived/*.csv meant a fresh clone
+    rendered a different site, with every stance count zeroed.
+    """
+    seed_evidence(tmp_path, "2026-09-14", {
+        "a.com": "User-agent: GPTBot\nDisallow: /\n",
+        "b.com": "User-agent: *\nAllow: /\n",
+    })
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="50.0", methodology_version="agents=2;protego=0.6.2"))
+    assert not (tmp_path / "derived").exists()
+
+    data = load_site_data(tmp_path)
+    stances = {a: s for a, s in
+               [(row["agent"], row["stance"]) for row in data["verdicts"]
+                if row["domain"] == "a.com"]}
+    assert stances["GPTBot"] == "FullBlock"
+    assert stances["CCBot"] == "Unmentioned"
+    assert {row["period"] for row in data["verdicts"]} == {"2026-09-14"}
+
+
+def test_the_described_period_is_the_one_the_headline_is_about(tmp_path):
+    """Not whichever period someone last ran derive for.
+
+    derived/ held exactly one period, overwritten on each run, so the crawler
+    pages could describe one week while the headline above them described
+    another, with nothing on the page saying so.
+    """
+    seed_evidence(tmp_path, "2026-09-07", {"a.com": "User-agent: GPTBot\nDisallow: /\n"})
+    seed_evidence(tmp_path, "2026-09-14", {"a.com": "User-agent: *\nAllow: /\n"})
+    for period in ("2026-09-07", "2026-09-14"):
+        append_row(tmp_path / "prints.csv",
+                   {"index_id": "agent-accessibility", "period": period},
+                   meta(value="50.0", methodology_version="agents=2;protego=0.6.2"))
+
+    data = load_site_data(tmp_path)
+    assert {row["period"] for row in data["verdicts"]} == {"2026-09-14"}
+    # The later period does not block GPTBot, so the count must reflect that
+    # rather than the earlier week's FullBlock.
+    gptbot = [r for r in data["verdicts"] if r["agent"] == "GPTBot"]
+    assert [r["stance"] for r in gptbot] == ["Unmentioned"]
+
+
+def test_stances_are_counted_over_the_agent_set_that_produced_the_print(tmp_path):
+    """Read off the print, not passed in alongside it.
+
+    Otherwise a site can be rendered with 45 tokens under a headline computed
+    from 16, and no page would say so.
+    """
+    seed_evidence(tmp_path, "2026-09-14", {"a.com": "User-agent: GPTBot\nDisallow: /\n"},
+                  agents_version=1, agents=("GPTBot",))
+    seed_evidence(tmp_path, "2026-09-14", {"a.com": "User-agent: GPTBot\nDisallow: /\n"},
+                  agents_version=2, agents=("GPTBot", "CCBot", "Bytespider"))
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="100.0", methodology_version="agents=1;protego=0.6.2"))
+
+    data = load_site_data(tmp_path)
+    # The print says agents=1, so one token is counted -- not the three that
+    # happen to be available in v2.
+    assert {row["agent"] for row in data["verdicts"]} == {"GPTBot"}
+
+
+def test_a_print_that_does_not_name_its_agent_set_is_refused(tmp_path):
+    # Counting stances over a guessed agent set would publish numbers the
+    # headline cannot vouch for. Zeroed counts would look like real data.
+    from tallyhouse.site import UnreadableMethodology
+
+    seed_evidence(tmp_path, "2026-09-14", {"a.com": "User-agent: *\nAllow: /\n"})
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="0.0", methodology_version="protego=0.6.2"))
+    with pytest.raises(UnreadableMethodology, match="which agent set"):
+        load_site_data(tmp_path)
+
+
+def test_a_published_period_with_no_committed_evidence_yields_empty_sections(tmp_path):
+    # A checkout without the raw tree still renders; it just cannot describe
+    # per-crawler behaviour.
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="23.4", methodology_version="agents=2;protego=0.6.2"))
+    data = load_site_data(tmp_path)
+    assert data["verdicts"] == [] and data["fetches"] == []
+    assert data["prints"][0]["value"] == "23.4"

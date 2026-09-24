@@ -36,28 +36,6 @@ echo "==> compiling the generator"
 # to look at changes just made.
 (cd generate && elm make src/Site.elm --optimize --output=site.js)
 
-echo "==> deriving the latest published period"
-# The crawler pages' stance counts come from data/derived/, which is gitignored
-# and holds whichever period was derived last. Deriving the latest published
-# period here keeps the served pages consistent with the headline they sit under.
-period=$(PYTHONPATH=src python3 - <<'PY'
-from pathlib import Path
-from tallyhouse.ledger import read_rows
-from tallyhouse.publish import INDEX_ID
-periods = [r["period"] for r in read_rows(Path("data/prints.csv"))
-           if r["index_id"] == INDEX_ID]
-print(max(periods) if periods else "")
-PY
-)
-if [ -n "$period" ]; then
-    # A failure here costs the per-crawler stance counts, not the site, so say
-    # so and carry on rather than refusing to serve anything.
-    PYTHONPATH=src python3 -m tallyhouse.cli derive --period "$period" --agents 2 \
-        || echo "warning: derive failed for $period; crawler pages will show zeroes" >&2
-else
-    echo "warning: no published prints found; skipping derive" >&2
-fi
-
 echo "==> generating the site"
 PYTHONPATH=src python3 -m tallyhouse.cli generate --out "$OUT"
 

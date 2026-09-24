@@ -59,6 +59,11 @@ current = period_for(now)
 print(current if not is_within_window(current, now) else previous_period(current))
 ')
         log "publishing $period"
+        # --agents is pinned rather than inferred, and deliberately so: the
+        # agent set is methodology, and bumping it restates every affected
+        # published row. That should take a human editing this line, not a
+        # scheduled job noticing a new file. The site reads the agent set back
+        # off each print, so it can never disagree with what was published.
         python3 -m tallyhouse.cli derive --period "$period" --agents 2
         python3 -m tallyhouse.cli print --period "$period" --agents 2
         commit_data "Publish $period"

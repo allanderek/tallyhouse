@@ -7,11 +7,14 @@ rather than recalculated, so a page can never disagree with the published record
 """
 
 import collections
-import csv
 import json
+import re
 from pathlib import Path
 
+from tallyhouse.config import load_agents
+from tallyhouse.derive import derive_period
 from tallyhouse.ledger import read_rows
+from tallyhouse.storage import manifest_path
 
 INDEX_ID = "agent-accessibility"
 HISTORY_INDEX_ID = "agent-accessibility-history"
@@ -28,11 +31,44 @@ def _latest_by(rows: list[dict], key_fields: tuple[str, ...]) -> list[dict]:
     return list(best.values())
 
 
-def _read_csv(path: Path) -> list[dict]:
-    if not path.exists():
-        return []
-    with path.open(newline="") as handle:
-        return list(csv.DictReader(handle))
+class UnreadableMethodology(Exception):
+    """A print's methodology_version does not name an agent-set version."""
+
+
+def _agents_version(methodology_version: str) -> int:
+    """The agent-set version a print was computed with, read off the print.
+
+    Taken from the print rather than passed in, so the stance counts on the
+    crawler pages are always counted over the same agent set that produced the
+    published number. Passing it in separately would let a site be rendered
+    with 45 tokens under a headline computed from 16, and nothing would say so.
+    """
+    match = re.search(r"\bagents=(\d+)\b", methodology_version or "")
+    if match is None:
+        raise UnreadableMethodology(
+            f"cannot tell which agent set produced this print from "
+            f"methodology_version {methodology_version!r}. Refusing to count "
+            f"stances over a guess."
+        )
+    return int(match.group(1))
+
+
+def _describe_period(root: Path, period: str, methodology_version: str) -> tuple[list[dict], list[dict]]:
+    """Verdicts and observations for one period, derived from committed evidence.
+
+    Read from raw/ rather than from derived/, which is gitignored and holds
+    whichever period happened to be derived last. Two things follow. A fresh
+    clone renders the same site as this one, which is the claim the whole
+    project rests on and was not previously true of `generate`. And the counts
+    on the crawler pages describe the period whose headline they sit under,
+    rather than whatever week someone last ran `derive` for.
+    """
+    agents = load_agents(root, _agents_version(methodology_version))
+    tables = derive_period(root, period, agents)
+    return (
+        [dict(row) for row in tables["verdicts"]],
+        [dict(observation, period=period) for observation in tables["observations"]],
+    )
 
 
 def _slug(token: str) -> str:
@@ -165,8 +201,17 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
     """Everything the generator needs, as plain JSON-serialisable data."""
     latest_prints, superseded, latest_series = _index_rows(root, index_id)
 
-    verdicts = _read_csv(root / "derived" / "verdicts.csv")
-    fetches = _read_csv(root / "derived" / "fetches.csv")
+    # The period the site's descriptive sections are about: the one whose
+    # headline the pages sit under.
+    described = latest_prints[-1] if latest_prints else None
+    if described is not None and manifest_path(root, described["period"]).exists():
+        verdicts, fetches = _describe_period(
+            root, described["period"], described["methodology_version"]
+        )
+    else:
+        # Nothing published, or its evidence is not in this checkout. Empty
+        # sections rather than a failed build, as elsewhere in this module.
+        verdicts, fetches = [], []
 
     panel_path = root / "panel" / "2026.json"
     panel = json.loads(panel_path.read_text()) if panel_path.exists() else {}
