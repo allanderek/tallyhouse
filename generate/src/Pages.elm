@@ -982,7 +982,7 @@ directoryRow flags period token =
         |> Maybe.map
             (\agent ->
                 Html.tr []
-                    [ Html.td [] [ Html.a [ Html.attribute "href" (String.concat [ "../agent/", agent.slug, "/index.html" ]) ] [ Html.text agent.token ] ]
+                    [ Html.td [] [ Html.a [ Html.attribute "href" (String.concat [ agent.slug, "/index.html" ]) ] [ Html.text agent.token ] ]
                     , Html.td [] [ Html.text (Data.purposeLabel agent.purpose) ]
                     , Html.td [] [ Html.text (publishedRate flags period agent) ]
                     ]
@@ -1012,7 +1012,7 @@ agentPageList flags =
 
 agentPage : Flags -> Agent -> Page
 agentPage flags agent =
-    { path = String.concat [ "agent-accessibility/agent/", agent.slug, "/index.html" ]
+    { path = String.concat [ "agent-accessibility/agents/", agent.slug, "/index.html" ]
     , content =
         Html.document
             { title = agent.token
@@ -1034,6 +1034,7 @@ agentPage flags agent =
                                   ]
                                 , agentRateSection flags agent
                                 , stanceSection agent
+                                , agentHistorySection flags agent
                                 , siblingsSection flags agent
                                 , divergenceSection flags agent
                                 ]
@@ -1166,6 +1167,90 @@ stanceTableRow row =
         [ Html.td [] [ Html.text row.label ]
         , Html.td [] [ Html.text (String.fromInt row.count) ]
         , Html.td [] [ Html.text row.explanation ]
+        ]
+
+
+{-| A token's own three-year line from the historical index, when it has
+one. Omitted entirely, rather than shown with an empty chart, for a token
+history predates or has simply never recorded — most of the 45 tracked
+tokens are newer than the three-year span.
+-}
+agentHistorySection : Flags -> Agent -> List Html
+agentHistorySection flags agent =
+    let
+        rows =
+            Data.agentHistory agent.token flags.history.series
+    in
+    case rows of
+        [] ->
+            []
+
+        _ ->
+            [ Html.section [ Html.attribute "class" "agent-history" ]
+                (List.concat
+                    [ [ Html.h2 [] [ Html.text (String.concat [ agent.token, "'s three-year history" ]) ] ]
+                    , Chart.viewOne { cadence = "quarterly", label = agent.token } rows
+                    , [ firstBlockedSentence rows
+                      , historyNotComparableCaution flags.history.panel
+                      ]
+                    ]
+                )
+            ]
+
+
+{-| When this token was first named and disallowed by any site in the
+historical panel, and its most recent reading — both read from the data
+rather than assumed, so the sentence stays true whatever a future vintage
+of the ledger says.
+-}
+firstBlockedSentence : List Row -> Html
+firstBlockedSentence rows =
+    case Data.latestPrint rows of
+        Nothing ->
+            Html.p [] [ Html.text "No historical reading has been published yet." ]
+
+        Just latest ->
+            Html.p [] [ Html.text (firstBlockedText (Data.firstBlockedPeriod rows) (Data.formatPercent latest.value)) ]
+
+
+firstBlockedText : Maybe String -> String -> String
+firstBlockedText maybeFirstBlocked latestValue =
+    case maybeFirstBlocked of
+        Nothing ->
+            String.concat
+                [ "No site in the historical panel has ever named and disallowed this token; its most recent reading is "
+                , latestValue
+                , "."
+                ]
+
+        Just period ->
+            String.concat
+                [ "A site in the historical panel first named and disallowed this token in "
+                , period
+                , "; its most recent reading is "
+                , latestValue
+                , "."
+                ]
+
+
+{-| This chart's panel is not the panel behind the stance table above it on
+the same page: the live panel is a single dated snapshot, the historical
+panel is a fixed set read across three years from Common Crawl's archive.
+`notComparable` is the ledger's own account of that limit, read back rather
+than restated here.
+-}
+historyNotComparableCaution : HistoryPanel -> Html
+historyNotComparableCaution panel =
+    Html.p [ Html.attribute "class" "meta" ]
+        [ Html.text
+            (String.concat
+                [ "Note: this chart reads Common Crawl's own "
+                , String.fromInt panel.size
+                , "-domain historical panel, not the panel behind the stance table above — "
+                , panel.construction.notComparable
+                , "."
+                ]
+            )
         ]
 
 

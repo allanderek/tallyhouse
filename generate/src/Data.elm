@@ -13,6 +13,7 @@ module Data exposing
     , Qualification
     , Row
     , Stances
+    , agentHistory
     , agentName
     , biggestMove
     , currentPeriod
@@ -20,6 +21,7 @@ module Data exposing
     , earliestPrint
     , findByPeriod
     , findBySeriesAndPeriod
+    , firstBlockedPeriod
     , formatFixed2
     , formatPercent
     , isAgentSeries
@@ -513,6 +515,34 @@ findBySeriesAndPeriod : String -> String -> List Row -> Maybe Row
 findBySeriesAndPeriod seriesId period rows =
     rows
         |> List.filter (\row -> row.seriesId == Just seriesId && row.period == period)
+        |> List.head
+
+
+{-| One token's three-year history: the rows for `"agent:" ++ token` in a
+historical series, ordered by period. `[]` if the token has no historical
+rows at all, e.g. a crawler that history predates.
+-}
+agentHistory : String -> List Row -> List Row
+agentHistory token rows =
+    rows
+        |> List.filter (\row -> row.seriesId == Just (String.concat [ "agent:", token ]))
+        |> List.sortBy .period
+
+
+{-| The earliest period, among the given rows, whose value is greater than
+zero — roughly when a crawler became known enough that sites started naming
+it. `Nothing` if every row is zero (or the list is empty), rather than the
+first row regardless of its value: a later zero must not hide an earlier
+non-zero reading, nor may a token that was never blocked be reported as
+blocked from its first period.
+-}
+firstBlockedPeriod : List Row -> Maybe String
+firstBlockedPeriod rows =
+    rows
+        |> List.filterMap withNumericValue
+        |> List.filter (\( value, _ ) -> value > 0)
+        |> List.map (\( _, row ) -> row.period)
+        |> List.sort
         |> List.head
 
 

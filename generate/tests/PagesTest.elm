@@ -170,6 +170,9 @@ baseHistory =
         , { historyMidPrint | value = "66.7000", seriesId = Just "coverage" }
         , { historyLatestPrint | value = "61.7000", seriesId = Just "coverage" }
         , { historyLatestPrint | value = "29.0000", seriesId = Just "effective" }
+        , { historyEarliestPrint | value = "0.0000", seriesId = Just "agent:GPTBot" }
+        , { historyMidPrint | value = "14.0000", seriesId = Just "agent:GPTBot" }
+        , { historyLatestPrint | value = "19.1000", seriesId = Just "agent:GPTBot" }
         ]
     , panel =
         { size = 611
@@ -232,7 +235,7 @@ baseFlags =
 agentContent : Flags -> String -> String
 agentContent flags slug =
     Pages.pages flags
-        |> List.filter (\page -> page.path == String.concat [ "agent-accessibility/agent/", slug, "/index.html" ])
+        |> List.filter (\page -> page.path == String.concat [ "agent-accessibility/agents/", slug, "/index.html" ])
         |> List.map .content
         |> String.concat
 
@@ -298,10 +301,10 @@ suite =
                             , "agent-accessibility/index.html"
                             , "agent-accessibility-history/index.html"
                             , "agent-accessibility/agents/index.html"
-                            , "agent-accessibility/agent/claude-web/index.html"
-                            , "agent-accessibility/agent/gptbot/index.html"
-                            , "agent-accessibility/agent/google-extended/index.html"
-                            , "agent-accessibility/agent/oai-searchbot/index.html"
+                            , "agent-accessibility/agents/claude-web/index.html"
+                            , "agent-accessibility/agents/gptbot/index.html"
+                            , "agent-accessibility/agents/google-extended/index.html"
+                            , "agent-accessibility/agents/oai-searchbot/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"
                             ]
@@ -450,10 +453,10 @@ suite =
                         , String.contains "Claude-Web" >> Expect.equal True
                         ]
                         content
-            , test "links each agent to its own page" <|
+            , test "links each agent to its own page, one level down from the directory" <|
                 \_ ->
                     agentsIndexContent baseFlags
-                        |> String.contains "../agent/gptbot/index.html"
+                        |> String.contains "href=\"gptbot/index.html\""
                         |> Expect.equal True
             , test "shows a multi-token operator's divergent domain count" <|
                 \_ ->
@@ -554,6 +557,38 @@ suite =
                     Expect.all
                         [ String.contains "../../agents/index.html" >> Expect.equal True
                         , String.contains "../../index.html" >> Expect.equal True
+                        ]
+                        content
+            , test "carries a three-year section with a value from the historical fixture" <|
+                \_ ->
+                    agentContent baseFlags "gptbot"
+                        |> String.contains "19.10%"
+                        |> Expect.equal True
+            , test "names the period the token was first blocked in" <|
+                \_ ->
+                    agentContent baseFlags "gptbot"
+                        |> String.contains "2023-09"
+                        |> Expect.equal True
+            , test "carries the not-comparable caution, naming the historical panel size" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "gptbot"
+                    in
+                    Expect.all
+                        [ String.contains baseHistory.panel.construction.notComparable >> Expect.equal True
+                        , String.contains "611" >> Expect.equal True
+                        ]
+                        content
+            , test "a token with no historical rows omits the three-year section entirely" <|
+                \_ ->
+                    let
+                        content =
+                            agentContent baseFlags "claude-web"
+                    in
+                    Expect.all
+                        [ String.contains "three-year history" >> Expect.equal False
+                        , String.contains baseHistory.panel.construction.notComparable >> Expect.equal False
                         ]
                         content
             ]

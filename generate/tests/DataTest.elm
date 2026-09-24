@@ -318,6 +318,52 @@ suite =
                         |> Data.biggestMove
                         |> Expect.equal Nothing
             ]
+        , describe "agentHistory"
+            [ test "returns only the named token's rows, ordered by period" <|
+                \_ ->
+                    [ { baseRow | period = "2023-09", value = "14.0", seriesId = Just "agent:GPTBot" }
+                    , { baseRow | period = "2023-01", value = "0.0", seriesId = Just "agent:GPTBot" }
+                    , { baseRow | period = "2023-01", value = "5.0", seriesId = Just "agent:ClaudeBot" }
+                    , { baseRow | period = "2023-01", value = "1.1", seriesId = Just "coverage" }
+                    ]
+                        |> Data.agentHistory "GPTBot"
+                        |> List.map .period
+                        |> Expect.equal [ "2023-01", "2023-09" ]
+            , test "an unknown token has no history" <|
+                \_ ->
+                    [ { baseRow | seriesId = Just "agent:GPTBot" } ]
+                        |> Data.agentHistory "NoSuchBot"
+                        |> Expect.equal []
+            ]
+        , describe "firstBlockedPeriod"
+            [ test "finds the earliest period with a non-zero value" <|
+                \_ ->
+                    [ { baseRow | period = "2023-01", value = "0.0" }
+                    , { baseRow | period = "2023-09", value = "14.0" }
+                    , { baseRow | period = "2024-02", value = "16.9" }
+                    ]
+                        |> Data.firstBlockedPeriod
+                        |> Expect.equal (Just "2023-09")
+            , test "is Nothing when every value is zero" <|
+                \_ ->
+                    [ { baseRow | period = "2023-01", value = "0.0" }
+                    , { baseRow | period = "2023-09", value = "0.0" }
+                    ]
+                        |> Data.firstBlockedPeriod
+                        |> Expect.equal Nothing
+            , test "is Nothing for an empty list" <|
+                \_ ->
+                    Data.firstBlockedPeriod []
+                        |> Expect.equal Nothing
+            , test "is not fooled by a later zero after a non-zero reading" <|
+                \_ ->
+                    [ { baseRow | period = "2023-01", value = "0.0" }
+                    , { baseRow | period = "2023-09", value = "14.0" }
+                    , { baseRow | period = "2024-02", value = "0.0" }
+                    ]
+                        |> Data.firstBlockedPeriod
+                        |> Expect.equal (Just "2023-09")
+            ]
         , describe "earliestPrint"
             [ test "picks the earliest period, not merely the list head" <|
                 \_ ->

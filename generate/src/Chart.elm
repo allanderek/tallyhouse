@@ -1,17 +1,20 @@
-module Chart exposing (view)
+module Chart exposing (view, viewOne)
 
-{-| The trend chart on the index page: a two-series line chart plotting the
-headline `targeted` figure (from `prints`) against the broader `effective`
-figure (from the `effective` row of `series`) over every published period.
+{-| Charts built from a `Row` series: `view`, the two-series chart on the
+index pages, plotting the headline `targeted` figure (from `prints`)
+against the broader `effective` figure (from the `effective` row of
+`series`); and `viewOne`, a single-series chart for a crawler's own
+history, where a second series and a legend would only add clutter a
+section heading already covers.
 
 This is inline SVG built by hand with `Html.node`, not a charting library —
 the index page ships no JavaScript, and that is deliberate. A chart like
 this would normally offer a hover crosshair and tooltip for the exact value
 under the pointer; without JavaScript that is not available, so instead
 every line ends in a direct-reading label for its last value, a legend
-names each series, and the full series already lives in the table below
-this chart on the page. That is a compensation for a known limitation, not
-an oversight.
+names each series where there is more than one, and the full series already
+lives in a table elsewhere on the page. That is a compensation for a known
+limitation, not an oversight.
 
 -}
 
@@ -90,13 +93,111 @@ view config prints series =
             [ chartSection config.cadence targeted effective ]
 
 
+{-| Render a single-series chart: a token's own history, with at least two
+periods, or the same honest note as `view` in its place when there are
+fewer than that — a single point on axes is worse than no chart at all
+here too. There is only ever one line, so there is no legend; `label`
+names the series in the chart's accessible title and description, and the
+caller's own section heading is what names it for a sighted reader.
+-}
+viewOne : { cadence : String, label : String } -> List Row -> List Html
+viewOne config rows =
+    let
+        raw =
+            rows
+                |> List.filterMap toPoint
+                |> List.sortBy .period
+    in
+    case List.length raw < 2 of
+        True ->
+            [ tooFewPointsParagraph ]
+
+        False ->
+            let
+                indexByPeriod =
+                    periodIndex (List.map .period raw)
+
+                points =
+                    plot indexByPeriod raw
+            in
+            [ singleChartFigure config.cadence config.label points ]
+
+
+singleChartFigure : String -> String -> List PlottedPoint -> Html
+singleChartFigure cadence label points =
+    let
+        periodCount =
+            List.length points
+
+        firstPeriod =
+            points |> List.head |> Maybe.map .period |> Maybe.withDefault ""
+
+        lastPeriod =
+            points |> lastOf |> Maybe.map .period |> Maybe.withDefault ""
+
+        yScale =
+            yScaleFor (maxValueOf points)
+    in
+    Html.node "svg"
+        [ Html.attribute "viewBox" (String.concat [ "0 0 ", svgFloat viewboxWidth, " ", svgFloat viewboxHeight ])
+        , Html.attribute "class" "trend-chart"
+        , Html.attribute "role" "img"
+        ]
+        (List.concat
+            [ [ Html.node "title" [] [ Html.text (singleChartTitle label cadence periodCount firstPeriod lastPeriod) ]
+              , Html.node "desc" [] [ Html.text (describeTrend label points) ]
+              ]
+            , List.map (gridlineRow yScale) (yTicks yScale)
+            , xAxisLabels periodCount (List.map .period points)
+            , [ seriesGroup colorTargeted periodCount yScale points ]
+            , singleEndpointLabel periodCount yScale points
+            ]
+        )
+
+
+singleChartTitle : String -> String -> Int -> String -> String -> String
+singleChartTitle label cadence periodCount firstPeriod lastPeriod =
+    String.concat
+        [ label
+        , " over time, "
+        , String.fromInt periodCount
+        , " "
+        , cadence
+        , " periods from "
+        , firstPeriod
+        , " to "
+        , lastPeriod
+        , "."
+        ]
+
+
+singleEndpointLabel : Int -> YScale -> List PlottedPoint -> List Html
+singleEndpointLabel periodCount yScale points =
+    case lastOf points of
+        Nothing ->
+            []
+
+        Just point ->
+            [ endpointLabel periodCount point (yPixelFor yScale point.value) ]
+
+
 tooFewPointsNote : Html
 tooFewPointsNote =
     Html.section [ Html.attribute "class" "trend" ]
         [ Html.h2 [] [ Html.text "Trend" ]
-        , Html.p [ Html.attribute "class" "meta" ]
-            [ Html.text "The trend chart begins once there are at least two published prints." ]
+        , tooFewPointsParagraph
         ]
+
+
+{-| The honest note in place of a chart with fewer than two points: a
+single point on axes would be worse than no chart at all. Shared between
+`view`, which wraps it in its own "Trend" section, and `viewOne`, whose
+caller supplies its own heading.
+-}
+tooFewPointsParagraph : Html
+tooFewPointsParagraph =
+    Html.p [ Html.attribute "class" "meta" ]
+        [ Html.text "The trend chart begins once there are at least two published prints." ]
 
 
 isEffective : Row -> Bool

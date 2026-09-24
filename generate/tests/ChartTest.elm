@@ -103,6 +103,13 @@ render prints series =
         |> String.concat
 
 
+renderOne : List Row -> String
+renderOne rows =
+    Chart.viewOne { cadence = "quarterly", label = "GPTBot" } rows
+        |> List.map Html.toString
+        |> String.concat
+
+
 suite : Test
 suite =
     describe "Chart"
@@ -222,5 +229,38 @@ suite =
                         , String.contains (weekOf 28) >> Expect.equal True
                         ]
                         content
+            ]
+        , describe "viewOne, the single-series chart"
+            [ test "a single period renders the honest note and no svg" <|
+                \_ ->
+                    renderOne [ printRow "2023-01" "0.0" ]
+                        |> Expect.all
+                            [ String.contains "begins once there are at least two published prints" >> Expect.equal True
+                            , String.contains "<svg" >> Expect.equal False
+                            ]
+            , test "no rows at all also renders the note, not a chart" <|
+                \_ ->
+                    renderOne []
+                        |> String.contains "<svg"
+                        |> Expect.equal False
+            , test "two or more periods render an accessible svg with no legend" <|
+                \_ ->
+                    renderOne [ printRow "2023-09" "14.0", printRow "2024-02" "16.9" ]
+                        |> Expect.all
+                            [ String.contains "role=\"img\"" >> Expect.equal True
+                            , String.contains "chart-legend" >> Expect.equal False
+                            ]
+            , test "the title and description name the given label" <|
+                \_ ->
+                    renderOne [ printRow "2023-09" "14.0", printRow "2024-02" "16.9" ]
+                        |> Expect.all
+                            [ String.contains "GPTBot over time" >> Expect.equal True
+                            , String.contains "GPTBot rose" >> Expect.equal True
+                            ]
+            , test "the endpoint label carries the last value" <|
+                \_ ->
+                    renderOne [ printRow "2023-09" "14.0", printRow "2024-02" "16.9" ]
+                        |> String.contains "16.90%"
+                        |> Expect.equal True
             ]
         ]
