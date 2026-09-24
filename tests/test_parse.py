@@ -215,3 +215,48 @@ def test_wildcard_pattern_still_counts_when_protego_agrees():
     # stands: the fix skips only patterns nothing can confirm.
     body = "User-agent: GPTBot\nDisallow: /private*/data\n"
     assert classify(body, "GPTBot") == "PartialBlock"
+
+
+def test_a_body_is_parsed_once_however_many_agents_are_classified():
+    """Classification is per agent; parsing is per body.
+
+    A period is classified one domain at a time against every tracked agent, so
+    without this the real 997-domain panel cost 8.2 Protego parses and 45 line
+    scans per domain -- all of the same body -- and a site render took 102
+    seconds. Caching cannot change a verdict because both functions are pure
+    functions of the body; this test is here so the cache cannot be lost by
+    accident.
+    """
+    from tallyhouse import parse as parse_module
+
+    parse_module._parsed.cache_clear()
+    parse_module._named_tokens.cache_clear()
+
+    body = "User-agent: GPTBot\nDisallow: /private\nUser-agent: *\nAllow: /\n"
+    agents = ["GPTBot", "CCBot", "Bytespider", "ClaudeBot", "Applebot-Extended"]
+    parse_module.blanket_stance(body)
+    for agent in agents:
+        parse_module.classify(body, agent)
+
+    assert parse_module._parsed.cache_info().misses == 1
+    assert parse_module._named_tokens.cache_info().misses == 1
+
+
+def test_caching_does_not_leak_between_different_bodies():
+    # Two sites, one blocking and one not. A cache keyed wrongly would report
+    # the first site's policy for the second.
+    blocking = "User-agent: GPTBot\nDisallow: /\n"
+    permissive = "User-agent: GPTBot\nAllow: /\n"
+    assert classify(blocking, "GPTBot") == "FullBlock"
+    assert classify(permissive, "GPTBot") == "Allowed"
+    assert classify(blocking, "GPTBot") == "FullBlock"
+
+
+def test_mentioned_matching_stays_whole_token_and_case_insensitive():
+    # The property the token-set rewrite had to preserve: Applebot-Extended
+    # must not imply Applebot, and case must not matter.
+    body = "User-agent: Applebot-Extended\nDisallow: /\n"
+    assert is_mentioned(body, "Applebot-Extended")
+    assert is_mentioned(body, "applebot-extended")
+    assert not is_mentioned(body, "Applebot")
+    assert not is_mentioned(body, "Extended")

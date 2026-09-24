@@ -11,6 +11,8 @@ This hybrid approach uses probes for FullBlock/Allowed decisions (robust and
 reproducible) and directives for PartialBlock (detects targeting at any path).
 """
 
+from functools import lru_cache
+
 from protego import Protego
 
 from tallyhouse.constants import PROBE_BASE, PROBE_PATHS
@@ -49,6 +51,39 @@ def _parse_directive_line(line: str) -> tuple[str, str] | None:
     return (directive.strip().lower(), value.strip())
 
 
+# Both caches are deliberately tiny. A period is classified one domain at a
+# time against every tracked agent in turn, so the only reuse that matters is
+# within a single body -- and a large cache would pin megabytes of robots.txt
+# for no gain. Both functions are pure functions of the body, so caching cannot
+# change a verdict; it removes repeated identical work.
+#
+# Measured on the real 997-domain panel with 45 agents: 8.2 Protego parses and
+# 45 line scans per domain, all of the same body, which made a site render take
+# 102 seconds.
+_BODY_CACHE = 4
+
+
+@lru_cache(maxsize=_BODY_CACHE)
+def _parsed(body: str) -> Protego:
+    return Protego.parse(body)
+
+
+@lru_cache(maxsize=_BODY_CACHE)
+def _named_tokens(body: str) -> frozenset[str]:
+    """Every agent token this file names, lowercased.
+
+    One pass over the body instead of one pass per agent. Lowercasing here is
+    exactly what _agent_matches_token does, which is case-insensitive
+    whole-token equality, so set membership is equivalent to scanning.
+    """
+    tokens = set()
+    for line in body.splitlines():
+        parsed = _parse_directive_line(line)
+        if parsed and parsed[0] == 'user-agent':
+            tokens.add(parsed[1].lower())
+    return frozenset(tokens)
+
+
 def is_mentioned(body: str, agent: str) -> bool:
     """True if the agent is named in a User-agent line.
 
@@ -56,12 +91,7 @@ def is_mentioned(body: str, agent: str) -> bool:
     "Applebot-Extended" does not imply "Applebot". Comments (# to EOL)
     are stripped per RFC 9309 before matching.
     """
-    for line in body.splitlines():
-        parsed = _parse_directive_line(line)
-        if parsed and parsed[0] == 'user-agent':
-            if _agent_matches_token(agent, parsed[1]):
-                return True
-    return False
+    return agent.lower() in _named_tokens(body)
 
 
 def _agent_matches_token(agent: str, token: str) -> bool:
@@ -194,8 +224,8 @@ def classify(body: str, agent: str) -> str:
     if not is_mentioned(body, agent):
         return "Unmentioned"
 
-    # Parse once for efficiency
-    parser = Protego.parse(body)
+    # Parsed once per body, not once per agent: see _parsed.
+    parser = _parsed(body)
 
     # Step 2: All probe paths blocked -> FullBlock
     results = [parser.can_fetch(PROBE_BASE + path, agent) for path in PROBE_PATHS]
@@ -216,7 +246,7 @@ def blanket_stance(body: str) -> str:
     Uses probe-based classification (unchanged from original) because the
     blanket rule applies to all agents, not targeting a specific one.
     """
-    parser = Protego.parse(body)
+    parser = _parsed(body)
     results = [parser.can_fetch(PROBE_BASE + path, _BLANKET_PROBE_AGENT) for path in PROBE_PATHS]
     if not any(results):
         return "FullBlock"
