@@ -418,9 +418,40 @@ work without JS.
 
 ## 9. Operations
 
-Weekly cron (Monday 00:00 UTC): `collect` → `derive` → `generate` → commit → push. Stages are
-separately runnable so a failed `collect` never corrupts published data, and
-`derive`/`generate` can be re-run freely at any time.
+Two scheduled jobs rather than one, because collection and publication want
+different schedules. `weekly.sh collect` runs several times across the 72-hour
+window: it merges into the period's existing manifest, keeping every conclusive
+observation and re-attempting only the domains we learned nothing about, so
+repeated runs are how coverage climbs. `weekly.sh publish` runs once after the
+window closes — deriving, printing and rendering — because a print freezes a
+number, and freezing it while evidence is still arriving would guarantee a
+restatement.
+
+Both commit. A print that exists only on one machine's disk is not published,
+and the ledger's promise is about what is committed. Neither pushes; that stays
+a human decision.
+
+Stages remain separately runnable so a failed `collect` never corrupts
+published data, and `derive`/`generate` can be re-run freely at any time.
+
+### 9.1 The gap at 2026-09-21
+
+The series does not run continuously from its first print. `2026-09-14` was
+collected by hand while the pipeline was being built; `2026-09-21`'s window
+opened and closed with no scheduled job in existence to collect it. That week
+is unobservable rather than merely uncollected — `robots.txt` reports only the
+present, so there is no archive of what the panel said that Monday that our own
+instrument could have read.
+
+It is left as a gap rather than filled. `--ignore-window` would collect it now
+and label the observations with a week they were not gathered in, which is the
+one thing a dated series must not do. The pipeline already handles the
+consequence correctly: `change_wow` is omitted entirely for the first print
+after a gap, because a row named for a cadence must not report a fortnight's
+movement. The reading itself still publishes; only the change figure is
+withheld.
+
+Regular collection begins at `2026-09-28`.
 
 ## 10. Out of scope for v1
 

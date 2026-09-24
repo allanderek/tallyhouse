@@ -209,6 +209,45 @@ def test_valid_previous_period_produces_change_wow_series(tmp_path):
     assert len(change_wow_rows) > 0, "change_wow series should appear when previous period exists"
 
 
+def test_a_skipped_week_produces_no_change_row_rather_than_a_two_week_one(tmp_path):
+    """A gap in the weekly series must break the chain, not span it.
+
+    change_wow names a cadence, so a row computed across a fortnight would be
+    stating something false in a field name. This is not hypothetical: the
+    2026-09-21 window closed uncollected, so the live series really does run
+    2026-09-14 then 2026-09-28, and the first print after the gap must carry no
+    change row at all.
+    """
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+
+    # 2026-09-21 is never collected. The next period is a fortnight later.
+    records = []
+    for domain, body in [("a.com", "User-agent: GPTBot\nDisallow: /\n"),
+                         ("b.com", "User-agent: GPTBot\nDisallow: /\n")]:
+        records.append({"domain": domain, "outcome": "Fetched",
+                        "sha256": store_body(tmp_path, body.encode()),
+                        "http_status": 200, "final_url": None,
+                        "content_type": "text/plain", "bytes": len(body),
+                        "fetched_at": "2026-09-28T00:00:00Z", "attempts": 1})
+    write_manifest(tmp_path, "2026-09-28", records, collector_version="abc1234")
+
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-28"]) == 0
+
+    after_gap = [r for r in read_rows(tmp_path / "series.csv")
+                 if r["period"] == "2026-09-28" and r["series_id"] == "change_wow"]
+    assert after_gap == [], (
+        "a period whose predecessor was never collected must publish no "
+        "change_wow row; the rate really did move, but not over one week"
+    )
+    # The period itself still publishes: a missing neighbour costs the change
+    # figure, not the reading.
+    headline = [r for r in read_rows(tmp_path / "prints.csv")
+                if r["period"] == "2026-09-28"]
+    assert len(headline) == 1 and float(headline[0]["value"]) == 100.0
+
+
 def seed_published(root, period="2026-09-14"):
     seed_config(root)
     seed_raw(root)
