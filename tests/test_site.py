@@ -159,3 +159,58 @@ def test_site_data_renders_without_crawler_descriptions(tmp_path):
                {"index_id": "agent-accessibility", "period": "2026-09-14"}, meta(value="23.4"))
     data = load_site_data(tmp_path)
     assert data["prints"] and data["agents"] == {} and data["operators"] == {}
+
+
+def test_the_historical_series_travels_as_its_own_index(tmp_path):
+    # Not as more periods of the live series: the levels are not comparable,
+    # and keeping them separate in the data is what stops a page charting them
+    # together by accident.
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="23.4"))
+    for period, value in [("2023-01", "1.28"), ("2026-08", "27.85")]:
+        append_row(tmp_path / "prints.csv",
+                   {"index_id": "agent-accessibility-history", "period": period},
+                   meta(value=value, denominator="390", coverage="63.8"))
+    data = load_site_data(tmp_path)
+    assert [p["value"] for p in data["prints"]] == ["23.4"]
+    assert [p["period"] for p in data["history"]["prints"]] == ["2023-01", "2026-08"]
+    assert [p["value"] for p in data["history"]["prints"]] == ["1.28", "27.85"]
+
+
+def test_the_historical_panel_and_crawl_list_travel(tmp_path):
+    # The page has to be able to say what it measured and which crawls it read,
+    # because neither is derivable from the numbers.
+    (tmp_path / "panel").mkdir()
+    (tmp_path / "panel" / "historical.json").write_text(json.dumps({
+        "domains": ["a.com", "b.com"],
+        "endpoints": [{"tranco_list_id": "K2K4W", "date": "2023-02-01", "size": 1000}],
+        "construction": {"rule": "present at BOTH endpoints", "churn": "389 of 1000"},
+    }))
+    (tmp_path / "crawls").mkdir()
+    (tmp_path / "crawls" / "historical.json").write_text(json.dumps({
+        "crawls": [{"crawl": "CC-MAIN-2023-06", "period": "2023-01"}],
+        "selection": "roughly quarterly",
+    }))
+    history = load_site_data(tmp_path)["history"]
+    assert history["panel"]["size"] == 2
+    assert history["panel"]["construction"]["churn"] == "389 of 1000"
+    assert history["panel"]["endpoints"][0]["tranco_list_id"] == "K2K4W"
+    assert history["crawls"] == [{"crawl": "CC-MAIN-2023-06", "period": "2023-01"}]
+    assert history["selection"] == "roughly quarterly"
+
+
+def test_a_restated_historical_period_keeps_its_superseded_vintage(tmp_path):
+    key = {"index_id": "agent-accessibility-history", "period": "2024-05"}
+    append_row(tmp_path / "prints.csv", key, meta(value="13.38"))
+    append_row(tmp_path / "prints.csv", key, meta(value="22.14"), reason="lost bodies")
+    history = load_site_data(tmp_path)["history"]
+    assert [p["value"] for p in history["prints"]] == ["22.14"]
+    assert [p["value"] for p in history["superseded"]] == ["13.38"]
+
+
+def test_history_is_present_even_with_nothing_published(tmp_path):
+    # The generator's decoder requires the field; an index with no prints yet
+    # must yield an empty series rather than a missing key.
+    history = load_site_data(tmp_path)["history"]
+    assert history["prints"] == [] and history["panel"]["size"] == 0

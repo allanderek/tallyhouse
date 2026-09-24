@@ -14,6 +14,7 @@ from pathlib import Path
 from tallyhouse.ledger import read_rows
 
 INDEX_ID = "agent-accessibility"
+HISTORY_INDEX_ID = "agent-accessibility-history"
 
 
 def _latest_by(rows: list[dict], key_fields: tuple[str, ...]) -> list[dict]:
@@ -103,8 +104,13 @@ def load_agent_data(root: Path, verdicts: list[dict]) -> dict:
     return {"agents": agents, "operators": operators, "purposes": described["purposes"]}
 
 
-def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
-    """Everything the generator needs, as plain JSON-serialisable data."""
+def _index_rows(root: Path, index_id: str) -> tuple[list[dict], list[dict], list[dict]]:
+    """One index's latest prints, its superseded prints, and its latest series.
+
+    Shared by both indices rather than written twice: the vintage rule -- show
+    the highest vintage, but keep the superseded rows so a restatement stays
+    visible -- is the ledger's central promise, and two copies of it could drift.
+    """
     prints = [r for r in read_rows(root / "prints.csv") if r["index_id"] == index_id]
     series = [r for r in read_rows(root / "series.csv") if r["index_id"] == index_id]
 
@@ -112,14 +118,52 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
         _latest_by(prints, ("index_id", "period")), key=lambda r: r["period"]
     )
     latest_series = _latest_by(series, ("index_id", "period", "series_id"))
-
-    # Vintages matter: a restated period must be visible as restated, so the
-    # superseded rows travel too rather than being silently dropped.
     superseded = [
         r for r in prints
         if not any(l["period"] == r["period"] and l["vintage"] == r["vintage"]
                    for l in latest_prints)
     ]
+    return (
+        latest_prints,
+        sorted(superseded, key=lambda r: (r["period"], r["vintage"])),
+        sorted(latest_series, key=lambda r: (r["period"], r["series_id"])),
+    )
+
+
+def load_history_data(root: Path) -> dict:
+    """The historical index: the three-year series and how it was built.
+
+    Its levels are NOT comparable with the live index -- a different panel,
+    read by a different crawler, with different blind spots -- so it travels as
+    its own object rather than as more periods of the same series. Keeping them
+    separate in the data is what stops a page accidentally charting them
+    together.
+    """
+    prints, superseded, series = _index_rows(root, HISTORY_INDEX_ID)
+    panel_path = root / "panel" / "historical.json"
+    panel = json.loads(panel_path.read_text()) if panel_path.exists() else {}
+    crawls_path = root / "crawls" / "historical.json"
+    crawls = json.loads(crawls_path.read_text()) if crawls_path.exists() else {}
+    return {
+        "id": HISTORY_INDEX_ID,
+        "title": "Three years of AI-crawler blocking",
+        "question": "When did the top websites start telling AI crawlers to stay out?",
+        "prints": prints,
+        "superseded": superseded,
+        "series": series,
+        "panel": {
+            "size": len(panel.get("domains", [])),
+            "endpoints": panel.get("endpoints", []),
+            "construction": panel.get("construction", {}),
+        },
+        "crawls": crawls.get("crawls", []),
+        "selection": crawls.get("selection", ""),
+    }
+
+
+def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
+    """Everything the generator needs, as plain JSON-serialisable data."""
+    latest_prints, superseded, latest_series = _index_rows(root, index_id)
 
     verdicts = _read_csv(root / "derived" / "verdicts.csv")
     fetches = _read_csv(root / "derived" / "fetches.csv")
@@ -134,8 +178,9 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
             "question": "How many of the top 1000 websites tell AI crawlers to stay out?",
         },
         "prints": latest_prints,
-        "superseded": sorted(superseded, key=lambda r: (r["period"], r["vintage"])),
-        "series": sorted(latest_series, key=lambda r: (r["period"], r["series_id"])),
+        "superseded": superseded,
+        "series": latest_series,
+        "history": load_history_data(root),
         "panel": {
             "tranco_list_id": panel.get("tranco_list_id"),
             "captured": panel.get("captured"),
