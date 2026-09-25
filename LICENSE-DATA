@@ -1,0 +1,39 @@
+Tallyhouse index data — Creative Commons Attribution 4.0 International
+
+Copyright (c) 2026 Allan Clark
+
+The published index data in this repository is licensed under the Creative
+Commons Attribution 4.0 International License (CC BY 4.0). You are free to
+share and adapt it, including commercially, provided you give appropriate
+credit, link to the licence, and indicate if changes were made.
+
+    https://creativecommons.org/licenses/by/4.0/
+
+WHAT THIS COVERS
+
+  data/prints.csv        the published headline ledger
+  data/series.csv        the published sub-series ledger
+  data/panel/            the panels and how they were constructed
+  data/agents/           the tracked crawler sets and their descriptions
+  data/crawls/           which Common Crawl crawls make up the historical series
+  data/raw/*/manifest.json
+                         the observation manifests: what was requested, what
+                         answered, and which stored body it produced
+
+A suggested citation:
+
+    Tallyhouse, Agent Accessibility Index, <period>.
+    https://allanderek.github.io/tallyhouse/
+
+WHAT THIS DOES NOT COVER
+
+  data/raw/bodies/       robots.txt files as published by third-party websites
+
+Those files are other people's content. They are retained verbatim, and only
+because an index that cannot be checked against its evidence is an assertion
+rather than a measurement. No licence is granted over them here, and none could
+be: they are not ours to license. Each remains subject to whatever rights its
+publisher holds.
+
+The code in this repository is separately licensed under the MIT License; see
+LICENSE.

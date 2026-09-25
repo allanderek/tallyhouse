@@ -1,0 +1,95 @@
+name: Build and deploy the site
+
+# Deployment runs here rather than from the collecting machine, and that is a
+# deliberate choice rather than a convenience. `generate` is a pure function of
+# committed data, so a build from a fresh clone that reproduces the published
+# site is a continuous proof of the claim the whole project rests on: that a
+# stranger can clone the repository and re-derive every figure. A build pushed
+# from the machine that produced the data would prove nothing of the kind.
+#
+# Collection stays off CI. The index is about crawler etiquette, so the crawler
+# must identify itself honestly from a stable, reputable address — not from a
+# shared runner whose IP nobody can attribute.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A queued run is pointless once a newer commit exists, but never cancel a
+# deployment already in flight: a half-published site is worse than a stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: pip install -r requirements.txt
+
+      # Pinned exactly, matching the local toolchain: 0.19.2 demands a different
+      # compiler and fails with an error that reads like a code fault.
+      - run: npm install -g elm@0.19.1-5
+
+      - name: Run both test suites
+        run: ./check
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: pip install -r requirements.txt
+
+      - run: npm install -g elm@0.19.1-5
+
+      - name: Compile the generator
+        working-directory: generate
+        run: elm make src/Site.elm --optimize --output=site.js
+
+      - name: Render the site
+        env:
+          PYTHONPATH: src
+        run: python -m tallyhouse.cli generate --out site
+
+      # Every internal link is relative, so the site works at any base path —
+      # including the /tallyhouse/ prefix a project page is served under. This
+      # check is here because a broken relative link renders perfectly and then
+      # 404s silently, which is the sort of failure nobody reports.
+      - name: Check every internal link resolves
+        run: python .github/check_links.py site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
