@@ -27,17 +27,25 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# The runner image is pinned rather than `ubuntu-latest`. This workflow serves
+# the public site, and an image that changes under us is exactly the sort of
+# thing that breaks a deploy nobody is watching -- `ubuntu-latest` migrates to
+# Ubuntu 26 from 2026-10-19. Pinning does not avoid that upgrade, it makes it a
+# deliberate act: when this image is retired the build fails loudly, at a time we
+# can choose to act on, which is the right failure mode for something
+# load-bearing. Bump it together with the action versions below.
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -52,18 +60,18 @@ jobs:
 
   deploy:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -87,9 +95,9 @@ jobs:
       - name: Check every internal link resolves
         run: python .github/check_links.py site
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
