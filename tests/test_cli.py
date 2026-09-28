@@ -728,3 +728,29 @@ def test_backfill_reports_failure_in_its_exit_status(tmp_path, capsys, monkeypat
     monkeypatch.setattr(_backfill.time, "sleep", lambda seconds: None)
     assert main(["backfill", "--root", str(tmp_path), "--delay", "0"]) == 1
     assert "403 Forbidden" in capsys.readouterr().err
+
+
+def test_due_lists_a_pending_period(tmp_path, capsys, monkeypatch):
+    from datetime import datetime, timezone
+    from tallyhouse import cli as _cli
+
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    monkeypatch.setattr(_cli, "_utcnow",
+                        lambda: datetime(2026, 9, 18, 2, tzinfo=timezone.utc))
+    assert main(["due", "--root", str(tmp_path)]) == 0
+    assert capsys.readouterr().out == "2026-09-14\n"
+
+
+def test_due_is_silent_and_successful_when_nothing_is_ready(tmp_path, capsys, monkeypatch):
+    # The ordinary state for most of the week. A non-zero exit would have cron
+    # mailing a failure every time it correctly found no work.
+    from datetime import datetime, timezone
+    from tallyhouse import cli as _cli
+
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    monkeypatch.setattr(_cli, "_utcnow",
+                        lambda: datetime(2026, 9, 16, 2, tzinfo=timezone.utc))
+    assert main(["due", "--root", str(tmp_path)]) == 0
+    assert capsys.readouterr().out == ""

@@ -326,3 +326,105 @@ def test_change_wow_does_not_churn_when_only_the_level_denominator_moves():
     for field in ("value", "denominator"):
         assert first["series"]["change_wow"][field] == second["series"]["change_wow"][field]
     assert first["headline"]["denominator"] != second["headline"]["denominator"]
+
+
+# --- Choosing what to publish ------------------------------------------------
+#
+# A scheduled publish must not depend on firing at a particular instant. These
+# tests pin the two failure modes that dependence caused: a run a moment early
+# reaching for a week that was never collected, and a missed run skipping a week
+# forever.
+
+from datetime import datetime, timezone
+
+from tallyhouse.ledger import append_row
+from tallyhouse.publish import pending_periods
+from tallyhouse.storage import write_manifest
+
+THURSDAY = datetime(2026, 10, 1, 2, 0, tzinfo=timezone.utc)
+
+
+def collected(root, period):
+    write_manifest(root, period, [{"domain": "a.com", "outcome": "Fetched"}],
+                   collector_version="abc1234")
+
+
+def published(root, period, index_id="agent-accessibility"):
+    append_row(root / "prints.csv", {"index_id": index_id, "period": period},
+               {"value": "23.4", "denominator": "1", "coverage": "100.0",
+                "provisional": "false", "methodology_version": "1",
+                "collector_version": "abc1234", "computed_at": "2026-10-01T02:00:00Z"})
+
+
+def test_a_collected_closed_unpublished_period_is_pending(tmp_path):
+    collected(tmp_path, "2026-09-28")
+    assert pending_periods(tmp_path, now=THURSDAY) == ["2026-09-28"]
+
+
+def test_an_open_window_is_not_pending(tmp_path):
+    # Still collecting. Freezing the number now would guarantee a restatement
+    # that waiting would have avoided.
+    collected(tmp_path, "2026-09-28")
+    wednesday = datetime(2026, 9, 30, 18, 0, tzinfo=timezone.utc)
+    assert pending_periods(tmp_path, now=wednesday) == []
+
+
+def test_an_already_published_period_is_not_pending(tmp_path):
+    collected(tmp_path, "2026-09-28")
+    published(tmp_path, "2026-09-28")
+    assert pending_periods(tmp_path, now=THURSDAY) == []
+
+
+def test_a_period_with_no_evidence_is_not_pending(tmp_path):
+    # 2026-09-21's window opened and closed with nothing collected. It must
+    # never be reached for; that is the bug this selection replaces.
+    (tmp_path / "raw").mkdir(parents=True)
+    assert pending_periods(tmp_path, now=THURSDAY) == []
+
+
+def test_a_missed_week_is_still_pending_the_following_week(tmp_path):
+    """The self-healing property, and the reason this returns every period.
+
+    Returning only the newest would publish 2026-10-05 and leave 2026-09-28
+    unpublished forever, because the run after that moves on again.
+    """
+    collected(tmp_path, "2026-09-28")
+    collected(tmp_path, "2026-10-05")
+    next_thursday = datetime(2026, 10, 8, 2, 0, tzinfo=timezone.utc)
+    assert pending_periods(tmp_path, now=next_thursday) == ["2026-09-28", "2026-10-05"]
+
+
+def test_pending_periods_are_oldest_first(tmp_path):
+    # Each period's like-for-like change is computed against its predecessor,
+    # so the predecessor must be published first.
+    for period in ("2026-10-05", "2026-09-14", "2026-09-28"):
+        collected(tmp_path, period)
+    assert pending_periods(tmp_path, now=datetime(2026, 10, 8, 2, tzinfo=timezone.utc)) == [
+        "2026-09-14", "2026-09-28", "2026-10-05",
+    ]
+
+
+def test_the_historical_index_periods_are_not_pending_live_work(tmp_path):
+    # raw/ holds both indices' evidence. The historical index uses YYYY-MM
+    # periods and its own publishing path; picking those up here would try to
+    # publish them as weeks of the live series.
+    collected(tmp_path, "2026-09-28")
+    write_manifest(tmp_path, "2026-08", [{"domain": "a.com", "outcome": "Fetched"}],
+                   collector_version="commoncrawl")
+    assert pending_periods(tmp_path, now=THURSDAY) == ["2026-09-28"]
+
+
+def test_the_shared_bodies_directory_is_not_mistaken_for_a_period(tmp_path):
+    collected(tmp_path, "2026-09-28")
+    (tmp_path / "raw" / "bodies" / "ab").mkdir(parents=True)
+    assert pending_periods(tmp_path, now=THURSDAY) == ["2026-09-28"]
+
+
+def test_another_index_publishing_the_same_period_does_not_satisfy_this_one(tmp_path):
+    collected(tmp_path, "2026-09-28")
+    published(tmp_path, "2026-09-28", index_id="some-other-index")
+    assert pending_periods(tmp_path, now=THURSDAY) == ["2026-09-28"]
+
+
+def test_no_raw_tree_at_all_yields_nothing_rather_than_failing(tmp_path):
+    assert pending_periods(tmp_path, now=THURSDAY) == []

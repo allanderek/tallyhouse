@@ -11,6 +11,11 @@
 # about, so running it several times across the 72-hour window is how coverage
 # climbs. `publish` freezes the number and must therefore happen once, after
 # the window has closed and the evidence has stopped improving.
+#
+# Neither cares when it runs. `collect` refuses outside the window rather than
+# mislabelling evidence, and `publish` asks the evidence what is outstanding
+# rather than inferring a period from the clock -- so a missed run costs a
+# delay, never a gap.
 
 set -euo pipefail
 
@@ -47,29 +52,37 @@ case "${1:-}" in
         ;;
 
     publish)
-        # Run after the window has closed, so the period to publish is the one
-        # that just ended rather than the one now open.
-        period=$(python3 -c '
-from datetime import datetime, timezone
-from tallyhouse.periods import period_for, previous_period, is_within_window
-now = datetime.now(timezone.utc)
-current = period_for(now)
-# Inside the window the current period is still collecting; the finished one
-# is the week before.
-print(current if not is_within_window(current, now) else previous_period(current))
-')
-        log "publishing $period"
-        # --agents is pinned rather than inferred, and deliberately so: the
-        # agent set is methodology, and bumping it restates every affected
-        # published row. That should take a human editing this line, not a
-        # scheduled job noticing a new file. The site reads the agent set back
-        # off each print, so it can never disagree with what was published.
-        python3 -m tallyhouse.cli derive --period "$period" --agents 2
-        python3 -m tallyhouse.cli print --period "$period" --agents 2
-        commit_data "Publish $period"
+        # What to publish is decided by the evidence, not by the clock. A period
+        # qualifies once it has a manifest, its window has closed, and the ledger
+        # has no row for it -- so this job can run late, twice, or not at all
+        # without consequence. The work is simply still pending next time.
+        periods=$(python3 -m tallyhouse.cli due)
+        if [ -z "$periods" ]; then
+            log "nothing due"
+            exit 0
+        fi
 
-        # The site is downstream of the ledger and not required for the number
-        # to be published, so a missing compiler must not fail the run.
+        # Oldest first, because each period's like-for-like change is computed
+        # against its predecessor.
+        for period in $periods; do
+            log "publishing $period"
+            # --agents is pinned rather than inferred, and deliberately so: the
+            # agent set is methodology, and bumping it restates every affected
+            # published row. That should take a human editing this line, not a
+            # scheduled job noticing a new file. The site reads the agent set
+            # back off each print, so it can never disagree with what was
+            # published.
+            python3 -m tallyhouse.cli derive --period "$period" --agents 2
+            python3 -m tallyhouse.cli print  --period "$period" --agents 2
+            commit_data "Publish $period"
+        done
+
+        # Rendered once, after every pending period is in the ledger, rather
+        # than once per period: the site shows the whole series, so intermediate
+        # renders would be thrown away.
+        #
+        # The site is downstream of the ledger and not required for a number to
+        # be published, so a missing compiler must not fail the run.
         if command -v elm >/dev/null 2>&1; then
             (cd generate && elm make src/Site.elm --optimize --output=site.js >/dev/null)
             python3 -m tallyhouse.cli generate --out site

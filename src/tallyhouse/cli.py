@@ -27,7 +27,7 @@ from tallyhouse.periods import (
     window_end,
     window_start,
 )
-from tallyhouse.publish import INDEX_ID, build_print, record_print
+from tallyhouse.publish import INDEX_ID, build_print, pending_periods, record_print
 from tallyhouse.run_collect import collect_panel
 from tallyhouse.backfill import backfill, load_crawls, outstanding, repair_period
 from tallyhouse.balanced import balanced_panel, load_balanced_panel, write_balanced_panel
@@ -131,6 +131,30 @@ def _cmd_collect(args) -> int:
                 )
 
         asyncio.run(run())
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
+def _cmd_due(args) -> int:
+    """Print the periods ready to publish, one per line, oldest first.
+
+    Exists as its own command so the scheduled job does not have to embed the
+    rule, and so the rule can be asked before it acts: `due` answers "what
+    would publish now?" without publishing anything.
+
+    Silence means nothing is due, which is the ordinary state for most of the
+    week. That is a success, not an error, so the exit status stays 0 -- a
+    non-zero exit would have cron mailing a failure every time it correctly
+    found no work.
+    """
+    try:
+        periods = pending_periods(
+            Path(args.root), now=_utcnow(), index_id=args.index
+        )
+        for period in periods:
+            print(period)
         return 0
     except Exception as exc:
         print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
@@ -559,6 +583,10 @@ def main(argv: list[str] | None = None) -> int:
     hist.add_argument("--reason", default=None,
                       help="required to restate an already-published number")
 
+    due = sub.add_parser("due", help="list periods ready to publish, oldest first")
+    due.add_argument("--root", default="data")
+    due.add_argument("--index", default=INDEX_ID)
+
     gen = sub.add_parser("generate", help="render the static site from committed data")
     gen.add_argument("--root", default="data")
     gen.add_argument("--out", default="site")
@@ -611,6 +639,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_historical_print(args)
     if args.command == "generate":
         return _cmd_generate(args)
+    if args.command == "due":
+        return _cmd_due(args)
 
     try:
         parse_period(args.period)

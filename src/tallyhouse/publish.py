@@ -5,6 +5,7 @@ real collection run, per the spec. Changing it changes which prints are
 labelled provisional, so treat it as methodology.
 """
 
+from datetime import datetime
 from pathlib import Path
 
 from tallyhouse.compute import (
@@ -17,7 +18,9 @@ from tallyhouse.compute import (
     unreadable_rate,
     targeted_rate,
 )
-from tallyhouse.ledger import LedgerConflict, append_row, would_conflict
+from tallyhouse.ledger import LedgerConflict, append_row, latest, would_conflict
+from tallyhouse.periods import InvalidPeriod, parse_period, window_end
+from tallyhouse.storage import manifest_path
 
 INDEX_ID = "agent-accessibility"
 PROVISIONAL_COVERAGE_THRESHOLD = 97.0
@@ -190,3 +193,54 @@ def record_print(
             series_with_provisional,
             reason=reason,
         )
+
+
+def pending_periods(
+    root: Path, *, now: datetime, index_id: str = INDEX_ID
+) -> list[str]:
+    """Periods ready to publish and not yet published, oldest first.
+
+    A scheduled publish used to infer its period from the clock: the current
+    week if its window had closed, otherwise the week before. That made the job
+    depend on firing at the right moment. It fired at exactly the instant the
+    window closed, so a second early would have reached for a week that was
+    never collected, and a Thursday missed altogether would have skipped that
+    week permanently -- the next run would move on to the following one.
+
+    Asking the evidence instead removes both failure modes. A period qualifies
+    when it has a manifest, its window has closed, and the ledger has no row for
+    it. Nothing about when the job runs enters into it, so running late, twice,
+    or not at all costs nothing: the work is simply still pending.
+
+    Every pending period is returned rather than only the newest, because
+    returning the newest is what would leave a missed week unpublished forever.
+    Oldest first, so each period's like-for-like change is computed against a
+    predecessor that has already been published.
+    """
+    raw = root / "raw"
+    if not raw.exists():
+        return []
+
+    pending = []
+    for child in raw.iterdir():
+        if not child.is_dir():
+            continue
+        period = child.name
+        try:
+            # Rejects the historical index's YYYY-MM periods, and the shared
+            # bodies/ directory, without needing to name either.
+            parse_period(period)
+        except InvalidPeriod:
+            continue
+        if not manifest_path(root, period).exists():
+            continue
+        # An open window is still collecting. Publishing now would freeze a
+        # number that better evidence is about to improve, guaranteeing a
+        # restatement that waiting would have avoided.
+        if window_end(period) > now:
+            continue
+        if latest(root / "prints.csv", {"index_id": index_id, "period": period}):
+            continue
+        pending.append(period)
+
+    return sorted(pending)
