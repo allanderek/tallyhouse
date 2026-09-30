@@ -1,5 +1,5 @@
 {
-  "last_run_collector_version": "2c12ec8",
+  "last_run_collector_version": "4de4916",
   "observations": [
     {
       "attempts": 1,
@@ -3148,10 +3148,10 @@
     {
       "attempts": 1,
       "bytes": 1038,
-      "collector_version": "2c12ec8",
+      "collector_version": "4de4916",
       "content_type": "text/html",
       "domain": "eci.gov.in",
-      "fetched_at": "2026-09-30T09:00:21Z",
+      "fetched_at": "2026-09-30T17:00:27Z",
       "final_url": "https://www.eci.gov.in/robots.txt",
       "http_status": 406,
       "outcome": "ServerError",
@@ -4732,10 +4732,10 @@
     {
       "attempts": 1,
       "bytes": 387837,
-      "collector_version": "2c12ec8",
+      "collector_version": "4de4916",
       "content_type": "text/html; charset=UTF-8",
       "domain": "hostgator.com",
-      "fetched_at": "2026-09-30T09:00:20Z",
+      "fetched_at": "2026-09-30T17:00:25Z",
       "final_url": "https://www.hostgator.com/robots.txt",
       "http_status": 403,
       "outcome": "Challenged",
@@ -5296,10 +5296,10 @@
     {
       "attempts": 1,
       "bytes": 1106543,
-      "collector_version": "2c12ec8",
+      "collector_version": "4de4916",
       "content_type": "text/html;charset=utf-8",
       "domain": "ioh.co.id",
-      "fetched_at": "2026-09-30T09:00:25Z",
+      "fetched_at": "2026-09-30T17:00:31Z",
       "final_url": "https://ioh.co.id/robots.txt",
       "http_status": 200,
       "outcome": "TooLarge",
@@ -9748,10 +9748,10 @@
     {
       "attempts": 3,
       "bytes": null,
-      "collector_version": "2c12ec8",
+      "collector_version": "4de4916",
       "content_type": null,
       "domain": "tbank.ru",
-      "fetched_at": "2026-09-30T09:00:26Z",
+      "fetched_at": "2026-09-30T17:00:33Z",
       "final_url": null,
       "http_status": null,
       "outcome": "ConnectFailure",
