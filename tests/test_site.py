@@ -325,3 +325,33 @@ def test_a_published_period_with_no_committed_evidence_yields_empty_sections(tmp
     data = load_site_data(tmp_path)
     assert data["verdicts"] == [] and data["fetches"] == []
     assert data["prints"][0]["value"] == "23.4"
+
+
+def test_the_crawler_identity_takes_its_user_agent_from_the_collector(tmp_path):
+    """Not from the JSON, so the published identity cannot drift from reality.
+
+    An identity document that disagrees with the requests it describes is worse
+    than none: it is precisely what a bot-verification reviewer would reject.
+    """
+    from tallyhouse.constants import USER_AGENT
+    from tallyhouse.site import load_crawler_data
+
+    (tmp_path / "crawler.json").write_text(json.dumps({
+        "token": "TallyhouseIndexBot",
+        "category": "Academic Research",
+        "user_agent": "SomethingElse/9.9",
+        "egress": {"prefixes": [{"ipv4Prefix": "203.0.113.7/32"}]},
+    }))
+    crawler = load_crawler_data(tmp_path)
+    assert crawler["userAgent"] == USER_AGENT
+    assert "SomethingElse" not in crawler["userAgent"]
+    assert crawler["prefixes"] == ["203.0.113.7/32"]
+
+
+def test_crawler_identity_is_empty_rather_than_absent_when_unconfigured(tmp_path):
+    # The generator's decoder requires the field; a checkout without the file
+    # must still render.
+    from tallyhouse.site import load_crawler_data
+
+    crawler = load_crawler_data(tmp_path)
+    assert crawler["prefixes"] == [] and crawler["token"] == ""

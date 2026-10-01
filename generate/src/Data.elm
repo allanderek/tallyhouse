@@ -2,6 +2,7 @@ module Data exposing
     ( Agent
     , Crawl
     , CrawlEndpoint
+    , Crawler
     , DivergentDomain
     , Flags
     , History
@@ -357,6 +358,34 @@ decodeHistory =
         |> andMap (Decode.field "selection" Decode.string)
 
 
+{-| The crawler's own published identity: the exact user-agent it sends, the
+bot-verification token and category, a human-readable purpose statement, a
+contact point, and the egress addresses every request originates from.
+`prefixes` entries are CIDR notation (IPv4 or IPv6) and may be `[]` — a
+checkout without `data/crawler.json` must still render a crawler page, just
+one that says no address list is published yet.
+-}
+type alias Crawler =
+    { userAgent : String
+    , token : String
+    , category : String
+    , purpose : String
+    , contact : String
+    , prefixes : List String
+    }
+
+
+decodeCrawler : Decoder Crawler
+decodeCrawler =
+    Decode.map6 Crawler
+        (Decode.field "userAgent" Decode.string)
+        (Decode.field "token" Decode.string)
+        (Decode.field "category" Decode.string)
+        (Decode.field "purpose" Decode.string)
+        (Decode.field "contact" Decode.string)
+        (Decode.field "prefixes" (Decode.list Decode.string))
+
+
 type alias Flags =
     { index : IndexInfo
     , prints : List Row
@@ -367,6 +396,7 @@ type alias Flags =
     , operators : Dict String Operator
     , purposes : Dict String String
     , history : History
+    , crawler : Crawler
     }
 
 
@@ -382,6 +412,7 @@ decodeFlags =
         |> andMap (Decode.field "operators" (Decode.dict decodeOperator))
         |> andMap (Decode.field "purposes" (Decode.dict Decode.string))
         |> andMap (Decode.field "history" decodeHistory)
+        |> andMap (Decode.field "crawler" decodeCrawler)
 
 
 

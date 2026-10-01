@@ -453,6 +453,48 @@ withheld.
 
 Regular collection begins at `2026-09-28`.
 
+### 9.2 Bot verification, and the unreadable blind spot
+
+About 9% of the raw Tranco top 1000 answer our collector with a challenge or a
+refusal rather than the file. Those domains are excluded at qualification, and
+the index documents the resulting bias: a site that will not show us its
+`robots.txt` is plausibly more AI-hostile than average, so the published figure
+plausibly understates. The historical index, read through Common Crawl — which
+*is* a verified crawler and can read them — came in higher, which is evidence
+for that rather than proof.
+
+The way to shrink the blind spot is to be verifiable. Cloudflare's Verified
+Bots programme accepts three ways for a crawler to declare itself: a
+cryptographic Web Bot Auth signature, a published IP list with a stable
+user-agent, or forward-confirmed reverse DNS.
+
+**Web Bot Auth is the strongest and is not available to us as the site stands.**
+It requires the key directory at `/.well-known/http-message-signatures-directory`
+to be served with a `Content-Type` of
+`application/http-message-signatures-directory+json` and with `Signature` and
+`Signature-Input` response headers carrying `created`/`expires` timestamps.
+GitHub Pages serves static files and cannot set arbitrary headers or sign a
+response per request, so adopting it would mean hosting that one endpoint
+elsewhere. Worth revisiting if the IP route is refused.
+
+**The published IP list is what we use.** The collector runs from a single
+dedicated host with a static address, so the list is one prefix, published at
+`/about/crawler/ips.json` in the shape Google's `googlebot.json` established,
+because that is the shape existing tooling already parses. `data/crawler.json`
+holds it; the user-agent is deliberately *not* stored there but read from
+`constants.py`, which is what the collector actually sends — a published
+identity that disagrees with the requests it describes is worse than none.
+
+**Reverse DNS is available as a second factor** if wanted: the host's address
+has provider-controlled rDNS, which can be repointed at a hostname under a
+domain we control, with a matching forward record. That makes the claim
+self-verifying from DNS alone, without reference to any file we publish.
+
+Verified status does not oblige anyone to let us in. It means a site owner whose
+rule is "block all bots except verified ones" — a common default — can
+distinguish us from an unidentified scraper. The blind spot is expected to
+shrink rather than close, and `unreadable` stays a published series either way.
+
 ## 10. Out of scope for v1
 
 Indices two and three; arbitrary-domain lookup (needs a server, rate limiting and

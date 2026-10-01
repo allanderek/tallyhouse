@@ -91,6 +91,14 @@ sampleJson =
             ]
         , "selection": "Roughly quarterly from January 2023 to August 2026."
         }
+    , "crawler":
+        { "userAgent": "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)"
+        , "token": "TallyhouseIndexBot"
+        , "category": "Academic Research"
+        , "purpose": "Fetches only /robots.txt, once a week, from a fixed published panel of domains, to measure how many sites disallow AI crawlers."
+        , "contact": "https://github.com/allanderek/tallyhouse/issues"
+        , "prefixes": [ "149.102.158.121/32" ]
+        }
     }
     """
 
@@ -186,6 +194,20 @@ suite =
                     Decode.decodeString Data.decodeFlags sampleJson
                         |> Result.map (\flags -> List.map .name flags.history.crawls)
                         |> Expect.equal (Ok [ "January/February 2023", "August 2026" ])
+            , test "the crawler's identity decodes, user-agent and all" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> flags.crawler)
+                        |> Expect.equal
+                            (Ok
+                                { userAgent = "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)"
+                                , token = "TallyhouseIndexBot"
+                                , category = "Academic Research"
+                                , purpose = "Fetches only /robots.txt, once a week, from a fixed published panel of domains, to measure how many sites disallow AI crawlers."
+                                , contact = "https://github.com/allanderek/tallyhouse/issues"
+                                , prefixes = [ "149.102.158.121/32" ]
+                                }
+                            )
             ]
         , describe "isProvisional"
             [ test "\"true\" is provisional" <|

@@ -1,0 +1,16 @@
+{
+  "note": "The crawler's published identity, for bot-verification programmes and for anyone who wants to confirm that traffic claiming to be TallyhouseIndexBot is ours. The user-agent string is NOT stored here: it lives in src/tallyhouse/constants.py, which is what the collector actually sends, and a second copy here could drift from it.",
+  "token": "TallyhouseIndexBot",
+  "category": "Academic Research",
+  "purpose": "Fetches only /robots.txt, once a week, from a fixed published panel of domains, to measure how many sites disallow AI crawlers. Does not request any other path, follow links, execute JavaScript, or collect page content.",
+  "contact": "https://github.com/allanderek/tallyhouse/issues",
+  "crawler_page": "https://allanderek.github.io/tallyhouse/about/crawler/",
+  "egress": {
+    "prefixes": [
+      {
+        "ipv4Prefix": "149.102.158.121/32",
+        "note": "Single dedicated host. All TallyhouseIndexBot requests originate here."
+      }
+    ]
+  }
+}

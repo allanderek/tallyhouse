@@ -6,9 +6,10 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Agent, Crawl, CrawlEndpoint, DivergentDomain, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
+import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
 import Dict exposing (Dict)
 import Html exposing (Html)
+import Json.Encode as Encode
 
 
 type alias Page =
@@ -26,7 +27,7 @@ pages flags =
           , agentsIndexPage flags
           ]
         , agentPageList flags
-        , [ aboutPage flags, crawlerPage flags ]
+        , [ aboutPage flags, crawlerPage flags, crawlerIpsPage flags ]
         ]
 
 
@@ -829,7 +830,7 @@ crawlerPage flags =
                         [ Html.h2 [] [ Html.text "What it is" ]
                         , Html.p []
                             [ Html.text "TallyhouseIndexBot is the crawler behind Tallyhouse, an index of how many of the most popular websites tell AI crawlers to stay out. It identifies itself as "
-                            , Html.code [] [ Html.text "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)" ]
+                            , Html.code [] [ Html.text flags.crawler.userAgent ]
                             , Html.text " and it does not pretend to be anything else."
                             ]
                         ]
@@ -859,6 +860,7 @@ crawlerPage flags =
                         , Html.p []
                             [ Html.text "It never tries to get past an anti-automation challenge. If a site answers with a challenge instead of the file, Tallyhouse records that it could not read the policy and moves on. Those sites are published as an \"unreadable\" figure rather than guessed at, because a site that would not show us its robots.txt has not told us anything about its policy either way." ]
                         ]
+                    , verifySection flags.crawler
                     , Html.section []
                         [ Html.h2 [] [ Html.text "Asking it to stop" ]
                         , Html.p []
@@ -885,6 +887,98 @@ crawlerPage flags =
                 ]
             }
     }
+
+
+{-| The section a bot-verification reviewer actually needs: the token and
+user-agent this crawler claims, the fixed addresses that back the claim, and
+the plain statement that anything else claiming this user-agent is an
+impostor. `flags.crawler.userAgent` is read from the same flags field the
+"What it is" section above draws from, so there is one source of truth for
+the string rather than two copies that could drift apart.
+-}
+verifySection : Crawler -> Html
+verifySection crawler =
+    Html.section []
+        (List.concat
+            [ [ Html.h2 [] [ Html.text "How to verify it is us" ]
+              , Html.p []
+                    [ Html.text "This crawler is registered under the token "
+                    , Html.text crawler.token
+                    , Html.text ", and every request it makes carries the user-agent "
+                    , Html.code [] [ Html.text crawler.userAgent ]
+                    , Html.text "."
+                    ]
+              ]
+            , egressParagraphs crawler.prefixes
+            , [ Html.p []
+                    [ Html.text "A request claiming this user-agent from any other address is not ours." ]
+              ]
+            ]
+        )
+
+
+{-| The egress addresses, or an honest admission that there are none yet.
+Rendering an empty `ul` or a link to an `ips.json` with nothing in it would
+be worse than saying nothing: it would look like a published list when there
+isn't one.
+-}
+egressParagraphs : List String -> List Html
+egressParagraphs prefixes =
+    case prefixes of
+        [] ->
+            [ Html.p [] [ Html.text "No address list is currently published." ] ]
+
+        _ ->
+            [ Html.p []
+                [ Html.text "All requests originate from the following addresses:" ]
+            , Html.ul [] (List.map prefixItem prefixes)
+            , Html.p []
+                [ Html.text "The same list is published in machine-readable form at "
+                , Html.a [ Html.attribute "href" "ips.json" ] [ Html.text "ips.json" ]
+                , Html.text "."
+                ]
+            ]
+
+
+prefixItem : String -> Html
+prefixItem prefix =
+    Html.li [] [ Html.code [] [ Html.text prefix ] ]
+
+
+
+-- The crawler's machine-readable egress IP list, for bot-verification
+-- tooling. Google's `googlebot.json` established the de-facto shape this
+-- follows: a top-level "prefixes" list of single-key objects, each keyed
+-- "ipv4Prefix" or "ipv6Prefix". Built with `Json.Encode` rather than a
+-- hand-written string so the file is always valid JSON, even if a prefix
+-- ever contained a character that would need escaping.
+
+
+crawlerIpsPage : Flags -> Page
+crawlerIpsPage flags =
+    { path = "about/crawler/ips.json"
+    , content = Encode.encode 2 (encodeIpsDocument flags.crawler.prefixes)
+    }
+
+
+encodeIpsDocument : List String -> Encode.Value
+encodeIpsDocument prefixes =
+    Encode.object
+        [ ( "prefixes", Encode.list encodePrefix prefixes ) ]
+
+
+{-| IPv6 CIDR notation always contains a `:`; IPv4 never does. That is
+sufficient to tell them apart without a dedicated address-parsing library,
+which this project's `elm.json` does not depend on.
+-}
+encodePrefix : String -> Encode.Value
+encodePrefix prefix =
+    case String.contains ":" prefix of
+        True ->
+            Encode.object [ ( "ipv6Prefix", Encode.string prefix ) ]
+
+        False ->
+            Encode.object [ ( "ipv4Prefix", Encode.string prefix ) ]
 
 
 

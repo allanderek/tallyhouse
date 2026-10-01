@@ -100,6 +100,16 @@ wellFormedFlags =
                 , ( "selection", Encode.string "Roughly quarterly from January 2023 to August 2026." )
                 ]
           )
+        , ( "crawler"
+          , Encode.object
+                [ ( "userAgent", Encode.string "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)" )
+                , ( "token", Encode.string "TallyhouseIndexBot" )
+                , ( "category", Encode.string "Academic Research" )
+                , ( "purpose", Encode.string "Fetches only /robots.txt, once a week, from a fixed published panel of domains." )
+                , ( "contact", Encode.string "https://github.com/allanderek/tallyhouse/issues" )
+                , ( "prefixes", Encode.list Encode.string [ "149.102.158.121/32" ] )
+                ]
+          )
         ]
 
 
@@ -123,6 +133,7 @@ suite =
                             , "agent-accessibility/agents/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"
+                            , "about/crawler/ips.json"
                             ]
                         )
         , test "malformed flags render a JSON error object instead of pages" <|

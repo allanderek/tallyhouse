@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 
 from tallyhouse.config import load_agents
+from tallyhouse.constants import USER_AGENT
 from tallyhouse.derive import derive_period
 from tallyhouse.ledger import read_rows
 from tallyhouse.storage import manifest_path
@@ -197,6 +198,29 @@ def load_history_data(root: Path) -> dict:
     }
 
 
+def load_crawler_data(root: Path) -> dict:
+    """The crawler's published identity, for bot-verification programmes.
+
+    The user-agent is taken from constants.py rather than from the JSON,
+    because constants.py is what the collector actually sends. A second copy in
+    data/ could drift from it, and an identity document that disagrees with the
+    requests it describes is worse than none: it is exactly what a verification
+    reviewer would reject us for.
+    """
+    path = root / "crawler.json"
+    document = json.loads(path.read_text()) if path.exists() else {}
+    return {
+        "userAgent": USER_AGENT,
+        "token": document.get("token", ""),
+        "category": document.get("category", ""),
+        "purpose": document.get("purpose", ""),
+        "contact": document.get("contact", ""),
+        "prefixes": [
+            p["ipv4Prefix"] for p in document.get("egress", {}).get("prefixes", [])
+        ],
+    }
+
+
 def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
     """Everything the generator needs, as plain JSON-serialisable data."""
     latest_prints, superseded, latest_series = _index_rows(root, index_id)
@@ -226,6 +250,7 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
         "superseded": superseded,
         "series": latest_series,
         "history": load_history_data(root),
+        "crawler": load_crawler_data(root),
         "panel": {
             "tranco_list_id": panel.get("tranco_list_id"),
             "captured": panel.get("captured"),

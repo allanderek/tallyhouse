@@ -3,6 +3,7 @@ module PagesTest exposing (suite)
 import Data exposing (Agent, Flags, History, Operator, Panel, Row, Stances)
 import Dict
 import Expect
+import Json.Decode as Decode
 import Pages
 import Set
 import Test exposing (Test, describe, test)
@@ -229,6 +230,18 @@ baseFlags =
             ]
     , purposes = basePurposes
     , history = baseHistory
+    , crawler = baseCrawler
+    }
+
+
+baseCrawler : Data.Crawler
+baseCrawler =
+    { userAgent = "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)"
+    , token = "TallyhouseIndexBot"
+    , category = "Academic Research"
+    , purpose = "Fetches only /robots.txt, once a week, from a fixed published panel of domains, to measure how many sites disallow AI crawlers."
+    , contact = "https://github.com/allanderek/tallyhouse/issues"
+    , prefixes = [ "149.102.158.121/32" ]
     }
 
 
@@ -288,6 +301,14 @@ crawlerContent flags =
         |> String.concat
 
 
+crawlerIpsContent : Flags -> String
+crawlerIpsContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "about/crawler/ips.json")
+        |> List.map .content
+        |> String.concat
+
+
 suite : Test
 suite =
     describe "Pages"
@@ -307,6 +328,7 @@ suite =
                             , "agent-accessibility/agents/oai-searchbot/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"
+                            , "about/crawler/ips.json"
                             ]
             , test "no path is emitted twice" <|
                 \_ ->
@@ -619,6 +641,70 @@ suite =
                     crawlerContent baseFlags
                         |> String.contains "href=\"/index.html\""
                         |> Expect.equal False
+            , test "shows the user-agent read from flags, not a hardcoded string" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | crawler = { baseCrawler | userAgent = "DistinctiveTestBot/9.9 (+https://example.test/)" } }
+                    in
+                    crawlerContent flags
+                        |> String.contains "DistinctiveTestBot/9.9 (+https://example.test/)"
+                        |> Expect.equal True
+            , test "lists the egress prefix from the fixture" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "149.102.158.121/32"
+                        |> Expect.equal True
+            , test "links to the machine-readable ips.json" <|
+                \_ ->
+                    crawlerContent baseFlags
+                        |> String.contains "href=\"ips.json\""
+                        |> Expect.equal True
+            , test "with no published prefixes, says no list is published and links to nothing" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | crawler = { baseCrawler | prefixes = [] } }
+
+                        content =
+                            crawlerContent flags
+                    in
+                    Expect.all
+                        [ String.contains "No address list is currently published." >> Expect.equal True
+                        , String.contains "href=\"ips.json\"" >> Expect.equal False
+                        ]
+                        content
+            ]
+        , describe "the crawler ips.json page"
+            [ test "is present at about/crawler/ips.json" <|
+                \_ ->
+                    Pages.pages baseFlags
+                        |> List.map .path
+                        |> List.member "about/crawler/ips.json"
+                        |> Expect.equal True
+            , test "parses as JSON carrying the fixture's IPv4 prefix" <|
+                \_ ->
+                    crawlerIpsContent baseFlags
+                        |> Decode.decodeString (Decode.field "prefixes" (Decode.list (Decode.field "ipv4Prefix" Decode.string)))
+                        |> Expect.equal (Ok [ "149.102.158.121/32" ])
+            , test "emits an IPv6 prefix under ipv6Prefix, not ipv4Prefix" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | crawler = { baseCrawler | prefixes = [ "2001:db8::1/128" ] } }
+                    in
+                    crawlerIpsContent flags
+                        |> Decode.decodeString (Decode.field "prefixes" (Decode.list (Decode.field "ipv6Prefix" Decode.string)))
+                        |> Expect.equal (Ok [ "2001:db8::1/128" ])
+            , test "with no published prefixes, still renders valid JSON with an empty prefixes array" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | crawler = { baseCrawler | prefixes = [] } }
+                    in
+                    crawlerIpsContent flags
+                        |> Decode.decodeString (Decode.field "prefixes" (Decode.list Decode.value))
+                        |> Expect.equal (Ok [])
             ]
         , describe "the home page's lead prose"
             [ test "carries the historical series' latest value, computed rather than hardcoded" <|
