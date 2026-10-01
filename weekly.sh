@@ -77,18 +77,13 @@ case "${1:-}" in
             commit_data "Publish $period"
         done
 
-        # Rendered once, after every pending period is in the ledger, rather
-        # than once per period: the site shows the whole series, so intermediate
-        # renders would be thrown away.
-        #
-        # The site is downstream of the ledger and not required for a number to
-        # be published, so a missing compiler must not fail the run.
-        if command -v elm >/dev/null 2>&1; then
-            (cd generate && elm make src/Site.elm --optimize --output=site.js >/dev/null)
-            python3 -m tallyhouse.cli generate --out site
-        else
-            log "warning: elm not on PATH; skipped rendering the site"
-        fi
+        # No rendering here. The site is built and deployed by CI from the
+        # pushed commit, which is deliberate: a build from a fresh clone that
+        # reproduces the published site is a continuous proof that every figure
+        # is re-derivable from committed data. Rendering locally as well would
+        # write a directory nobody serves, and would report a missing compiler
+        # as a failure when nothing has failed.
+        log "publish complete; push to deploy"
         ;;
 
     *)
