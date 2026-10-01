@@ -15,6 +15,7 @@ and re-submit.
 |---|---|
 | Token | `TallyhouseIndexBot` |
 | User-agent | from `src/tallyhouse/constants.py` — the single source of truth |
+| Exact user agent | one string only, verified on the wire — httpx appends nothing |
 | UA match pattern | `TallyhouseIndexBot*` |
 | Egress | `149.102.158.121/32`, published at `/about/crawler/ips.json` |
 | Public page | `https://allanderek.github.io/tallyhouse/about/crawler/` |
@@ -28,7 +29,15 @@ BotBase**, or `https://dash.cloudflare.com/?to=/:account/application-security/bo
 (An earlier docs page said Manage Account → Configurations → Bot Submission
 Form. That path no longer exists; the docs lagged the dashboard.)
 
-**Category:** Academic Research.
+**Category:** Data Collection.
+
+Not "Academic Research" — that is a *legacy* value, retained only so existing
+WAF rules keep working, and the form no longer offers it. Of the current set
+(Search, Agent, Training, Transact, Data Collection, Security Testing, SEO, Ads
+Verification, Social / Link Preview, Feed Fetching, Monitoring & Operations),
+Data Collection is the right behavioural bucket: we fetch data, index nothing
+and train nothing. Its gloss mentions price scraping, which is not us, but no
+other value is closer.
 
 **Operator classification:** direct operator. We run the crawler on our own
 host; we are not a platform acting for third parties.
@@ -43,11 +52,28 @@ host; we are not a platform acting for third parties.
 | Model training | no | no model is trained on anything collected |
 | SEO tool support | no | — |
 
-**Content use:** none. This is worth stating precisely rather than picking the
-nearest box. We request exactly one file, `/robots.txt`, which is a directives
-file a site publishes *in order to be read by crawlers* — RFC 9309 §2.3.1 means
-a crawler is always permitted to fetch it. We request no page content at all, so
-we need no search, reference or training permission over any site's content.
+**Content use:** Full. The form offers Immediate (interacts, saves nothing),
+Reference (indexes, excerpts, links back) and Full (summarises, replicates).
+There is no "none".
+
+Full is the honest answer even though it sounds like the most aggressive one.
+We retain every `robots.txt` we fetch and **republish it verbatim** under
+`data/raw/bodies/` — that is replication. Immediate would be false, and
+Reference would understate it, since we do not excerpt but reproduce whole
+files.
+
+The asymmetry settles it. Cloudflare says a verified bot that reproduces
+content in full while declaring less may lose its status, and a reviewer sees
+our verbatim copies the moment they open the repository. Under-declaring is the
+error that costs us; over-declaring costs little, because we never request page
+content at all.
+
+What keeps that from being misleading in the other direction is the scope: the
+only file we ever request is `/robots.txt`, a directives file published *in
+order to be read by crawlers*, which RFC 9309 §2.3.1 always permits a crawler
+to fetch. Content Signals governs a site's content, and a signal file cannot be
+its own subject. The submission description should say so plainly, so that
+nothing a reviewer finds contradicts the declaration.
 
 **Verification method:** published IP list. Web Bot Auth is stronger and is not
 available while the site is on GitHub Pages — see §9.2 of
