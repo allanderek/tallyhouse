@@ -30,6 +30,7 @@ async def collect_panel(
     collector_version: str,
     concurrency: int = 8,
     attempts: int = 3,
+    removed: set[str] | None = None,
 ) -> list[dict]:
     # A re-run for a period already collected MERGES into the existing manifest:
     # every conclusive observation is kept exactly as recorded, and only the
@@ -39,6 +40,13 @@ async def collect_panel(
     # for three days. Overwriting instead would destroy the raw evidence behind
     # an already-derived number and break the promise that a stranger can clone
     # the repo and re-derive every figure.
+    #
+    # Domains whose owners asked to be left out are never requested. The
+    # observation is still written, as `Removed`, so the manifest explains the
+    # gap rather than merely having one -- a domain silently absent from a
+    # manifest is indistinguishable from a bug.
+    removed = removed or set()
+
     existing = {}
     if manifest_path(root, period).exists():
         existing = {r["domain"]: r for r in read_manifest(root, period)}
@@ -48,7 +56,28 @@ async def collect_panel(
         for domain, record in existing.items()
         if record.get("outcome") in CONCLUSIVE_OUTCOMES
     }
-    pending = [d for d in domains if d not in settled]
+    pending = [d for d in domains if d not in settled and d not in removed]
+
+    withdrawn = [
+        {
+            "domain": domain,
+            "outcome": "Removed",
+            "http_status": None,
+            "final_url": None,
+            "content_type": None,
+            "bytes": None,
+            "body": None,
+            "fetched_at": None,
+            "attempts": 0,
+        }
+        for domain in domains
+        if domain in removed
+    ]
+    # Note this overwrites a conclusive observation gathered earlier in the same
+    # window, which is deliberate: "removed from this period" has to mean there
+    # is no observation of them in this period, even if the request arrived
+    # after we had already fetched. It cannot disturb a published number,
+    # because collect refuses to re-run a period that is already published.
 
     semaphore = asyncio.Semaphore(concurrency)
 
@@ -72,7 +101,7 @@ async def collect_panel(
                     "attempts": attempts,
                 }
 
-    results = await asyncio.gather(*(one(d) for d in pending))
+    results = list(await asyncio.gather(*(one(d) for d in pending))) + withdrawn
 
     merged = dict(existing)
     for result in results:

@@ -7,6 +7,7 @@ the same agent set, it produces identical output forever.
 import csv
 from pathlib import Path
 
+from tallyhouse.config import load_removals, removals_in_effect
 from tallyhouse.constants import CONCLUSIVE_OUTCOMES
 from tallyhouse.parse import blanket_stance, classify
 from tallyhouse.storage import load_body, read_manifest
@@ -25,7 +26,17 @@ def derive_period(root: Path, period: str, agents: list[str]) -> dict:
     # duplicate would silently overwrite rather than double-count, while
     # `verdicts` is a list, so the same duplicate WOULD double-count there. The
     # two tables would then disagree about the same domain.
-    observations = sorted(read_manifest(root, period), key=lambda r: r["domain"])
+    #
+    # A domain withdrawn at its owner's request is not part of this period's
+    # population at all, so its observations are dropped here rather than
+    # filtered by each caller. Dropping them in one place is deliberate: when
+    # the denominator excluded them but the numerator did not, coverage came out
+    # at 200%. One decision about who is being measured, made once.
+    withdrawn = removals_in_effect(load_removals(root), period)
+    observations = sorted(
+        (r for r in read_manifest(root, period) if r["domain"] not in withdrawn),
+        key=lambda r: r["domain"],
+    )
     verdicts: list[dict] = []
     blanket: dict[str, str] = {}
 

@@ -166,8 +166,11 @@ def test_changed_series_value_with_no_reason_raises_before_prints_touched(tmp_pa
     prints_content_before = (tmp_path / "prints.csv").read_bytes()
     series_content_before = (tmp_path / "series.csv").read_bytes()
 
-    # Create a modified print with different coverage series value
-    built2 = build_print(simple(1, 2), None, panel_size=1, **META)
+    # A print whose series values genuinely differ. Previously this shrank
+    # panel_size to 1 while leaving two conclusive observations, which is an
+    # impossible population and is now rejected outright; changing how many
+    # domains block moves the series without inventing one.
+    built2 = build_print(simple(2, 2), None, panel_size=2, **META)
     with pytest.raises(LedgerConflict):
         record_print(tmp_path, "2026-09-14", built2)
 

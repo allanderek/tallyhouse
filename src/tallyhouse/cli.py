@@ -6,6 +6,7 @@ published data, and derive/print can be re-run freely at any time.
 
 import argparse
 import asyncio
+import json
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -14,12 +15,19 @@ from pathlib import Path
 import httpx
 
 from tallyhouse.commoncrawl import robotstxt_parts
-from tallyhouse.config import load_agents, load_panel, methodology_version
+from tallyhouse.config import (
+    load_agents,
+    load_panel,
+    load_removals,
+    methodology_version,
+    removals_in_effect,
+)
 from tallyhouse.derive import derive_period, write_tables
 from tallyhouse.historical import publish_series
 from tallyhouse.ledger import LedgerConflict, latest
 from tallyhouse.periods import (
     InvalidPeriod,
+    next_period,
     is_within_window,
     parse_period,
     period_for,
@@ -85,6 +93,19 @@ def _load(root: Path, period: str, agents_version: int):
     return panel, agents
 
 
+def _effective_panel(root: Path, panel, period: str) -> tuple[list[str], set[str]]:
+    """The panel as it stands for one period, and the domains withdrawn from it.
+
+    The panel file itself is never edited. It is the denominator of every
+    published figure, so editing it would make prints that were computed
+    against the old membership no longer re-derivable. Removals live in their
+    own dated file and are applied per period instead, which is what lets a
+    site be dropped from next week without restating last week.
+    """
+    withdrawn = removals_in_effect(load_removals(root), period) & set(panel.domains)
+    return [d for d in panel.domains if d not in withdrawn], withdrawn
+
+
 def _already_published(root: Path, period: str) -> bool:
     return latest(root / "prints.csv", {"index_id": INDEX_ID, "period": period}) is not None
 
@@ -120,6 +141,13 @@ def _cmd_collect(args) -> int:
 
         version = collector_version()
 
+        _, withdrawn = _effective_panel(root, panel, args.period)
+        if withdrawn:
+            print(
+                f"note: {len(withdrawn)} domain(s) withdrawn at their owner's "
+                f"request and not requested: {', '.join(sorted(withdrawn))}"
+            )
+
         async def run():
             async with httpx.AsyncClient(timeout=20.0) as client:
                 await collect_panel(
@@ -128,9 +156,68 @@ def _cmd_collect(args) -> int:
                     panel.domains,
                     client=client,
                     collector_version=version,
+                    removed=withdrawn,
                 )
 
         asyncio.run(run())
+        return 0
+    except Exception as exc:
+        print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
+def _cmd_remove(args) -> int:
+    """Record a site owner's request to be left out of the live panel.
+
+    A command rather than an invitation to edit JSON, because the effective
+    period is the part that is easy to get wrong and the part that matters: a
+    removal dated into a published period would make that print no longer
+    re-derivable. The default is the next period that has not begun, which is
+    always safe.
+    """
+    try:
+        root = Path(args.root)
+        removals = load_removals(root)
+        if any(r.domain == args.domain for r in removals):
+            print(f"error: {args.domain} is already recorded as removed", file=sys.stderr)
+            return 1
+
+        effective = args.effective_from or next_period(period_for(_utcnow()))
+        parse_period(effective)
+        if _already_published(root, effective):
+            print(
+                f"error: {effective} is already published. A removal dated into "
+                f"a published period would change the denominator behind a frozen "
+                f"number. Use a later period.",
+                file=sys.stderr,
+            )
+            return 1
+
+        path = root / "panel" / "removals.json"
+        document = json.loads(path.read_text()) if path.exists() else {"removals": []}
+        document["removals"] = sorted(
+            document.get("removals", [])
+            + [
+                {
+                    "domain": args.domain,
+                    "requested": _utcnow().strftime("%Y-%m-%d"),
+                    "effective_from": effective,
+                    "reason": args.reason,
+                    "source": args.source or "",
+                }
+            ],
+            key=lambda entry: (entry["effective_from"], entry["domain"]),
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+
+        # Validates what was just written, so a malformed entry is caught here
+        # rather than by the next collection run.
+        load_removals(root)
+        print(
+            f"recorded: {args.domain} removed from the panel from {effective}. "
+            f"Commit data/panel/removals.json."
+        )
         return 0
     except Exception as exc:
         print(f"error: {type(exc).__name__}: {exc}", file=sys.stderr)
@@ -196,10 +283,15 @@ def _cmd_print(args) -> int:
             # Manifest exists, so derive it (may fail if blob is corrupt)
             prev_tables = derive_period(root, previous, agents)
 
+        effective, withdrawn = _effective_panel(root, panel, args.period)
         built = build_print(
             tables,
             prev_tables,
-            panel_size=len(panel.domains),
+            # Withdrawn domains leave the denominator rather than counting as
+            # misses. We were asked not to look; we did not fail to see, and
+            # recording it as a coverage failure would make honouring a request
+            # look like a fault in the collector.
+            panel_size=len(effective),
             methodology_version=methodology_version(args.agents),
             # Read from the manifest, not recomputed here: the evidence was
             # produced by the collector as it stood at collection time, which is
@@ -583,6 +675,15 @@ def main(argv: list[str] | None = None) -> int:
     hist.add_argument("--reason", default=None,
                       help="required to restate an already-published number")
 
+    rm = sub.add_parser("remove", help="record a site owner's request to leave the panel")
+    rm.add_argument("--root", default="data")
+    rm.add_argument("--domain", required=True)
+    rm.add_argument("--reason", required=True,
+                    help="why, in the owner's terms; published alongside the removal")
+    rm.add_argument("--source", default=None, help="link to the request, e.g. an issue")
+    rm.add_argument("--effective-from", dest="effective_from", default=None,
+                    help="period it applies from (default: the next period)")
+
     due = sub.add_parser("due", help="list periods ready to publish, oldest first")
     due.add_argument("--root", default="data")
     due.add_argument("--index", default=INDEX_ID)
@@ -641,6 +742,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_generate(args)
     if args.command == "due":
         return _cmd_due(args)
+    if args.command == "remove":
+        return _cmd_remove(args)
 
     try:
         parse_period(args.period)

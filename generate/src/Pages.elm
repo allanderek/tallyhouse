@@ -870,7 +870,9 @@ crawlerPage flags =
                             , Html.code [] [ Html.text "Disallow" ]
                             , Html.text " rule cannot be the way to turn this one off. If you would rather your site were not in the panel, open an issue at "
                             , Html.a [ Html.attribute "href" "https://github.com/allanderek/tallyhouse/issues" ] [ Html.text "the project repository" ]
-                            , Html.text " and it will be removed. Removals are recorded in the panel file alongside the reason, because the panel is the denominator of every published figure and a silent change to it would make the numbers unreproducible."
+                            , Html.text " and it will be removed. Each removal is recorded in "
+                            , Html.code [] [ Html.text "data/panel/removals.json" ]
+                            , Html.text " with its reason and the week it takes effect from. The date matters: the panel is the denominator of every published figure, so a removal applies from a future week rather than reaching back and quietly restating numbers that have already been published. From that week the site is no longer requested at all, and it leaves the denominator rather than counting as a week we failed to read it."
                             ]
                         ]
                     , Html.section []

@@ -29,7 +29,19 @@ def unreadable_rate(observations: list[dict], panel_size: int) -> float:
 def coverage(observations: list[dict], panel_size: int) -> float:
     if panel_size == 0:
         raise ValueError("panel_size must be positive")
-    return _pct(len(conclusive_domains(observations)), panel_size)
+    conclusive = conclusive_domains(observations)
+    if len(conclusive) > panel_size:
+        # Impossible from consistent inputs, so it means the caller's idea of
+        # the population disagrees with the observations' -- which is exactly
+        # how a panel removal once produced 200% coverage, by leaving the
+        # denominator but not the numerator. Loud, because a coverage figure
+        # over 100% would otherwise be published.
+        raise ValueError(
+            f"{len(conclusive)} conclusive observations against a panel of "
+            f"{panel_size}: the observations describe domains outside the panel "
+            f"they are being measured against"
+        )
+    return _pct(len(conclusive), panel_size)
 
 
 def _pct(numerator: int, denominator: int) -> float:

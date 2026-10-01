@@ -93,12 +93,11 @@ Each of these is enforced in code, not merely intended:
   guessing past it.
 - **Concurrency capped** (8) and collection confined to a 72-hour window per
   week, refusing to run outside it.
-- **Removable on request** — promised on the crawler page, but **not yet
-  mechanised**. The panel file's `excluded` list records domains dropped at
-  qualification with a technical outcome (`ConnectFailure` and so on); there is
-  no opt-out list and no free-text reason field, so an actual request would
-  today be honoured by hand. This is the one claim on this page not enforced in
-  code, and it should be closed: a published promise that rests on someone
-  remembering is not a control.
+- **Removable on request.** `data/panel/removals.json` records each removal
+  with its reason and the period it takes effect from, `tallyhouse remove`
+  writes it and refuses to date one into an already-published period, and from
+  that period the domain is not requested at all. The panel file itself is
+  never edited, so prints computed against the old membership stay
+  re-derivable — a removal changes future weeks without restating past ones.
 - **Everything is public**: the code, the method, the ledger, and every
   `robots.txt` body we classified.

@@ -754,3 +754,84 @@ def test_due_is_silent_and_successful_when_nothing_is_ready(tmp_path, capsys, mo
                         lambda: datetime(2026, 9, 16, 2, tzinfo=timezone.utc))
     assert main(["due", "--root", str(tmp_path)]) == 0
     assert capsys.readouterr().out == ""
+
+
+def seed_removals(root, entries):
+    (root / "panel").mkdir(parents=True, exist_ok=True)
+    (root / "panel" / "removals.json").write_text(json.dumps({"removals": entries}))
+
+
+def test_a_withdrawn_domain_leaves_the_denominator_rather_than_counting_as_a_miss(tmp_path):
+    """We were asked not to look; we did not fail to see.
+
+    Counting a removal as a coverage failure would make honouring a request look
+    like a fault in the collector, and would push coverage below the provisional
+    threshold for a reason that has nothing to do with evidence quality.
+    """
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    seed_removals(tmp_path, [{"domain": "b.com", "effective_from": "2026-09-14",
+                              "reason": "Owner asked to be excluded."}])
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    row = [r for r in read_rows(tmp_path / "prints.csv") if r["period"] == "2026-09-14"][0]
+    # The panel is a.com and b.com; b.com is withdrawn, so it leaves both the
+    # denominator and the observations. One domain in the population, read.
+    assert float(row["coverage"]) == 100.0
+    assert row["denominator"] == "1"
+
+
+def test_a_removal_dated_later_does_not_change_an_earlier_period(tmp_path):
+    # The guarantee that honouring one promise does not break the other.
+    seed_config(tmp_path)
+    seed_raw(tmp_path)
+    seed_removals(tmp_path, [{"domain": "b.com", "effective_from": "2026-09-21",
+                              "reason": "Owner asked to be excluded."}])
+    assert main(["print", "--root", str(tmp_path), "--period", "2026-09-14"]) == 0
+    row = [r for r in read_rows(tmp_path / "prints.csv") if r["period"] == "2026-09-14"][0]
+    # Both domains still counted: the removal applies from 2026-09-21.
+    assert float(row["coverage"]) == 100.0
+    assert row["denominator"] == "2"
+
+
+def test_remove_records_the_request_with_its_reason(tmp_path, capsys, monkeypatch):
+    from datetime import datetime, timezone
+    from tallyhouse import cli as _cli
+
+    seed_config(tmp_path)
+    monkeypatch.setattr(_cli, "_utcnow",
+                        lambda: datetime(2026, 10, 1, 12, tzinfo=timezone.utc))
+    code = main(["remove", "--root", str(tmp_path), "--domain", "example.com",
+                 "--reason", "Owner asked to be excluded.",
+                 "--source", "https://example.invalid/issue/1"])
+    assert code == 0
+    document = json.loads((tmp_path / "panel" / "removals.json").read_text())
+    assert document["removals"] == [{
+        "domain": "example.com",
+        "requested": "2026-10-01",
+        # Defaults to the next period, which is always safe: it cannot land in
+        # a period that is already published.
+        "effective_from": "2026-10-05",
+        "reason": "Owner asked to be excluded.",
+        "source": "https://example.invalid/issue/1",
+    }]
+
+
+def test_remove_refuses_to_date_a_removal_into_a_published_period(tmp_path, capsys):
+    # Would change the denominator behind a frozen number.
+    seed_published(tmp_path, "2026-09-14")
+    code = main(["remove", "--root", str(tmp_path), "--domain", "example.com",
+                 "--reason", "Owner asked to be excluded.",
+                 "--effective-from", "2026-09-14"])
+    assert code == 1
+    assert "already published" in capsys.readouterr().err
+    assert not (tmp_path / "panel" / "removals.json").exists()
+
+
+def test_remove_refuses_a_domain_already_removed(tmp_path, capsys):
+    seed_config(tmp_path)
+    seed_removals(tmp_path, [{"domain": "example.com", "effective_from": "2026-10-05",
+                              "reason": "Owner asked to be excluded."}])
+    code = main(["remove", "--root", str(tmp_path), "--domain", "example.com",
+                 "--reason", "again"])
+    assert code == 1
+    assert "already recorded" in capsys.readouterr().err

@@ -30,6 +30,10 @@ PROBE_PATHS = [
 # - TooLarge: body exceeds MAX_BODY_BYTES
 # - ServerError: 5xx, or a 4xx other than 404/410 (we were refused, not answered)
 # - Challenged: an anti-automation challenge stood between us and the file
+# - Removed: the site asked to be left out, so we did not request it. Not a
+#   failure and not a blind spot: deliberately absent evidence. Excluded from
+#   the denominator rather than counted as a miss, because we were asked not to
+#   look rather than failing to see.
 #
 # Challenged and ServerError are deliberately NOT conclusive. RFC 9309 2.3.1.3
 # lets a crawler treat an unavailable robots.txt as permission to crawl, but

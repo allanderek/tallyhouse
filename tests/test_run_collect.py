@@ -246,3 +246,66 @@ async def test_a_period_collected_across_two_runs_reports_both_commits(tmp_path)
     assert second["flaky.com"]["outcome"] == "Fetched"
 
     assert manifest_collector_version(tmp_path, "2026-09-14") == "aaaaaaa+bbbbbbb"
+
+
+async def test_a_removed_domain_is_never_requested(tmp_path):
+    """The whole point of honouring the request: we stop asking.
+
+    The observation is still written, as Removed, so the manifest explains the
+    gap. A domain silently absent from a manifest is indistinguishable from a
+    bug in the collector.
+    """
+    requested = []
+
+    def handler(request):
+        requested.append(request.url.host)
+        return httpx.Response(200, text="User-agent: *\nAllow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        records = await collect_panel(
+            tmp_path, "2026-09-14", ["a.com", "b.com"], client=client,
+            collector_version="abc1234", removed={"b.com"},
+        )
+
+    assert not any("b.com" in host for host in requested)
+    by_domain = {r["domain"]: r for r in records}
+    assert by_domain["a.com"]["outcome"] == "Fetched"
+    assert by_domain["b.com"]["outcome"] == "Removed"
+    assert by_domain["b.com"]["sha256"] is None
+
+
+async def test_a_removal_is_not_conclusive_and_is_not_an_unreadable_blind_spot(tmp_path):
+    # It is neither evidence of a policy nor a site withholding one. Counting it
+    # as unreadable would inflate the blind-spot figure with our own decision.
+    from tallyhouse.constants import CONCLUSIVE_OUTCOMES, UNREADABLE_OUTCOMES
+
+    assert "Removed" not in CONCLUSIVE_OUTCOMES
+    assert "Removed" not in UNREADABLE_OUTCOMES
+
+
+async def test_a_removal_supersedes_evidence_gathered_earlier_in_the_window(tmp_path):
+    """"Removed from this period" must mean no observation of them in it.
+
+    A request can arrive on Wednesday for a window that opened on Monday, after
+    we have already fetched. This cannot disturb a published number, because
+    collect refuses to re-run an already-published period.
+    """
+    def handler(request):
+        return httpx.Response(200, text="User-agent: GPTBot\nDisallow: /\n",
+                              headers={"content-type": "text/plain"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        first = await collect_panel(
+            tmp_path, "2026-09-14", ["a.com"], client=client,
+            collector_version="abc1234",
+        )
+        assert first[0]["outcome"] == "Fetched"
+
+        second = await collect_panel(
+            tmp_path, "2026-09-14", ["a.com"], client=client,
+            collector_version="abc1234", removed={"a.com"},
+        )
+
+    assert second[0]["outcome"] == "Removed"
+    assert second[0]["sha256"] is None

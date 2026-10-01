@@ -1,0 +1,6 @@
+{
+  "note": "Domains removed from the live panel at their owner's request. The crawler page promises this, so it has to be a mechanism rather than an intention.",
+  "why_dated": "Each removal records the period it takes effect from, and that date is what keeps the promise from breaking a different one. The panel is the denominator of every published figure, so dropping a domain retroactively would silently restate every print that included it. A dated removal changes future periods only, and leaves every published number re-derivable from the panel plus this file.",
+  "effect": "From its effective period the domain is no longer requested, is recorded as Removed in that period's manifest so the gap is explained rather than merely absent, and is excluded from the denominator rather than counted as a collection failure. We were asked not to look; we did not fail to see.",
+  "removals": []
+}
