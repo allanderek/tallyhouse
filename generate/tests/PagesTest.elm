@@ -1,6 +1,6 @@
 module PagesTest exposing (suite)
 
-import Data exposing (Agent, Flags, History, Operator, Panel, Row, Stances)
+import Data exposing (Agent, Download, Flags, History, Operator, Panel, Row, Stances)
 import Dict
 import Expect
 import Json.Decode as Decode
@@ -231,6 +231,7 @@ baseFlags =
     , purposes = basePurposes
     , history = baseHistory
     , crawler = baseCrawler
+    , downloads = baseDownloads
     }
 
 
@@ -243,6 +244,55 @@ baseCrawler =
     , contact = "https://github.com/allanderek/tallyhouse/issues"
     , prefixes = [ "149.102.158.121/32" ]
     }
+
+
+printsDownload : Download
+printsDownload =
+    { path = "data/prints.csv"
+    , indexId = ""
+    , label = "Headline ledger"
+    , description = "Every headline figure ever published, for both indices."
+    , bytes = 2532
+    , rows = 19
+    }
+
+
+seriesDownload : Download
+seriesDownload =
+    { path = "data/series.csv"
+    , indexId = ""
+    , label = "Series ledger"
+    , description = "Every sub-series: per-crawler rates, effective and blanket blocking, coverage."
+    , bytes = 2203648
+    , rows = 4521
+    }
+
+
+liveOnlyDownload : Download
+liveOnlyDownload =
+    { path = "data/panel-2026-09-28.csv"
+    , indexId = "agent-accessibility"
+    , label = "Panel, 2026-09-28"
+    , description = "The domains measured in this period, with their Tranco rank."
+    , bytes = 15000
+    , rows = 1000
+    }
+
+
+historyOnlyDownload : Download
+historyOnlyDownload =
+    { path = "data/panel-historical.csv"
+    , indexId = "agent-accessibility-history"
+    , label = "Balanced panel"
+    , description = "The domains measured by the historical index."
+    , bytes = 9000
+    , rows = 611
+    }
+
+
+baseDownloads : List Download
+baseDownloads =
+    [ printsDownload, seriesDownload, liveOnlyDownload, historyOnlyDownload ]
 
 
 agentContent : Flags -> String -> String
@@ -862,6 +912,85 @@ suite =
                 \_ ->
                     historyContent baseFlags
                         |> String.contains "<td>2023-01</td><td>January/February 2023</td><td>1.28%</td><td></td><td>390</td><td>63.80%</td>"
+                        |> Expect.equal True
+            ]
+        , describe "the Downloads section"
+            [ test "the live index links the prints download one directory up, with its label and size" <|
+                \_ ->
+                    let
+                        content =
+                            agentAccessibilityContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "<h2>Downloads</h2>" >> Expect.equal True
+                        , String.contains "href=\"../data/prints.csv\"" >> Expect.equal True
+                        , String.contains "Headline ledger" >> Expect.equal True
+                        , String.contains "2.5 KB" >> Expect.equal True
+                        ]
+                        content
+            , test "the historical index also links downloads one directory up" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "<h2>Downloads</h2>" >> Expect.equal True
+                        , String.contains "href=\"../data/prints.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/series.csv\"" >> Expect.equal True
+                        , String.contains "2.1 MB" >> Expect.equal True
+                        ]
+                        content
+            , test "the live index links the shared downloads and its own, but not the historical index's" <|
+                \_ ->
+                    let
+                        content =
+                            agentAccessibilityContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "href=\"../data/prints.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/series.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/panel-2026-09-28.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/panel-historical.csv\"" >> Expect.equal False
+                        ]
+                        content
+            , test "the historical index links the shared downloads and its own, but not the live index's" <|
+                \_ ->
+                    let
+                        content =
+                            historyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "href=\"../data/prints.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/series.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/panel-historical.csv\"" >> Expect.equal True
+                        , String.contains "href=\"../data/panel-2026-09-28.csv\"" >> Expect.equal False
+                        ]
+                        content
+            , test "an empty downloads list renders no Downloads section on either index page" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | downloads = [] }
+                    in
+                    Expect.all
+                        [ agentAccessibilityContent >> String.contains "Downloads" >> Expect.equal False
+                        , historyContent >> String.contains "Downloads" >> Expect.equal False
+                        ]
+                        flags
+            , test "a downloads list with nothing for this index renders no Downloads section" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | downloads = [ historyOnlyDownload ] }
+                    in
+                    agentAccessibilityContent flags
+                        |> String.contains "Downloads"
+                        |> Expect.equal False
+            , test "the about page's Reproducibility section links to the live index's downloads" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains "href=\"../agent-accessibility/index.html\""
                         |> Expect.equal True
             ]
         , describe "the live index page still renders on its own"

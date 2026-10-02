@@ -110,6 +110,7 @@ wellFormedFlags =
                 , ( "prefixes", Encode.list Encode.string [ "149.102.158.121/32" ] )
                 ]
           )
+        , ( "downloads", Encode.list identity [] )
         ]
 
 

@@ -6,7 +6,7 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
+import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Download, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Json.Encode as Encode
@@ -203,8 +203,11 @@ indexPage flags =
     let
         period =
             Maybe.withDefault "" (Data.currentPeriod flags.prints)
+
+        path =
+            "agent-accessibility/index.html"
     in
-    { path = "agent-accessibility/index.html"
+    { path = path
     , content =
         Html.document
             { title = flags.index.title
@@ -224,6 +227,7 @@ indexPage flags =
                                         ]
                                   ]
                                 , supersededSection flags.superseded flags.prints
+                                , downloadsSection path (Data.downloadsFor flags.index.id flags.downloads)
                                 ]
                             )
                       ]
@@ -453,6 +457,80 @@ restatementRow latestPrints old =
 
 
 
+-- Downloads: the CSV files Python writes alongside the site. Shared between
+-- the live and historical index pages, each of which is one directory below
+-- the site root, so a download's root-relative `path` needs one `../`
+-- stepped off before it resolves from either page.
+
+
+{-| The "Downloads" section listed on both index pages (spec 7: CSV downloads
+are the site's only data interface). Omitted entirely rather than rendered
+as an empty table when there is nothing to list, since an empty table would
+look like a broken feature rather than an absent one.
+-}
+downloadsSection : String -> List Download -> List Html
+downloadsSection ownPath downloads =
+    case downloads of
+        [] ->
+            []
+
+        _ ->
+            [ Html.section [ Html.attribute "class" "downloads" ]
+                [ Html.h2 [] [ Html.text "Downloads" ]
+                , Html.p []
+                    [ Html.text "Every figure published on this site can be re-derived from these files. The two ledgers below are served as the exact bytes committed to the repository, not regenerated." ]
+                , downloadsTable ownPath downloads
+                ]
+            ]
+
+
+downloadsTable : String -> List Download -> Html
+downloadsTable ownPath downloads =
+    Html.table []
+        [ Html.thead []
+            [ Html.tr []
+                [ Html.th [] [ Html.text "File" ]
+                , Html.th [] [ Html.text "Rows" ]
+                , Html.th [] [ Html.text "Size" ]
+                , Html.th [] [ Html.text "Description" ]
+                ]
+            ]
+        , Html.tbody [] (List.map (downloadRow ownPath) downloads)
+        ]
+
+
+downloadRow : String -> Download -> Html
+downloadRow ownPath download =
+    Html.tr []
+        [ Html.td [] [ Html.a [ Html.attribute "href" (rootRelativeHref ownPath download.path) ] [ Html.text download.label ] ]
+        , Html.td [] [ Html.text (String.fromInt download.rows) ]
+        , Html.td [] [ Html.text (Data.humanBytes download.bytes) ]
+        , Html.td [] [ Html.text download.description ]
+        ]
+
+
+{-| A link from `ownPath` (a page's own site-root-relative path, e.g.
+`"agent-accessibility/index.html"`) to `targetPath` (a download's path, also
+relative to the site root). Counted from `ownPath` itself rather than
+hardcoded, so a page that ever moved to a different depth would carry a
+correct link without anyone having to remember to update a `"../"` literal
+by hand.
+-}
+rootRelativeHref : String -> String -> String
+rootRelativeHref ownPath targetPath =
+    String.concat [ String.repeat (depthOf ownPath) "../", targetPath ]
+
+
+{-| How many directories deep `path` sits below the site root — the number
+of `"/"` separators in it, since the final segment is always the file name
+itself rather than a directory.
+-}
+depthOf : String -> Int
+depthOf path =
+    List.length (String.split "/" path) - 1
+
+
+
 -- The historical index: three years of quarterly readings from Common
 -- Crawl's archive, over its own panel and its own page.
 
@@ -462,8 +540,11 @@ historyPage flags =
     let
         history =
             flags.history
+
+        path =
+            "agent-accessibility-history/index.html"
     in
-    { path = "agent-accessibility-history/index.html"
+    { path = path
     , content =
         Html.document
             { title = history.title
@@ -487,6 +568,7 @@ historyPage flags =
                                   , crawlsSection history
                                   ]
                                 , supersededSection history.superseded history.prints
+                                , downloadsSection path (Data.downloadsFor history.id flags.downloads)
                                 ]
                             )
                       ]
@@ -758,6 +840,11 @@ aboutPage flags =
                         [ Html.h2 [] [ Html.text "Reproducibility" ]
                         , Html.p []
                             [ Html.text "Every number this site publishes is read back from a committed, append-only ledger, never recomputed at render time. Cloning the repository and re-running the collector against the recorded panel reproduces every published figure exactly. When a value has to change, it is appended as a new vintage alongside a stated reason — the earlier value is never edited or deleted." ]
+                        , Html.p []
+                            [ Html.text "The ledgers themselves are published as CSV in "
+                            , Html.a [ Html.attribute "href" "../agent-accessibility/index.html" ] [ Html.text "the live index's downloads section" ]
+                            , Html.text "."
+                            ]
                         ]
                     , Html.section []
                         [ Html.h2 [] [ Html.text "How the panel is built" ]

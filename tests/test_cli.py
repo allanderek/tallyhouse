@@ -835,3 +835,19 @@ def test_remove_refuses_a_domain_already_removed(tmp_path, capsys):
                  "--reason", "again"])
     assert code == 1
     assert "already recorded" in capsys.readouterr().err
+
+
+def test_generate_refuses_a_path_produced_as_both_a_page_and_a_download(tmp_path, capsys, monkeypatch):
+    # One would silently overwrite the other, and which won would depend on
+    # dictionary ordering.
+    from tallyhouse import cli as _cli
+
+    seed_published(tmp_path)
+    program = tmp_path / "site.js"
+    program.write_text("// not a real program")
+    monkeypatch.setattr(_cli, "render_site", lambda *a, **k: {"data/prints.csv": "<html>"})
+    monkeypatch.setattr(_cli, "download_files", lambda entries: {"data/prints.csv": "a,b\n"})
+    code = main(["generate", "--root", str(tmp_path), "--out", str(tmp_path / "site"),
+                 "--program", str(program)])
+    assert code == 1
+    assert "both a page and a download" in capsys.readouterr().err

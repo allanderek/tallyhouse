@@ -1,6 +1,6 @@
 module DataTest exposing (suite)
 
-import Data exposing (Row)
+import Data exposing (Download, Row)
 import Dict
 import Expect
 import Json.Decode as Decode
@@ -99,8 +99,22 @@ sampleJson =
         , "contact": "https://github.com/allanderek/tallyhouse/issues"
         , "prefixes": [ "149.102.158.121/32" ]
         }
+    , "downloads":
+        [ { "path": "data/prints.csv", "indexId": "", "label": "Headline ledger", "description": "Every headline figure ever published.", "bytes": 2532, "rows": 19 }
+        ]
     }
     """
+
+
+baseDownload : Download
+baseDownload =
+    { path = "data/prints.csv"
+    , indexId = ""
+    , label = "Headline ledger"
+    , description = "Every headline figure ever published."
+    , bytes = 2532
+    , rows = 19
+    }
 
 
 baseRow : Row
@@ -194,6 +208,21 @@ suite =
                     Decode.decodeString Data.decodeFlags sampleJson
                         |> Result.map (\flags -> List.map .name flags.history.crawls)
                         |> Expect.equal (Ok [ "January/February 2023", "August 2026" ])
+            , test "the downloads decode, path, label and sizes all" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map .downloads
+                        |> Expect.equal
+                            (Ok
+                                [ { path = "data/prints.csv"
+                                  , indexId = ""
+                                  , label = "Headline ledger"
+                                  , description = "Every headline figure ever published."
+                                  , bytes = 2532
+                                  , rows = 19
+                                  }
+                                ]
+                            )
             , test "the crawler's identity decodes, user-agent and all" <|
                 \_ ->
                     Decode.decodeString Data.decodeFlags sampleJson
@@ -397,5 +426,68 @@ suite =
                 \_ ->
                     Data.earliestPrint []
                         |> Expect.equal Nothing
+            ]
+        , describe "humanBytes"
+            [ test "a small size is a bare byte count" <|
+                \_ ->
+                    Data.humanBytes 512
+                        |> Expect.equal "512 B"
+            , test "just under 1 KB stays a bare byte count" <|
+                \_ ->
+                    Data.humanBytes 1023
+                        |> Expect.equal "1023 B"
+            , test "just over 1 KB switches to KB with one decimal" <|
+                \_ ->
+                    Data.humanBytes 1024
+                        |> Expect.equal "1.0 KB"
+            , test "a typical KB-sized download" <|
+                \_ ->
+                    Data.humanBytes 2532
+                        |> Expect.equal "2.5 KB"
+            , test "just under 1 MB stays in KB" <|
+                \_ ->
+                    Data.humanBytes 1048575
+                        |> Expect.equal "1024.0 KB"
+            , test "just over 1 MB switches to MB with one decimal" <|
+                \_ ->
+                    Data.humanBytes 1048576
+                        |> Expect.equal "1.0 MB"
+            , test "a typical MB-sized download" <|
+                \_ ->
+                    Data.humanBytes 2203648
+                        |> Expect.equal "2.1 MB"
+            ]
+        , describe "downloadsFor"
+            [ test "keeps a shared download (empty indexId)" <|
+                \_ ->
+                    [ { baseDownload | indexId = "" } ]
+                        |> Data.downloadsFor "agent-accessibility"
+                        |> List.length
+                        |> Expect.equal 1
+            , test "keeps a download owned by the given index" <|
+                \_ ->
+                    [ { baseDownload | path = "data/panel-2026-09-28.csv", indexId = "agent-accessibility" } ]
+                        |> Data.downloadsFor "agent-accessibility"
+                        |> List.map .path
+                        |> Expect.equal [ "data/panel-2026-09-28.csv" ]
+            , test "drops a download owned by a different index" <|
+                \_ ->
+                    [ { baseDownload | path = "data/panel-historical.csv", indexId = "agent-accessibility-history" } ]
+                        |> Data.downloadsFor "agent-accessibility"
+                        |> Expect.equal []
+            , test "preserves input order across shared and owned entries" <|
+                \_ ->
+                    [ { baseDownload | path = "data/prints.csv", indexId = "" }
+                    , { baseDownload | path = "data/panel-2026-09-28.csv", indexId = "agent-accessibility" }
+                    , { baseDownload | path = "data/panel-historical.csv", indexId = "agent-accessibility-history" }
+                    , { baseDownload | path = "data/series.csv", indexId = "" }
+                    ]
+                        |> Data.downloadsFor "agent-accessibility"
+                        |> List.map .path
+                        |> Expect.equal [ "data/prints.csv", "data/panel-2026-09-28.csv", "data/series.csv" ]
+            , test "returns [] from []" <|
+                \_ ->
+                    Data.downloadsFor "agent-accessibility" []
+                        |> Expect.equal []
             ]
         ]

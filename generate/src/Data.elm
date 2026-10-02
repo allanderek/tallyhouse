@@ -4,6 +4,7 @@ module Data exposing
     , CrawlEndpoint
     , Crawler
     , DivergentDomain
+    , Download
     , Flags
     , History
     , HistoryPanel
@@ -19,12 +20,14 @@ module Data exposing
     , biggestMove
     , currentPeriod
     , decodeFlags
+    , downloadsFor
     , earliestPrint
     , findByPeriod
     , findBySeriesAndPeriod
     , firstBlockedPeriod
     , formatFixed2
     , formatPercent
+    , humanBytes
     , isAgentSeries
     , isProvisional
     , latestByPeriod
@@ -386,6 +389,52 @@ decodeCrawler =
         (Decode.field "prefixes" (Decode.list Decode.string))
 
 
+{-| One CSV file published alongside the site: where it lives (relative to
+the site root, not to whichever page links it), which index it belongs to,
+a human label and description, and its size so a reader knows what they are
+about to fetch before they click. The content itself never reaches this
+program — Python writes the bytes directly, and the generator only renders
+the link.
+
+`indexId` is `""` when the file belongs to both indices (the two ledgers
+hold every index's rows, distinguished by an `index_id` column inside the
+file) and a specific index's id when the file belongs to that index alone —
+see `downloadsFor`.
+
+-}
+type alias Download =
+    { path : String
+    , indexId : String
+    , label : String
+    , description : String
+    , bytes : Int
+    , rows : Int
+    }
+
+
+decodeDownload : Decoder Download
+decodeDownload =
+    Decode.succeed Download
+        |> andMap (Decode.field "path" Decode.string)
+        |> andMap (Decode.field "indexId" Decode.string)
+        |> andMap (Decode.field "label" Decode.string)
+        |> andMap (Decode.field "description" Decode.string)
+        |> andMap (Decode.field "bytes" Decode.int)
+        |> andMap (Decode.field "rows" Decode.int)
+
+
+{-| The downloads one index's page may offer: those shared between every
+index (`indexId == ""`) plus those owned by the given index id, in the
+order they arrived. A download owned by a different index is dropped —
+the live index's panel and the historical index's panel are different
+populations, so a page must never offer the other index's panel or
+verdicts file.
+-}
+downloadsFor : String -> List Download -> List Download
+downloadsFor indexId downloads =
+    List.filter (\download -> download.indexId == "" || download.indexId == indexId) downloads
+
+
 type alias Flags =
     { index : IndexInfo
     , prints : List Row
@@ -397,6 +446,7 @@ type alias Flags =
     , purposes : Dict String String
     , history : History
     , crawler : Crawler
+    , downloads : List Download
     }
 
 
@@ -413,6 +463,7 @@ decodeFlags =
         |> andMap (Decode.field "purposes" (Decode.dict Decode.string))
         |> andMap (Decode.field "history" decodeHistory)
         |> andMap (Decode.field "crawler" decodeCrawler)
+        |> andMap (Decode.field "downloads" (Decode.list decodeDownload))
 
 
 
@@ -689,3 +740,49 @@ formatPercent raw =
 
         Just value ->
             String.concat [ formatFixed2 value, "%" ]
+
+
+{-| A file size in binary units (1 KB = 1024 bytes), the way a reader expects
+a download's size to be shown. Below 1024 bytes it is a bare byte count;
+above that it is KB or MB to one decimal place.
+
+The unit is chosen from the raw byte count, not from the rounded figure, so a
+size just under 1 MB (e.g. `1048575`) is reported as `"1024.0 KB"` rather
+than being bumped up to `"1.0 MB"`. That reads a little oddly right at the
+boundary, but it keeps the rule simple and the output a pure function of the
+input with no second rounding pass to get wrong.
+
+-}
+humanBytes : Int -> String
+humanBytes bytes =
+    case bytes < 1024 of
+        True ->
+            String.concat [ String.fromInt bytes, " B" ]
+
+        False ->
+            case bytes < 1024 * 1024 of
+                True ->
+                    String.concat [ oneDecimal (toFloat bytes / 1024), " KB" ]
+
+                False ->
+                    String.concat [ oneDecimal (toFloat bytes / (1024 * 1024)), " MB" ]
+
+
+{-| A `Float` rounded to one decimal place, e.g. `2.47265625` to `"2.5"`.
+Mirrors `formatFixed2`'s approach (scale, round to an `Int`, split whole from
+fractional) rather than relying on `Float` string formatting, which Elm's
+core libraries do not provide.
+-}
+oneDecimal : Float -> String
+oneDecimal value =
+    let
+        rounded =
+            round (value * 10)
+
+        whole =
+            rounded // 10
+
+        fractional =
+            rounded - whole * 10
+    in
+    String.concat [ String.fromInt whole, ".", String.fromInt fractional ]

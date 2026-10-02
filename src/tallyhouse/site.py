@@ -14,6 +14,7 @@ from pathlib import Path
 from tallyhouse.config import load_agents
 from tallyhouse.constants import USER_AGENT
 from tallyhouse.derive import derive_period
+from tallyhouse.downloads import catalogue, manifest
 from tallyhouse.ledger import read_rows
 from tallyhouse.storage import manifest_path
 
@@ -240,7 +241,7 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
     panel_path = root / "panel" / "2026.json"
     panel = json.loads(panel_path.read_text()) if panel_path.exists() else {}
 
-    return {
+    data = {
         "index": {
             "id": index_id,
             "title": "Agent Accessibility Index",
@@ -261,6 +262,12 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
         "fetches": fetches,
         **load_agent_data(root, verdicts),
     }
+    # Built last, because the catalogue is a function of everything above it.
+    # Only the manifest travels to the generator: the content is written by
+    # Python, so there is no reason to push tens of thousands of CSV rows
+    # through the generator to be handed straight back.
+    data["downloads"] = manifest(catalogue(root, data))
+    return data
 
 
 def write_site(files: dict[str, str], out: Path) -> list[Path]:
@@ -269,6 +276,11 @@ def write_site(files: dict[str, str], out: Path) -> list[Path]:
     for path, content in sorted(files.items()):
         target = out / path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content)
+        # newline="" writes exactly the characters given, with no translation.
+        # Without it the CRLF line endings of a verbatim ledger download would be
+        # rewritten on some platforms, so the published file would not be the
+        # committed one.
+        with target.open("w", newline="") as handle:
+            handle.write(content)
         written.append(target)
     return written

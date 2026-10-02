@@ -23,6 +23,7 @@ from tallyhouse.config import (
     removals_in_effect,
 )
 from tallyhouse.derive import derive_period, write_tables
+from tallyhouse.downloads import catalogue, files as download_files
 from tallyhouse.historical import publish_series
 from tallyhouse.ledger import LedgerConflict, latest
 from tallyhouse.periods import (
@@ -614,8 +615,24 @@ def _cmd_generate(args) -> int:
             print("error: no published prints to render", file=sys.stderr)
             return 1
         files = render_site(program.read_text(), data)
+        # The downloads are data rather than pages, so Python builds them and
+        # hands them to the same writer. Rebuilding the catalogue here rather
+        # than carrying the content through the generator costs a few
+        # milliseconds of CSV formatting and saves a megabyte of string.
+        downloads = download_files(catalogue(Path(args.root), data))
+        overlap = set(files) & set(downloads)
+        if overlap:
+            # A page and a download writing the same path would mean one
+            # silently replaced the other.
+            print(
+                f"error: {', '.join(sorted(overlap))} is produced as both a page "
+                f"and a download",
+                file=sys.stderr,
+            )
+            return 1
+        files.update(downloads)
         written = write_site(files, Path(args.out))
-        print(f"site: {len(written)} files -> {args.out}")
+        print(f"site: {len(written)} files ({len(downloads)} downloads) -> {args.out}")
         return 0
     except RenderError as exc:
         print(f"error: the generator failed: {exc}", file=sys.stderr)
