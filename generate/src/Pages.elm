@@ -18,6 +18,14 @@ type alias Page =
     }
 
 
+{-| Append the terminating full stop that the data deliberately omits (so
+punctuation stays in the markup, not the stored strings).
+-}
+sentence : String -> String
+sentence text =
+    String.concat [ text, "." ]
+
+
 pages : Flags -> List Page
 pages flags =
     List.concat
@@ -288,7 +296,7 @@ biasCallout : Qualification -> Html
 biasCallout qualification =
     Html.section [ Html.attribute "class" "callout bias" ]
         [ Html.h2 [] [ Html.text "A known bias in this number" ]
-        , Html.p [] [ Html.text qualification.knownBias ]
+        , Html.p [] [ Html.text (sentence qualification.knownBias) ]
         , Html.p [ Html.attribute "class" "meta" ]
             [ Html.text
                 (String.concat
@@ -308,7 +316,7 @@ printsTable prints =
         [ Html.thead []
             [ Html.tr []
                 [ Html.th [] [ Html.text "Period" ]
-                , Html.th [] [ Html.text "Value" ]
+                , Html.th [] [ Html.text "Targeted" ]
                 , Html.th [] [ Html.text "Coverage" ]
                 , Html.th [] [ Html.text "Status" ]
                 ]
@@ -631,7 +639,7 @@ panelSection panel =
                 (String.concat [ "Membership is fixed across the span: ", panel.construction.churn, "." ])
             ]
         , Html.p [ Html.attribute "class" "meta" ]
-            [ Html.text (String.concat [ panel.construction.knownBias, "." ]) ]
+            [ Html.text (sentence panel.construction.knownBias) ]
         ]
 
 
@@ -780,7 +788,7 @@ aboutPage flags =
                                     ]
                                 )
                             ]
-                        , Html.p [ Html.attribute "class" "meta" ] [ Html.text flags.panel.qualification.knownBias ]
+                        , Html.p [ Html.attribute "class" "meta" ] [ Html.text (sentence flags.panel.qualification.knownBias) ]
                         ]
                     , Html.section []
                         [ Html.h2 [] [ Html.text "Related work" ]

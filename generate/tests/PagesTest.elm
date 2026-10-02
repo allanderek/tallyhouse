@@ -406,12 +406,29 @@ suite =
                     agentAccessibilityContent baseFlags
                         |> String.contains "agent:GPTBot"
                         |> Expect.equal False
+            , test "a series table heads its value column 'Value', since the row's series names the quantity" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "<th>Series</th><th>Value</th>"
+                        |> Expect.equal True
+            ]
+        , describe "the live index's prints table"
+            [ test "heads its value column 'Targeted', not the ledger field name 'Value'" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "<th>Period</th><th>Targeted</th><th>Coverage</th><th>Status</th>"
+                        |> Expect.equal True
             ]
         , describe "the panel's known bias"
             [ test "appears on the index page" <|
                 \_ ->
                     agentAccessibilityContent baseFlags
                         |> String.contains basePanel.qualification.knownBias
+                        |> Expect.equal True
+            , test "the bias callout's known-bias sentence ends in a full stop" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains (String.concat [ basePanel.qualification.knownBias, "." ])
                         |> Expect.equal True
             ]
         , describe "the Tranco link on the about page"
@@ -432,6 +449,11 @@ suite =
                                 , "</a>"
                                 ]
                             )
+                        |> Expect.equal True
+            , test "the about page's known-bias sentence ends in a full stop" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains (String.concat [ basePanel.qualification.knownBias, "." ])
                         |> Expect.equal True
             ]
         , describe "related work on the about page"
