@@ -33,7 +33,13 @@ concurrency:
 # Ubuntu 26 from 2026-10-19. Pinning does not avoid that upgrade, it makes it a
 # deliberate act: when this image is retired the build fails loudly, at a time we
 # can choose to act on, which is the right failure mode for something
-# load-bearing. Bump it together with the action versions below.
+# load-bearing.
+#
+# There is no retirement date to plan around yet: GitHub keeps the latest two
+# stable images, so 24.04 only becomes the oldest supported — and only then
+# starts a deprecation clock — once an image newer than 26.04 reaches GA. Until
+# that announcement there is nothing to do here, and a failed build is the
+# signal to act. Bump it together with the action versions below.
 
 jobs:
   test:
