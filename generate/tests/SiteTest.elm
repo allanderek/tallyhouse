@@ -110,6 +110,24 @@ wellFormedFlags =
                 , ( "prefixes", Encode.list Encode.string [ "149.102.158.121/32" ] )
                 ]
           )
+        , ( "methodology"
+          , Encode.object
+                [ ( "composition", Encode.string "A methodology version is the tracked agent set combined with the pinned parser." )
+                , ( "versions", Encode.list identity [] )
+                , ( "undocumented", Encode.list identity [] )
+                , ( "parameters"
+                  , Encode.object
+                        [ ( "probePaths", Encode.list Encode.string [ "/" ] )
+                        , ( "conclusiveOutcomes", Encode.list Encode.string [ "Fetched", "NoRobotsTxt" ] )
+                        , ( "unreadableOutcomes", Encode.list Encode.string [ "Challenged", "ServerError" ] )
+                        , ( "maxBodyBytes", Encode.int 524288 )
+                        , ( "collectionWindowHours", Encode.int 72 )
+                        , ( "provisionalCoverageThreshold", Encode.float 97.0 )
+                        , ( "userAgent", Encode.string "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)" )
+                        ]
+                  )
+                ]
+          )
         , ( "downloads", Encode.list identity [] )
         ]
 
@@ -132,6 +150,7 @@ suite =
                             , "agent-accessibility/index.html"
                             , "agent-accessibility-history/index.html"
                             , "agent-accessibility/agents/index.html"
+                            , "agent-accessibility/methodology/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"
                             , "about/crawler/ips.json"

@@ -355,3 +355,64 @@ def test_crawler_identity_is_empty_rather_than_absent_when_unconfigured(tmp_path
 
     crawler = load_crawler_data(tmp_path)
     assert crawler["prefixes"] == [] and crawler["token"] == ""
+
+
+def test_methodology_parameters_come_from_the_code_that_runs(tmp_path):
+    """Not restated on the page.
+
+    A methodology page that drifts from the pipeline documents a method nobody
+    ran. Same reasoning as keeping the crawler's user-agent out of its JSON.
+    """
+    from tallyhouse.constants import CONCLUSIVE_OUTCOMES, PROBE_PATHS
+    from tallyhouse.periods import COLLECTION_WINDOW_HOURS
+    from tallyhouse.publish import PROVISIONAL_COVERAGE_THRESHOLD
+    from tallyhouse.site import load_methodology_data
+
+    parameters = load_methodology_data(tmp_path)["parameters"]
+    assert parameters["probePaths"] == list(PROBE_PATHS)
+    assert parameters["conclusiveOutcomes"] == sorted(CONCLUSIVE_OUTCOMES)
+    assert parameters["collectionWindowHours"] == COLLECTION_WINDOW_HOURS
+    assert parameters["provisionalCoverageThreshold"] == PROVISIONAL_COVERAGE_THRESHOLD
+
+
+def test_a_superseded_methodology_version_says_so_rather_than_showing_nothing(tmp_path):
+    # A version used only by restated rows is a different fact from one never
+    # used, and "no periods" would read as the latter.
+    from tallyhouse.site import load_methodology_data
+
+    key = {"index_id": "agent-accessibility", "period": "2026-09-14"}
+    append_row(tmp_path / "prints.csv", key, meta(value="23.4", methodology_version="agents=1;protego=0.6.2"))
+    append_row(tmp_path / "prints.csv", key, meta(value="23.9", methodology_version="agents=2;protego=0.6.2"),
+               reason="agent set expanded")
+    (tmp_path / "methodology.json").write_text(json.dumps({"versions": [
+        {"version": "agents=1;protego=0.6.2", "summary": "first"},
+        {"version": "agents=2;protego=0.6.2", "summary": "45 tokens"},
+    ]}))
+
+    versions = {v["version"]: v for v in load_methodology_data(tmp_path)["versions"]}
+    old = versions["agents=1;protego=0.6.2"]
+    assert old["periods"] == [] and old["supersededPeriods"] == ["2026-09-14"]
+    new = versions["agents=2;protego=0.6.2"]
+    assert new["periods"] == ["2026-09-14"] and new["supersededPeriods"] == []
+
+
+def test_a_published_version_with_no_changelog_entry_is_named(tmp_path):
+    """So the gap is detectable rather than invisible.
+
+    A figure published under a methodology nobody documented is exactly what
+    this page exists to prevent.
+    """
+    from tallyhouse.site import load_methodology_data
+
+    append_row(tmp_path / "prints.csv",
+               {"index_id": "agent-accessibility", "period": "2026-09-14"},
+               meta(value="23.4", methodology_version="agents=9;protego=9.9.9"))
+    (tmp_path / "methodology.json").write_text(json.dumps({"versions": []}))
+    assert load_methodology_data(tmp_path)["undocumented"] == ["agents=9;protego=9.9.9"]
+
+
+def test_methodology_without_its_changelog_file_still_reports_parameters(tmp_path):
+    from tallyhouse.site import load_methodology_data
+
+    data = load_methodology_data(tmp_path)
+    assert data["versions"] == [] and data["parameters"]["probePaths"]

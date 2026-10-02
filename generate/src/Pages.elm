@@ -6,7 +6,7 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Download, Flags, History, HistoryPanel, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
+import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Download, Flags, History, HistoryPanel, Methodology, MethodologyParameters, MethodologyVersion, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Json.Encode as Encode
@@ -33,6 +33,7 @@ pages flags =
           , indexPage flags
           , historyPage flags
           , agentsIndexPage flags
+          , methodologyPage flags
           ]
         , agentPageList flags
         , [ aboutPage flags, crawlerPage flags, crawlerIpsPage flags ]
@@ -269,12 +270,10 @@ headlineSection panel prints =
                                             , " sites with a usable robots.txt verdict for this period. Coverage: "
                                             , Data.formatPercent latest.coverage
                                             , " of the panel. Methodology "
-                                            , latest.methodologyVersion
-                                            , ", collector "
-                                            , latest.collectorVersion
-                                            , "."
                                             ]
                                         )
+                                    , Html.a [ Html.attribute "href" "methodology/index.html" ] [ Html.text latest.methodologyVersion ]
+                                    , Html.text (String.concat [ ", collector ", latest.collectorVersion, "." ])
                                     ]
                               ]
                             ]
@@ -835,6 +834,11 @@ aboutPage flags =
                         , Html.p []
                             [ Html.text "Tranco is a research-grade ranking of the most popular domains, built by combining several underlying popularity sources and published daily. Each day's list carries a permanent identifier, so a specific list can be cited and retrieved later — which is what lets a reader check our panel against the exact list we drew it from, rather than take our word for it."
                             ]
+                        , Html.p []
+                            [ Html.text "The full method behind that figure — how a verdict is reached, what counts as evidence, and the versioned changelog behind every published number — is set out on "
+                            , Html.a [ Html.attribute "href" "../agent-accessibility/methodology/index.html" ] [ Html.text "the methodology page" ]
+                            , Html.text "."
+                            ]
                         ]
                     , Html.section []
                         [ Html.h2 [] [ Html.text "Reproducibility" ]
@@ -1188,6 +1192,342 @@ publishedRate flags period agent =
     Data.findBySeriesAndPeriod agent.seriesId period flags.series
         |> Maybe.map (\row -> Data.formatPercent row.value)
         |> Maybe.withDefault "—"
+
+
+
+-- The methodology page: spec 7 promises this page, versioned with a
+-- changelog, as the place a sceptical reader goes before trusting a number.
+-- Every parameter quoted here is read from `flags.methodology.parameters`,
+-- which Python reads from the same modules the collection and
+-- classification pipeline itself imports — never written into this page as
+-- a literal, since a hardcoded number here could silently drift from the
+-- code that actually runs.
+
+
+methodologyPage : Flags -> Page
+methodologyPage flags =
+    let
+        methodology =
+            flags.methodology
+
+        path =
+            "agent-accessibility/methodology/index.html"
+    in
+    { path = path
+    , content =
+        Html.document
+            { title = "Methodology"
+            , description = "What Tallyhouse measures, how a verdict is reached, what counts as evidence, and the versioned changelog behind every published figure."
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = "Methodology"
+                            , subtitle = Just "Versioned, with a changelog."
+                            , homeHref = "../../index.html"
+                            }
+                      , Html.main_ []
+                            (List.concat
+                                [ whatIsMeasuredSection flags.index
+                                , howVerdictIsReachedSection methodology.parameters
+                                , whatCountsAsEvidenceSection methodology.parameters
+                                , cadenceSection methodology.parameters
+                                , methodologyCrawlerSection methodology.parameters
+                                , methodologyVersionsSection methodology
+                                , undocumentedSection methodology.undocumented
+                                , [ specsLink ]
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+whatIsMeasuredSection : Data.IndexInfo -> List Html
+whatIsMeasuredSection index =
+    [ Html.section []
+        [ Html.h2 [] [ Html.text "What is measured" ]
+        , Html.p [] [ Html.text index.question ]
+        , Html.p []
+            [ Html.text "The measure behind that question is the share of a fixed panel whose "
+            , Html.code [] [ Html.text "robots.txt" ]
+            , Html.text " names a tracked AI crawler and disallows it. Naming and disallowing is the test, not mere closure: a site shut to "
+            , Html.node "em" [] [ Html.text "every" ]
+            , Html.text " crawler by a blanket rule that names none of them is not counted in this headline. That is not hidden — it is published separately, as its own blanket figure, in "
+            , Html.a [ Html.attribute "href" "../index.html" ] [ Html.text "the index page's series" ]
+            , Html.text "."
+            ]
+        ]
+    ]
+
+
+howVerdictIsReachedSection : MethodologyParameters -> List Html
+howVerdictIsReachedSection parameters =
+    [ Html.section []
+        [ Html.h2 [] [ Html.text "How a verdict is reached" ]
+        , Html.p []
+            [ Html.text "A token the file never names is "
+            , Html.code [] [ Html.text "Unmentioned" ]
+            , Html.text " — not consent, since a blanket rule naming nobody could still be catching it. Otherwise the token's own group of rules is evaluated: if every probe path is disallowed the verdict is a full block; if the group disallows some paths but not others it is a partial block; otherwise the token is allowed."
+            ]
+        , Html.p []
+            [ Html.text "That evaluation is done by the pinned "
+            , Html.code [] [ Html.text "protego" ]
+            , Html.text " parser rather than a hand-rolled one, so a rule is read the way a conformant "
+            , Html.code [] [ Html.text "robots.txt" ]
+            , Html.text " library reads it. The probe paths themselves are fixed, because changing them would change published numbers:"
+            ]
+        , Html.ul [] (List.map probePathItem parameters.probePaths)
+        ]
+    ]
+
+
+probePathItem : String -> Html
+probePathItem path =
+    Html.li [] [ Html.code [] [ Html.text path ] ]
+
+
+whatCountsAsEvidenceSection : MethodologyParameters -> List Html
+whatCountsAsEvidenceSection parameters =
+    [ Html.section []
+        [ Html.h2 [] [ Html.text "What counts as evidence" ]
+        , Html.p []
+            (List.concat
+                [ [ Html.text "Only two outcomes tell us a site's policy: " ]
+                , joinWithAnd (List.map outcomeCode parameters.conclusiveOutcomes)
+                , [ Html.text ". A server can also answer and still withhold the file — " ]
+                , joinWithAnd (List.map outcomeCode parameters.unreadableOutcomes)
+                , [ Html.text " — and those cases are excluded from the rate rather than assumed permissive, published as their own series so the blind spot stays visible rather than being quietly absorbed into either side of the headline." ]
+                ]
+            )
+        , Html.p []
+            [ Html.text "Collection also caps how much of any one file it will read: a body larger than "
+            , Html.text (Data.humanBytes parameters.maxBodyBytes)
+            , Html.text " is not read in full."
+            ]
+        ]
+    ]
+
+
+outcomeCode : String -> Html
+outcomeCode outcome =
+    Html.code [] [ Html.text outcome ]
+
+
+{-| Join a list of `Html` fragments into English prose: `", "` between all
+but the last pair, `" and "` before the last. Handles the empty and
+single-item cases directly rather than falling through to a join that would
+produce a stray separator.
+-}
+joinWithAnd : List Html -> List Html
+joinWithAnd items =
+    case items of
+        [] ->
+            []
+
+        [ only ] ->
+            [ only ]
+
+        _ ->
+            let
+                lastIndex =
+                    List.length items - 1
+            in
+            List.concat
+                [ List.intersperse (Html.text ", ") (List.take lastIndex items)
+                , [ Html.text " and " ]
+                , List.drop lastIndex items
+                ]
+
+
+cadenceSection : MethodologyParameters -> List Html
+cadenceSection parameters =
+    [ Html.section []
+        [ Html.h2 [] [ Html.text "Cadence and the collection window" ]
+        , Html.p []
+            [ Html.text "A period is a week, identified by its Monday. Collection stays open for "
+            , Html.text (String.fromInt parameters.collectionWindowHours)
+            , Html.text " hours after a period begins, during which re-collection can still improve coverage; once that window closes the figure is frozen."
+            ]
+        , Html.p []
+            [ Html.text "A print whose coverage falls below "
+            , Html.text (formatThreshold parameters.provisionalCoverageThreshold)
+            , Html.text "% is marked provisional, since more evidence could still arrive for it inside the window."
+            ]
+        ]
+    ]
+
+
+{-| A threshold like `97.0` reads as `"97"`, and one like `91.5` keeps its
+one decimal place — unlike `Data.formatFixed2`, which would pad the first to
+`"97.00"`. A reader comparing this page to the pipeline's own constant
+should see the same bare number the code defines, not an invented decimal.
+-}
+formatThreshold : Float -> String
+formatThreshold value =
+    let
+        tenths =
+            round (value * 10)
+
+        whole =
+            tenths // 10
+
+        fractional =
+            tenths - whole * 10
+    in
+    case fractional of
+        0 ->
+            String.fromInt whole
+
+        _ ->
+            String.concat [ String.fromInt whole, ".", String.fromInt fractional ]
+
+
+methodologyCrawlerSection : MethodologyParameters -> List Html
+methodologyCrawlerSection parameters =
+    [ Html.section []
+        [ Html.h2 [] [ Html.text "The crawler" ]
+        , Html.p []
+            [ Html.text "Every observation this method rests on is made by one crawler, identifying itself as "
+            , Html.code [] [ Html.text parameters.userAgent ]
+            , Html.text ". "
+            , Html.a [ Html.attribute "href" "../../about/crawler/index.html" ] [ Html.text "More on what it fetches and how to verify it" ]
+            , Html.text "."
+            ]
+        ]
+    ]
+
+
+{-| One block per changelog entry, as a table rather than a definition
+list: every other structured listing on this site — prints, series,
+downloads, divergent domains — already reads as a table, and a table lets
+a reader scan a short fact (the version, the date, how many periods) down a
+column instead of hunting for it inside a repeated heading, which is what a
+`<dl>` would ask of them here.
+-}
+methodologyVersionsSection : Methodology -> List Html
+methodologyVersionsSection methodology =
+    [ Html.section [ Html.attribute "class" "methodology-versions" ]
+        (List.concat
+            [ [ Html.h2 [] [ Html.text "Methodology versions" ]
+              , Html.p [] [ Html.text methodology.composition ]
+              ]
+            , [ Html.div [ Html.attribute "class" "table-scroll" ]
+                    [ Html.table []
+                        [ Html.thead []
+                            [ Html.tr []
+                                [ Html.th [] [ Html.text "Version" ]
+                                , Html.th [] [ Html.text "Adopted" ]
+                                , Html.th [] [ Html.text "Summary" ]
+                                , Html.th [] [ Html.text "What changed" ]
+                                , Html.th [] [ Html.text "Why" ]
+                                , Html.th [] [ Html.text "In force for" ]
+                                , Html.th [] [ Html.text "Restated" ]
+                                ]
+                            ]
+                        , Html.tbody [] (List.map methodologyVersionRow methodology.versions)
+                        ]
+                    ]
+              ]
+            ]
+        )
+    ]
+
+
+methodologyVersionRow : MethodologyVersion -> Html
+methodologyVersionRow version =
+    Html.tr []
+        [ Html.td [] [ Html.code [] [ Html.text version.version ] ]
+        , Html.td [] [ Html.text version.adopted ]
+        , Html.td [] [ Html.text version.summary ]
+        , Html.td [] [ Html.text version.changed ]
+        , Html.td [] [ Html.text version.why ]
+        , Html.td [] [ Html.text (periodsSummary version.periods "not currently in force") ]
+        , Html.td [] [ Html.text (supersededSummary version.supersededPeriods) ]
+        ]
+
+
+{-| A period list rendered for a reader rather than dumped in full: a
+single period is shown bare, and anything longer is a count plus its first
+and last member, so a version in force for 18 weeks does not turn into an
+unreadable wall of dates.
+-}
+periodsSummary : List String -> String -> String
+periodsSummary periods whenEmpty =
+    case List.sort periods of
+        [] ->
+            whenEmpty
+
+        [ only ] ->
+            only
+
+        sorted ->
+            String.concat
+                [ String.fromInt (List.length sorted)
+                , " periods, "
+                , Maybe.withDefault "" (List.head sorted)
+                , " to "
+                , Maybe.withDefault "" (List.head (List.reverse sorted))
+                ]
+
+
+{-| What a version's `supersededPeriods` means to a reader: this version
+once produced these periods' published figures, and they have since been
+restated under a later version. `"—"` when there are none, since most
+versions currently in force have nothing superseded to report.
+-}
+supersededSummary : List String -> String
+supersededSummary periods =
+    case periods of
+        [] ->
+            "—"
+
+        _ ->
+            String.concat
+                [ "Produced "
+                , periodsSummary periods ""
+                , "; since restated under a later version."
+                ]
+
+
+{-| A prominent warning naming every methodology version that produced a
+published figure with no changelog entry explaining it — exactly the gap
+this page exists to make visible rather than let pass unnoticed. Renders
+nothing when the list is empty, since an empty warning box would itself
+look like a broken feature.
+-}
+undocumentedSection : List String -> List Html
+undocumentedSection undocumented =
+    case undocumented of
+        [] ->
+            []
+
+        _ ->
+            [ Html.section [ Html.attribute "class" "callout bias" ]
+                [ Html.h2 [] [ Html.text "Published without a changelog entry" ]
+                , Html.p []
+                    [ Html.text "A figure has been published under a methodology version with no explanation recorded for it:" ]
+                , Html.ul [] (List.map undocumentedItem undocumented)
+                ]
+            ]
+
+
+undocumentedItem : String -> Html
+undocumentedItem version =
+    Html.li [] [ Html.code [] [ Html.text version ] ]
+
+
+specsLink : Html
+specsLink =
+    Html.p []
+        [ Html.text "For full detail, see the "
+        , Html.a
+            [ Html.attribute "href" "https://github.com/allanderek/tallyhouse/tree/main/docs/superpowers/specs" ]
+            [ Html.text "design documents in the repository" ]
+        , Html.text "."
+        ]
 
 
 

@@ -9,6 +9,9 @@ module Data exposing
     , History
     , HistoryPanel
     , IndexInfo
+    , Methodology
+    , MethodologyParameters
+    , MethodologyVersion
     , Operator
     , Panel
     , PanelConstruction
@@ -389,6 +392,88 @@ decodeCrawler =
         (Decode.field "prefixes" (Decode.list Decode.string))
 
 
+{-| One entry in the methodology changelog: a version string (the tracked
+agent set combined with the pinned parser), when it was adopted, a summary
+and a longer account of what changed and why, plus the periods it actually
+produced. `periods` are the periods currently published under this version;
+`supersededPeriods` are periods this version once produced that have since
+been restated under a later version — both derived from the ledger by
+Python rather than declared by hand, so a version nobody used cannot claim
+periods it never produced.
+-}
+type alias MethodologyVersion =
+    { version : String
+    , adopted : String
+    , summary : String
+    , changed : String
+    , why : String
+    , periods : List String
+    , supersededPeriods : List String
+    }
+
+
+decodeMethodologyVersion : Decoder MethodologyVersion
+decodeMethodologyVersion =
+    Decode.succeed MethodologyVersion
+        |> andMap (Decode.field "version" Decode.string)
+        |> andMap (Decode.field "adopted" Decode.string)
+        |> andMap (Decode.field "summary" Decode.string)
+        |> andMap (Decode.field "changed" Decode.string)
+        |> andMap (Decode.field "why" Decode.string)
+        |> andMap (Decode.field "periods" (Decode.list Decode.string))
+        |> andMap (Decode.field "supersededPeriods" (Decode.list Decode.string))
+
+
+{-| The fixed parameters the collection and classification pipeline actually
+runs with. Read from the Python modules the pipeline itself imports, so this
+is the one place a reader can check what the code does rather than what a
+page merely claims it does.
+-}
+type alias MethodologyParameters =
+    { probePaths : List String
+    , conclusiveOutcomes : List String
+    , unreadableOutcomes : List String
+    , maxBodyBytes : Int
+    , collectionWindowHours : Int
+    , provisionalCoverageThreshold : Float
+    , userAgent : String
+    }
+
+
+decodeMethodologyParameters : Decoder MethodologyParameters
+decodeMethodologyParameters =
+    Decode.succeed MethodologyParameters
+        |> andMap (Decode.field "probePaths" (Decode.list Decode.string))
+        |> andMap (Decode.field "conclusiveOutcomes" (Decode.list Decode.string))
+        |> andMap (Decode.field "unreadableOutcomes" (Decode.list Decode.string))
+        |> andMap (Decode.field "maxBodyBytes" Decode.int)
+        |> andMap (Decode.field "collectionWindowHours" Decode.int)
+        |> andMap (Decode.field "provisionalCoverageThreshold" Decode.float)
+        |> andMap (Decode.field "userAgent" Decode.string)
+
+
+{-| The method as the code actually implements it, plus its changelog.
+`undocumented` names any methodology version appearing in the ledger with no
+changelog entry for it — a figure published under a method nobody wrote
+down, which this page exists to make visible rather than hide.
+-}
+type alias Methodology =
+    { composition : String
+    , versions : List MethodologyVersion
+    , undocumented : List String
+    , parameters : MethodologyParameters
+    }
+
+
+decodeMethodology : Decoder Methodology
+decodeMethodology =
+    Decode.map4 Methodology
+        (Decode.field "composition" Decode.string)
+        (Decode.field "versions" (Decode.list decodeMethodologyVersion))
+        (Decode.field "undocumented" (Decode.list Decode.string))
+        (Decode.field "parameters" decodeMethodologyParameters)
+
+
 {-| One CSV file published alongside the site: where it lives (relative to
 the site root, not to whichever page links it), which index it belongs to,
 a human label and description, and its size so a reader knows what they are
@@ -446,6 +531,7 @@ type alias Flags =
     , purposes : Dict String String
     , history : History
     , crawler : Crawler
+    , methodology : Methodology
     , downloads : List Download
     }
 
@@ -463,6 +549,7 @@ decodeFlags =
         |> andMap (Decode.field "purposes" (Decode.dict Decode.string))
         |> andMap (Decode.field "history" decodeHistory)
         |> andMap (Decode.field "crawler" decodeCrawler)
+        |> andMap (Decode.field "methodology" decodeMethodology)
         |> andMap (Decode.field "downloads" (Decode.list decodeDownload))
 
 

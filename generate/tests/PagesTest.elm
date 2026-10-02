@@ -231,7 +231,58 @@ baseFlags =
     , purposes = basePurposes
     , history = baseHistory
     , crawler = baseCrawler
+    , methodology = baseMethodology
     , downloads = baseDownloads
+    }
+
+
+{-| Deliberately different from the real pipeline's own constants (72 hours,
+97.0%, 512 KB): a test asserting these fixture values appear on the
+rendered page is the only way to prove they were interpolated from
+`flags.methodology.parameters` rather than typed into the page as literals.
+-}
+baseMethodologyParameters : Data.MethodologyParameters
+baseMethodologyParameters =
+    { probePaths = [ "/", "/index.html", "/about", "/news/article-1", "/api/v1/data", "/images/photo.jpg" ]
+    , conclusiveOutcomes = [ "Fetched", "NoRobotsTxt" ]
+    , unreadableOutcomes = [ "Challenged", "ServerError" ]
+    , maxBodyBytes = 1024
+    , collectionWindowHours = 48
+    , provisionalCoverageThreshold = 91.5
+    , userAgent = "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)"
+    }
+
+
+firstMethodologyVersion : Data.MethodologyVersion
+firstMethodologyVersion =
+    { version = "agents=1;protego=0.6.2"
+    , adopted = "2026-09-17"
+    , summary = "First published methodology."
+    , changed = "Initial agent set of 16 tokens, classified with protego 0.6.2."
+    , why = "The starting point, published so later changes have something to be measured against."
+    , periods = []
+    , supersededPeriods = [ "2026-09-14" ]
+    }
+
+
+secondMethodologyVersion : Data.MethodologyVersion
+secondMethodologyVersion =
+    { version = "agents=2;protego=0.6.2"
+    , adopted = "2026-09-19"
+    , summary = "Agent set expanded from 16 tokens to 45."
+    , changed = "Added 29 tokens that were live and widely named but untracked."
+    , why = "An audit found the original set incomplete enough to understate the headline."
+    , periods = [ "2026-09-21" ]
+    , supersededPeriods = []
+    }
+
+
+baseMethodology : Data.Methodology
+baseMethodology =
+    { composition = "A methodology version is the tracked agent set combined with the pinned parser."
+    , versions = [ firstMethodologyVersion, secondMethodologyVersion ]
+    , undocumented = []
+    , parameters = baseMethodologyParameters
     }
 
 
@@ -343,6 +394,14 @@ aboutContent flags =
         |> String.concat
 
 
+methodologyContent : Flags -> String
+methodologyContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "agent-accessibility/methodology/index.html")
+        |> List.map .content
+        |> String.concat
+
+
 crawlerContent : Flags -> String
 crawlerContent flags =
     Pages.pages flags
@@ -372,6 +431,7 @@ suite =
                             , "agent-accessibility/index.html"
                             , "agent-accessibility-history/index.html"
                             , "agent-accessibility/agents/index.html"
+                            , "agent-accessibility/methodology/index.html"
                             , "agent-accessibility/agents/claude-web/index.html"
                             , "agent-accessibility/agents/gptbot/index.html"
                             , "agent-accessibility/agents/google-extended/index.html"
@@ -1004,5 +1064,116 @@ suite =
                     agentAccessibilityContent baseFlags
                         |> String.contains "27.85%"
                         |> Expect.equal False
+            ]
+        , describe "the methodology page"
+            [ test "is present at agent-accessibility/methodology/index.html" <|
+                \_ ->
+                    Pages.pages baseFlags
+                        |> List.map .path
+                        |> List.member "agent-accessibility/methodology/index.html"
+                        |> Expect.equal True
+            , test "links home two directories up" <|
+                \_ ->
+                    methodologyContent baseFlags
+                        |> String.contains "href=\"../../index.html\""
+                        |> Expect.equal True
+            , test "shows the collection window, provisional threshold and body cap from the fixture, not the real values" <|
+                \_ ->
+                    let
+                        content =
+                            methodologyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "48" >> Expect.equal True
+                        , String.contains "91.5" >> Expect.equal True
+                        , String.contains "1.0 KB" >> Expect.equal True
+                        ]
+                        content
+            , test "shows every fixture probe path" <|
+                \_ ->
+                    let
+                        content =
+                            methodologyContent baseFlags
+                    in
+                    Expect.all
+                        (List.map (\path -> String.contains path >> Expect.equal True) baseMethodologyParameters.probePaths)
+                        content
+            , test "names the conclusive and unreadable outcomes" <|
+                \_ ->
+                    let
+                        content =
+                            methodologyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "Fetched" >> Expect.equal True
+                        , String.contains "NoRobotsTxt" >> Expect.equal True
+                        , String.contains "Challenged" >> Expect.equal True
+                        , String.contains "ServerError" >> Expect.equal True
+                        ]
+                        content
+            , test "shows the user-agent read from flags, in code" <|
+                \_ ->
+                    methodologyContent baseFlags
+                        |> String.contains "<code>TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)</code>"
+                        |> Expect.equal True
+            , test "links to the crawler's own page, two directories up" <|
+                \_ ->
+                    methodologyContent baseFlags
+                        |> String.contains "href=\"../../about/crawler/index.html\""
+                        |> Expect.equal True
+            , test "shows a fixture methodology version's string, summary and why" <|
+                \_ ->
+                    let
+                        content =
+                            methodologyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "agents=2;protego=0.6.2" >> Expect.equal True
+                        , String.contains secondMethodologyVersion.summary >> Expect.equal True
+                        , String.contains secondMethodologyVersion.why >> Expect.equal True
+                        ]
+                        content
+            , test "describes a superseded version's periods as restated" <|
+                \_ ->
+                    let
+                        content =
+                            methodologyContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "2026-09-14" >> Expect.equal True
+                        , String.contains "restated" >> Expect.equal True
+                        ]
+                        content
+            , test "with undocumented versions, the warning names each one" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | methodology = { baseMethodology | undocumented = [ "agents=9;protego=9.9.9" ] } }
+                    in
+                    methodologyContent flags
+                        |> String.contains "agents=9;protego=9.9.9"
+                        |> Expect.equal True
+            , test "with no undocumented versions, no warning is rendered" <|
+                \_ ->
+                    methodologyContent baseFlags
+                        |> String.contains "Published without a changelog entry"
+                        |> Expect.equal False
+            , test "links to the design documents in the repository" <|
+                \_ ->
+                    methodologyContent baseFlags
+                        |> String.contains "href=\"https://github.com/allanderek/tallyhouse/tree/main/docs/superpowers/specs\""
+                        |> Expect.equal True
+            ]
+        , describe "links to the methodology page"
+            [ test "the live index links to it alongside the methodology version, at the right depth" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "href=\"methodology/index.html\""
+                        |> Expect.equal True
+            , test "the about page links to it, one directory up and across" <|
+                \_ ->
+                    aboutContent baseFlags
+                        |> String.contains "href=\"../agent-accessibility/methodology/index.html\""
+                        |> Expect.equal True
             ]
         ]

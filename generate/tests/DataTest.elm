@@ -99,6 +99,37 @@ sampleJson =
         , "contact": "https://github.com/allanderek/tallyhouse/issues"
         , "prefixes": [ "149.102.158.121/32" ]
         }
+    , "methodology":
+        { "composition": "A methodology version is the tracked agent set combined with the pinned parser."
+        , "versions":
+            [ { "version": "agents=1;protego=0.6.2"
+              , "adopted": "2026-09-17"
+              , "summary": "First published methodology."
+              , "changed": "Initial agent set of 16 tokens."
+              , "why": "The starting point."
+              , "periods": []
+              , "supersededPeriods": [ "2026-09-14" ]
+              }
+            , { "version": "agents=2;protego=0.6.2"
+              , "adopted": "2026-09-19"
+              , "summary": "Agent set expanded from 16 tokens to 45."
+              , "changed": "Added 29 tokens."
+              , "why": "An audit found the original set incomplete."
+              , "periods": [ "2026-09-21" ]
+              , "supersededPeriods": []
+              }
+            ]
+        , "undocumented": []
+        , "parameters":
+            { "probePaths": [ "/", "/index.html", "/about", "/news/article-1", "/api/v1/data", "/images/photo.jpg" ]
+            , "conclusiveOutcomes": [ "Fetched", "NoRobotsTxt" ]
+            , "unreadableOutcomes": [ "Challenged", "ServerError" ]
+            , "maxBodyBytes": 1024
+            , "collectionWindowHours": 48
+            , "provisionalCoverageThreshold": 91.5
+            , "userAgent": "TallyhouseIndexBot/1.0 (+https://allanderek.github.io/tallyhouse/about/crawler/)"
+            }
+        }
     , "downloads":
         [ { "path": "data/prints.csv", "indexId": "", "label": "Headline ledger", "description": "Every headline figure ever published.", "bytes": 2532, "rows": 19 }
         ]
@@ -223,6 +254,26 @@ suite =
                                   }
                                 ]
                             )
+            , test "the methodology's composition and parameters decode" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> ( flags.methodology.composition, flags.methodology.parameters.collectionWindowHours, flags.methodology.parameters.provisionalCoverageThreshold ))
+                        |> Expect.equal (Ok ( "A methodology version is the tracked agent set combined with the pinned parser.", 48, 91.5 ))
+            , test "a methodology version decodes its periods and supersededPeriods" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.map (\version -> ( version.version, version.periods, version.supersededPeriods )) flags.methodology.versions)
+                        |> Expect.equal
+                            (Ok
+                                [ ( "agents=1;protego=0.6.2", [], [ "2026-09-14" ] )
+                                , ( "agents=2;protego=0.6.2", [ "2026-09-21" ], [] )
+                                ]
+                            )
+            , test "the methodology's probe paths decode in order" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> flags.methodology.parameters.probePaths)
+                        |> Expect.equal (Ok [ "/", "/index.html", "/about", "/news/article-1", "/api/v1/data", "/images/photo.jpg" ])
             , test "the crawler's identity decodes, user-agent and all" <|
                 \_ ->
                     Decode.decodeString Data.decodeFlags sampleJson

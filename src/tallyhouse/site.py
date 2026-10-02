@@ -12,10 +12,18 @@ import re
 from pathlib import Path
 
 from tallyhouse.config import load_agents
-from tallyhouse.constants import USER_AGENT
+from tallyhouse.constants import (
+    CONCLUSIVE_OUTCOMES,
+    MAX_BODY_BYTES,
+    PROBE_PATHS,
+    UNREADABLE_OUTCOMES,
+    USER_AGENT,
+)
 from tallyhouse.derive import derive_period
 from tallyhouse.downloads import catalogue, manifest
 from tallyhouse.ledger import read_rows
+from tallyhouse.periods import COLLECTION_WINDOW_HOURS
+from tallyhouse.publish import PROVISIONAL_COVERAGE_THRESHOLD
 from tallyhouse.storage import manifest_path
 
 INDEX_ID = "agent-accessibility"
@@ -222,6 +230,75 @@ def load_crawler_data(root: Path) -> dict:
     }
 
 
+def load_methodology_data(root: Path) -> dict:
+    """The method as the code actually implements it, plus its changelog.
+
+    Every parameter here is read from the module that the pipeline itself uses,
+    not restated. A methodology page that drifts from the code is worse than no
+    page: it documents a method nobody ran. This is the same reasoning that
+    keeps the crawler's user-agent out of data/crawler.json.
+
+    Which versions were actually used is derived from the ledger rather than
+    declared, so a version that appears in a published print without an
+    explanation shows up as a gap instead of passing unnoticed.
+    """
+    path = root / "methodology.json"
+    document = json.loads(path.read_text()) if path.exists() else {}
+
+    # Read across both indices and every vintage: a methodology version is not
+    # specific to an index, and a version used only by rows that have since
+    # been restated is a different fact from one never used at all. Showing
+    # "no periods" for a superseded version would read as the latter.
+    rows = read_rows(root / "prints.csv")
+    current = {
+        (r["index_id"], r["period"], r["vintage"])
+        for r in _latest_by(rows, ("index_id", "period"))
+    }
+
+    in_force: dict[str, set[str]] = collections.defaultdict(set)
+    retired: dict[str, set[str]] = collections.defaultdict(set)
+    for row in rows:
+        key = (row["index_id"], row["period"], row["vintage"])
+        bucket = in_force if key in current else retired
+        bucket[row["methodology_version"]].add(row["period"])
+
+    versions = [
+        {
+            "version": entry["version"],
+            "adopted": entry.get("adopted", ""),
+            "summary": entry.get("summary", ""),
+            "changed": entry.get("changed", ""),
+            "why": entry.get("why", ""),
+            "periods": sorted(in_force.get(entry["version"], ())),
+            # Periods this version produced that have since been restated under
+            # a later one. The restatement is the ledger's record of the change
+            # actually taking effect.
+            "supersededPeriods": sorted(
+                retired.get(entry["version"], set()) - in_force.get(entry["version"], set())
+            ),
+        }
+        for entry in document.get("versions", [])
+    ]
+    declared = {entry["version"] for entry in versions}
+
+    return {
+        "composition": document.get("composition", ""),
+        "versions": versions,
+        # Named rather than counted, so the page can say which version lacks an
+        # explanation instead of merely that one does.
+        "undocumented": sorted({r["methodology_version"] for r in rows} - declared),
+        "parameters": {
+            "probePaths": list(PROBE_PATHS),
+            "conclusiveOutcomes": sorted(CONCLUSIVE_OUTCOMES),
+            "unreadableOutcomes": sorted(UNREADABLE_OUTCOMES),
+            "maxBodyBytes": MAX_BODY_BYTES,
+            "collectionWindowHours": COLLECTION_WINDOW_HOURS,
+            "provisionalCoverageThreshold": PROVISIONAL_COVERAGE_THRESHOLD,
+            "userAgent": USER_AGENT,
+        },
+    }
+
+
 def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
     """Everything the generator needs, as plain JSON-serialisable data."""
     latest_prints, superseded, latest_series = _index_rows(root, index_id)
@@ -252,6 +329,7 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
         "series": latest_series,
         "history": load_history_data(root),
         "crawler": load_crawler_data(root),
+        "methodology": load_methodology_data(root),
         "panel": {
             "tranco_list_id": panel.get("tranco_list_id"),
             "captured": panel.get("captured"),

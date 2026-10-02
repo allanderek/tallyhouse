@@ -1,0 +1,20 @@
+{
+  "note": "The methodology changelog. Every published print records the methodology_version it was computed under; this file says what each version was and why it changed. It is committed data rather than page copy so that a version appearing in the ledger with no explanation here is a detectable gap rather than an invisible one.",
+  "composition": "A methodology version is the tracked agent set combined with the pinned parser: anything that can change a verdict from identical raw evidence. It is composed from those two rather than written by hand, so neither can be bumped without the ledger noticing.",
+  "versions": [
+    {
+      "version": "agents=1;protego=0.6.2",
+      "adopted": "2026-09-17",
+      "summary": "First published methodology.",
+      "changed": "Initial agent set of 16 tokens, classified with protego 0.6.2 against a frozen 1,000-domain panel.",
+      "why": "The starting point, published so that later changes have something to be measured against."
+    },
+    {
+      "version": "agents=2;protego=0.6.2",
+      "adopted": "2026-09-19",
+      "summary": "Agent set expanded from 16 tokens to 45.",
+      "changed": "Added 29 tokens: operator-run crawlers that were live and widely named in robots.txt but untracked. Generic scraping tooling was deliberately not added, since a site naming it is not stating a position on AI crawling.",
+      "why": "An audit of tokens appearing in the collected files found the original set incomplete enough to understate the headline: Anthropic was tracked by one of four live tokens, and Meta's fetcher, Cohere's training crawler and Mistral were absent entirely. Every affected published figure was restated as a new vintage with this reason recorded, rather than edited."
+    }
+  ]
+}
