@@ -418,6 +418,22 @@ crawlerIpsContent flags =
         |> String.concat
 
 
+releaseContent : Flags -> String -> String -> String
+releaseContent flags basePath period =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == String.concat [ basePath, "/releases/", period, "/index.html" ])
+        |> List.map .content
+        |> String.concat
+
+
+releasesIndexContent : Flags -> String -> String
+releasesIndexContent flags basePath =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == String.concat [ basePath, "/releases/index.html" ])
+        |> List.map .content
+        |> String.concat
+
+
 suite : Test
 suite =
     describe "Pages"
@@ -430,12 +446,18 @@ suite =
                             [ "index.html"
                             , "agent-accessibility/index.html"
                             , "agent-accessibility-history/index.html"
+                            , "agent-accessibility/releases/index.html"
+                            , "agent-accessibility-history/releases/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "agent-accessibility/methodology/index.html"
                             , "agent-accessibility/agents/claude-web/index.html"
                             , "agent-accessibility/agents/gptbot/index.html"
                             , "agent-accessibility/agents/google-extended/index.html"
                             , "agent-accessibility/agents/oai-searchbot/index.html"
+                            , "agent-accessibility/releases/2026-09-14/index.html"
+                            , "agent-accessibility-history/releases/2023-01/index.html"
+                            , "agent-accessibility-history/releases/2023-09/index.html"
+                            , "agent-accessibility-history/releases/2026-08/index.html"
                             , "about/index.html"
                             , "about/crawler/index.html"
                             , "about/crawler/ips.json"
@@ -1174,6 +1196,174 @@ suite =
                 \_ ->
                     aboutContent baseFlags
                         |> String.contains "href=\"../agent-accessibility/methodology/index.html\""
+                        |> Expect.equal True
+            ]
+        , describe "release pages"
+            [ test "emits a release page for each fixture period of each index" <|
+                \_ ->
+                    let
+                        paths =
+                            Pages.pages baseFlags |> List.map .path
+                    in
+                    Expect.all
+                        [ List.member "agent-accessibility/releases/2026-09-14/index.html" >> Expect.equal True
+                        , List.member "agent-accessibility-history/releases/2023-01/index.html" >> Expect.equal True
+                        , List.member "agent-accessibility-history/releases/2023-09/index.html" >> Expect.equal True
+                        , List.member "agent-accessibility-history/releases/2026-08/index.html" >> Expect.equal True
+                        ]
+                        paths
+            , test "a release page shows its own period's value and not another period's" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | prints = [ baseRow, { baseRow | period = "2026-09-28", vintage = "1", value = "24.0964" } ] }
+
+                        content =
+                            releaseContent flags "agent-accessibility" "2026-09-28"
+                    in
+                    Expect.all
+                        [ String.contains "24.10%" >> Expect.equal True
+                        , String.contains "23.47%" >> Expect.equal False
+                        ]
+                        content
+            , test "the historical release page shows its own period's value, not another's" <|
+                \_ ->
+                    let
+                        content =
+                            releaseContent baseFlags "agent-accessibility-history" "2023-09"
+                    in
+                    Expect.all
+                        [ String.contains "15.93%" >> Expect.equal True
+                        , String.contains "27.85%" >> Expect.equal False
+                        , String.contains "1.28%" >> Expect.equal False
+                        ]
+                        content
+            , test "shows provenance: vintage, methodology version and collector version" <|
+                \_ ->
+                    let
+                        content =
+                            releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                    in
+                    Expect.all
+                        [ String.contains baseRow.vintage >> Expect.equal True
+                        , String.contains baseRow.methodologyVersion >> Expect.equal True
+                        , String.contains baseRow.collectorVersion >> Expect.equal True
+                        , String.contains baseRow.computedAt >> Expect.equal True
+                        ]
+                        content
+            , test "the methodology version links to the methodology page, three levels deep" <|
+                \_ ->
+                    releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                        |> String.contains "href=\"../../../agent-accessibility/methodology/index.html\""
+                        |> Expect.equal True
+            , test "a period with a superseded vintage shows the earlier value and the reason" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags
+                                | prints = [ { baseRow | vintage = "2", value = "23.9719", reason = "corrected a parser bug" } ]
+                                , superseded = [ { baseRow | vintage = "1", value = "23.4704" } ]
+                            }
+
+                        content =
+                            releaseContent flags "agent-accessibility" "2026-09-14"
+                    in
+                    Expect.all
+                        [ String.contains "23.97%" >> Expect.equal True
+                        , String.contains "23.47%" >> Expect.equal True
+                        , String.contains "corrected a parser bug" >> Expect.equal True
+                        , String.contains "never edited, only superseded" >> Expect.equal True
+                        ]
+                        content
+            , test "a period with no superseded vintage says plainly that it was never restated" <|
+                \_ ->
+                    releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                        |> String.contains "has never been restated"
+                        |> Expect.equal True
+            , test "per-agent series rows link to the crawler pages, three levels deep" <|
+                \_ ->
+                    releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                        |> String.contains "href=\"../../../agent-accessibility/agents/gptbot/index.html\""
+                        |> Expect.equal True
+            , test "a token with no crawler page renders as plain text, not a broken link" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags
+                                | agents = Dict.fromList [ ( "GPTBot", gptBot ) ]
+                            }
+
+                        content =
+                            releaseContent flags "agent-accessibility" "2026-09-14"
+                    in
+                    Expect.all
+                        [ String.contains "Claude-Web" >> Expect.equal True
+                        , String.contains "href=\"../../../agent-accessibility/agents/claude-web/index.html\"" >> Expect.equal False
+                        ]
+                        content
+            , test "a 2026-09-28-style release links its own per-period download" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | prints = [ baseRow, { baseRow | period = "2026-09-28", vintage = "1" } ] }
+                    in
+                    releaseContent flags "agent-accessibility" "2026-09-28"
+                        |> String.contains "panel-2026-09-28.csv"
+                        |> Expect.equal True
+            , test "a 2026-09-14-style release does not link the other period's download" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | prints = [ baseRow, { baseRow | period = "2026-09-28", vintage = "1" } ] }
+                    in
+                    releaseContent flags "agent-accessibility" "2026-09-14"
+                        |> String.contains "panel-2026-09-28.csv"
+                        |> Expect.equal False
+            , test "either way, the shared ledgers are always linked" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | prints = [ baseRow, { baseRow | period = "2026-09-28", vintage = "1" } ] }
+                    in
+                    Expect.all
+                        [ \_ -> releaseContent flags "agent-accessibility" "2026-09-14" |> String.contains "data/prints.csv" |> Expect.equal True
+                        , \_ -> releaseContent flags "agent-accessibility" "2026-09-28" |> String.contains "data/series.csv" |> Expect.equal True
+                        ]
+                        ()
+            , test "carries a suggested citation with the index title, period, value, vintage and canonical url" <|
+                \_ ->
+                    let
+                        content =
+                            releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                    in
+                    Expect.all
+                        [ String.contains "Suggested citation" >> Expect.equal True
+                        , String.contains baseFlags.index.title >> Expect.equal True
+                        , String.contains "2026-09-14" >> Expect.equal True
+                        , String.contains "23.47%" >> Expect.equal True
+                        , String.contains "vintage 1" >> Expect.equal True
+                        , String.contains "https://allanderek.github.io/tallyhouse/agent-accessibility/releases/2026-09-14/index.html" >> Expect.equal True
+                        ]
+                        content
+            , test "the releases index lists every period, newest first" <|
+                \_ ->
+                    releasesIndexContent baseFlags "agent-accessibility-history"
+                        |> String.contains "<td><a href=\"2026-08/index.html\">2026-08</a></td>"
+                        |> Expect.equal True
+            , test "home links from a release page resolve three levels up" <|
+                \_ ->
+                    releaseContent baseFlags "agent-accessibility" "2026-09-14"
+                        |> String.contains "href=\"../../../index.html\""
+                        |> Expect.equal True
+            , test "the live index page links to its releases index" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "href=\"../agent-accessibility/releases/index.html\""
+                        |> Expect.equal True
+            , test "the historical index page links to its releases index" <|
+                \_ ->
+                    historyContent baseFlags
+                        |> String.contains "href=\"../agent-accessibility-history/releases/index.html\""
                         |> Expect.equal True
             ]
         ]

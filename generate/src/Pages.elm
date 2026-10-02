@@ -32,10 +32,14 @@ pages flags =
         [ [ homePage flags
           , indexPage flags
           , historyPage flags
+          , releasesIndexPage flags
+          , historyReleasesIndexPage flags
           , agentsIndexPage flags
           , methodologyPage flags
           ]
         , agentPageList flags
+        , releasePageList flags
+        , historyReleasePageList flags
         , [ aboutPage flags, crawlerPage flags, crawlerIpsPage flags ]
         ]
 
@@ -225,6 +229,10 @@ indexPage flags =
                                 , [ Html.section [ Html.attribute "class" "history" ]
                                         [ Html.h2 [] [ Html.text "Every published print" ]
                                         , printsTable flags.prints
+                                        , Html.p []
+                                            [ Html.a [ Html.attribute "href" (rootRelativeHref path "agent-accessibility/releases/index.html") ]
+                                                [ Html.text "Every period as its own permanent, citable page" ]
+                                            ]
                                         ]
                                   ]
                                 , supersededSection flags.superseded flags.prints
@@ -559,6 +567,10 @@ historyPage flags =
                                 , [ Html.section [ Html.attribute "class" "history" ]
                                         [ Html.h2 [] [ Html.text "Every published period" ]
                                         , historyTable history
+                                        , Html.p []
+                                            [ Html.a [ Html.attribute "href" (rootRelativeHref path "agent-accessibility-history/releases/index.html") ]
+                                                [ Html.text "Every period as its own permanent, citable page" ]
+                                            ]
                                         ]
                                   , howItIsReadSection
                                   , panelSection history.panel
@@ -804,6 +816,456 @@ crawlRow crawl =
         , Html.td [] [ Html.text crawl.name ]
         , Html.td [] [ Html.text crawl.period ]
         ]
+
+
+
+-- Release pages (spec 7): a permanent, citable page per published period.
+-- The index pages above move every time a new print lands; a release page
+-- never does, which is the whole point of giving a reader something to cite.
+
+
+releasesIndexPage : Flags -> Page
+releasesIndexPage flags =
+    releasesIndexPageFor flags.index.title "agent-accessibility" flags.prints flags.superseded
+
+
+historyReleasesIndexPage : Flags -> Page
+historyReleasesIndexPage flags =
+    releasesIndexPageFor flags.history.title "agent-accessibility-history" flags.history.prints flags.history.superseded
+
+
+releasesIndexPageFor : String -> String -> List Row -> List Row -> Page
+releasesIndexPageFor indexTitle basePath prints superseded =
+    let
+        path =
+            String.concat [ basePath, "/releases/index.html" ]
+    in
+    { path = path
+    , content =
+        Html.document
+            { title = String.concat [ indexTitle, " — Releases" ]
+            , description = String.concat [ "Every period ", indexTitle, " has published, each frozen at the value it had when printed." ]
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = "Releases"
+                            , subtitle = Just indexTitle
+                            , homeHref = rootRelativeHref path "index.html"
+                            }
+                      , Html.main_ []
+                            [ Html.p []
+                                [ Html.text "Each period below has its own permanent page, frozen at the value it had when printed, so a citation never has to point at a figure that might later move." ]
+                            , releasesIndexTable basePath prints superseded
+                            ]
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+releasesIndexTable : String -> List Row -> List Row -> Html
+releasesIndexTable basePath prints superseded =
+    let
+        restatedPeriods =
+            List.map .period superseded
+    in
+    Html.table []
+        [ Html.thead []
+            [ Html.tr []
+                [ Html.th [] [ Html.text "Period" ]
+                , Html.th [] [ Html.text "Value" ]
+                , Html.th [] [ Html.text "Coverage" ]
+                , Html.th [] [ Html.text "Restated" ]
+                ]
+            ]
+        , Html.tbody [] (List.map (releasesIndexRow restatedPeriods) (List.reverse (List.sortBy .period prints)))
+        ]
+
+
+releasesIndexRow : List String -> Row -> Html
+releasesIndexRow restatedPeriods row =
+    Html.tr []
+        [ Html.td [] [ Html.a [ Html.attribute "href" (String.concat [ row.period, "/index.html" ]) ] [ Html.text row.period ] ]
+        , Html.td [] [ Html.text (Data.formatPercent row.value) ]
+        , Html.td [] [ Html.text (Data.formatPercent row.coverage) ]
+        , Html.td [] [ Html.text (restatedLabel (List.member row.period restatedPeriods)) ]
+        ]
+
+
+restatedLabel : Bool -> String
+restatedLabel restated =
+    case restated of
+        False ->
+            "No"
+
+        True ->
+            "Yes"
+
+
+{-| The config one release page is built from. Both indices share every
+function below; only these values differ between the live weekly print and
+a historical quarterly one.
+-}
+type alias ReleaseConfig =
+    { basePath : String
+    , indexTitle : String
+    , print : Row
+    , allPrints : List Row
+    , allSeries : List Row
+    , superseded : List Row
+    , downloads : List Download
+    , changeSeriesId : String
+    , changeLabel : String
+    , agents : Dict String Agent
+    }
+
+
+releasePageList : Flags -> List Page
+releasePageList flags =
+    List.map (releasePage flags) flags.prints
+
+
+releasePage : Flags -> Row -> Page
+releasePage flags print =
+    releasePageFor
+        { basePath = "agent-accessibility"
+        , indexTitle = flags.index.title
+        , print = print
+        , allPrints = flags.prints
+        , allSeries = flags.series
+        , superseded = flags.superseded
+        , downloads = Data.downloadsFor flags.index.id flags.downloads
+        , changeSeriesId = "change_wow"
+        , changeLabel = "Change (week over week)"
+        , agents = flags.agents
+        }
+
+
+historyReleasePageList : Flags -> List Page
+historyReleasePageList flags =
+    List.map (historyReleasePage flags) flags.history.prints
+
+
+historyReleasePage : Flags -> Row -> Page
+historyReleasePage flags print =
+    releasePageFor
+        { basePath = "agent-accessibility-history"
+        , indexTitle = flags.history.title
+        , print = print
+        , allPrints = flags.history.prints
+        , allSeries = flags.history.series
+        , superseded = flags.history.superseded
+        , downloads = Data.downloadsFor flags.history.id flags.downloads
+        , changeSeriesId = "change_since_previous"
+        , changeLabel = "Change since the previous reading"
+        , agents = flags.agents
+        }
+
+
+{-| The methodology page is shared by both indices (the historical index has
+no methodology page of its own), so every release page links the same path
+regardless of which index it belongs to.
+-}
+methodologyPath : String
+methodologyPath =
+    "agent-accessibility/methodology/index.html"
+
+
+releasePageFor : ReleaseConfig -> Page
+releasePageFor config =
+    let
+        path =
+            String.concat [ config.basePath, "/releases/", config.print.period, "/index.html" ]
+    in
+    { path = path
+    , content =
+        Html.document
+            { title = String.concat [ config.indexTitle, " — ", config.print.period ]
+            , description =
+                String.concat
+                    [ "The frozen print of ", config.indexTitle, " for ", config.print.period, ": ", Data.formatPercent config.print.value, "." ]
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = String.concat [ config.indexTitle, " — ", config.print.period ]
+                            , subtitle = Just "A permanent, citable page for this period's figure."
+                            , homeHref = rootRelativeHref path "index.html"
+                            }
+                      , Html.main_ []
+                            (List.concat
+                                [ [ releaseNav path config.basePath config.indexTitle ]
+                                , releaseHeadlineSection config.print
+                                , releaseProvenanceSection path config.print
+                                , releaseSeriesSection path config.agents config.allSeries config.changeSeriesId config.changeLabel config.print.period
+                                , releaseRestatementSection config.superseded config.print
+                                , [ releaseCitationSection path config.indexTitle config.print ]
+                                , releaseDownloadsSection path config.allPrints config.print.period config.downloads
+                                ]
+                            )
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+{-| The href from a release page, always three directories deep, back to the
+index page that owns it, one directory deep — counted from the release
+page's own path with `depthOf` rather than a hardcoded `"../../"`, so a
+release page that ever moved would still link correctly.
+-}
+owningIndexHref : String -> String
+owningIndexHref ownPath =
+    String.concat [ String.repeat (depthOf ownPath - 1) "../", "index.html" ]
+
+
+releaseNav : String -> String -> String -> Html
+releaseNav ownPath basePath indexTitle =
+    Html.p [ Html.attribute "class" "meta" ]
+        [ Html.a [ Html.attribute "href" (owningIndexHref ownPath) ] [ Html.text indexTitle ]
+        , Html.text " · "
+        , Html.a [ Html.attribute "href" (rootRelativeHref ownPath (String.concat [ basePath, "/releases/index.html" ])) ] [ Html.text "All releases" ]
+        ]
+
+
+releaseHeadlineSection : Row -> List Html
+releaseHeadlineSection print =
+    [ Html.section [ Html.attribute "class" "headline" ]
+        (List.concat
+            [ provisionalBadge print
+            , [ Html.p [ Html.attribute "class" "headline-value" ] [ Html.text (Data.formatPercent print.value) ]
+              , Html.p [ Html.attribute "class" "headline-caption" ]
+                    [ Html.text
+                        (String.concat
+                            [ "Denominator: "
+                            , print.denominator
+                            , " conclusive domains. Coverage: "
+                            , Data.formatPercent print.coverage
+                            , " of the panel."
+                            ]
+                        )
+                    ]
+              ]
+            ]
+        )
+    ]
+
+
+releaseProvenanceSection : String -> Row -> List Html
+releaseProvenanceSection ownPath print =
+    [ Html.section [ Html.attribute "class" "provenance" ]
+        [ Html.h2 [] [ Html.text "Provenance" ]
+        , Html.p [] [ Html.text "This is why this page exists: the exact run that produced this figure, frozen alongside it rather than left to be inferred later." ]
+        , Html.table []
+            [ Html.tbody []
+                [ provenanceRow "Vintage" [ Html.text print.vintage ]
+                , provenanceRow "Methodology"
+                    [ Html.a [ Html.attribute "href" (rootRelativeHref ownPath methodologyPath) ] [ Html.text print.methodologyVersion ] ]
+                , provenanceRow "Collector" [ Html.text print.collectorVersion ]
+                , provenanceRow "Computed at" [ Html.time [ Html.attribute "datetime" print.computedAt ] [ Html.text print.computedAt ] ]
+                ]
+            ]
+        ]
+    ]
+
+
+provenanceRow : String -> List Html -> Html
+provenanceRow label value =
+    Html.tr []
+        [ Html.th [] [ Html.text label ]
+        , Html.td [] value
+        ]
+
+
+releaseSeriesSection : String -> Dict String Agent -> List Row -> String -> String -> String -> List Html
+releaseSeriesSection ownPath agents allSeries changeSeriesId changeLabel period =
+    let
+        fixed =
+            List.filterMap
+                (\seriesId -> Data.findBySeriesAndPeriod seriesId period allSeries)
+                [ "effective", "blanket", "coverage", "unreadable", changeSeriesId ]
+
+        agentRows =
+            allSeries
+                |> List.filter (\row -> row.period == period && Data.isAgentSeries row)
+                |> List.sortBy Data.agentName
+    in
+    [ Html.section [ Html.attribute "class" "series" ]
+        [ Html.h2 [] [ Html.text "Every series value for this period" ]
+        , Html.table []
+            [ Html.thead []
+                [ Html.tr []
+                    [ Html.th [] [ Html.text "Series" ]
+                    , Html.th [] [ Html.text "Value" ]
+                    ]
+                ]
+            , Html.tbody []
+                (List.concat
+                    [ List.map (releaseFixedSeriesRow changeSeriesId changeLabel) fixed
+                    , List.map (releaseAgentSeriesRow ownPath agents) agentRows
+                    ]
+                )
+            ]
+        ]
+    ]
+
+
+releaseFixedSeriesRow : String -> String -> Row -> Html
+releaseFixedSeriesRow changeSeriesId changeLabel row =
+    Html.tr []
+        [ Html.td [] [ Html.text (fixedSeriesLabel changeSeriesId changeLabel row) ]
+        , Html.td [] [ Html.text (Data.formatPercent row.value) ]
+        ]
+
+
+fixedSeriesLabel : String -> String -> Row -> String
+fixedSeriesLabel changeSeriesId changeLabel row =
+    case row.seriesId of
+        Nothing ->
+            ""
+
+        Just seriesId ->
+            case seriesId == changeSeriesId of
+                True ->
+                    changeLabel
+
+                False ->
+                    Data.seriesLabel seriesId
+
+
+releaseAgentSeriesRow : String -> Dict String Agent -> Row -> Html
+releaseAgentSeriesRow ownPath agents row =
+    Html.tr []
+        [ Html.td [] [ agentLinkOrText ownPath agents (Data.agentName row) ]
+        , Html.td [] [ Html.text (Data.formatPercent row.value) ]
+        ]
+
+
+{-| A per-agent series row links to the token's own crawler page when one is
+published; otherwise the bare token text, never a link to a page that does
+not exist.
+-}
+agentLinkOrText : String -> Dict String Agent -> String -> Html
+agentLinkOrText ownPath agents token =
+    case Dict.get token agents of
+        Nothing ->
+            Html.text token
+
+        Just agent ->
+            Html.a
+                [ Html.attribute "href" (rootRelativeHref ownPath (String.concat [ "agent-accessibility/agents/", agent.slug, "/index.html" ])) ]
+                [ Html.text token ]
+
+
+releaseRestatementSection : List Row -> Row -> List Html
+releaseRestatementSection superseded current =
+    let
+        earlier =
+            superseded
+                |> List.filter (\row -> row.period == current.period)
+                |> List.sortBy (\row -> Maybe.withDefault 0 (String.toInt row.vintage))
+    in
+    [ Html.section [ Html.attribute "class" "callout superseded" ]
+        (Html.h2 [] [ Html.text "Restatements" ] :: releaseRestatementBody earlier current)
+    ]
+
+
+releaseRestatementBody : List Row -> Row -> List Html
+releaseRestatementBody earlier current =
+    case earlier of
+        [] ->
+            [ Html.p [] [ Html.text "This period has never been restated: the value above is the only one ever published for it." ] ]
+
+        _ ->
+            [ Html.p [] [ Html.text "This period has been restated. The earlier figure was never edited, only superseded — it is kept here alongside the reason it changed." ]
+            , Html.table []
+                [ Html.thead []
+                    [ Html.tr []
+                        [ Html.th [] [ Html.text "Vintage" ]
+                        , Html.th [] [ Html.text "Value" ]
+                        , Html.th [] [ Html.text "Reason" ]
+                        ]
+                    ]
+                , Html.tbody [] (List.map (restatementVintageRow current) earlier)
+                ]
+            ]
+
+
+restatementVintageRow : Row -> Row -> Html
+restatementVintageRow current earlier =
+    Html.tr []
+        [ Html.td [] [ Html.text earlier.vintage ]
+        , Html.td [] [ Html.text (Data.formatPercent earlier.value) ]
+        , Html.td [] [ Html.text current.reason ]
+        ]
+
+
+releaseCitationSection : String -> String -> Row -> Html
+releaseCitationSection ownPath indexTitle print =
+    Html.section [ Html.attribute "class" "citation" ]
+        [ Html.h2 [] [ Html.text "Suggested citation" ]
+        , Html.p []
+            [ Html.text
+                (String.concat
+                    [ indexTitle
+                    , ", "
+                    , print.period
+                    , ": "
+                    , Data.formatPercent print.value
+                    , " (vintage "
+                    , print.vintage
+                    , "). "
+                    ]
+                )
+            , Html.a [ Html.attribute "href" (canonicalUrl ownPath) ] [ Html.text (canonicalUrl ownPath) ]
+            ]
+        ]
+
+
+{-| The site's own published base, read back rather than guessed, since a
+citation that points at the wrong domain is worse than none.
+-}
+canonicalUrl : String -> String
+canonicalUrl ownPath =
+    String.concat [ "https://allanderek.github.io/tallyhouse/", ownPath ]
+
+
+releaseDownloadsSection : String -> List Row -> String -> List Download -> List Html
+releaseDownloadsSection ownPath allPrints period downloads =
+    let
+        relevant =
+            List.filter (relevantToPeriod (List.map .period allPrints) period) downloads
+    in
+    case relevant of
+        [] ->
+            []
+
+        _ ->
+            List.concat
+                [ [ Html.p [] [ Html.text "The two ledgers below carry this period's rows among every other period's; anything named for this period alone is listed with them." ] ]
+                , downloadsSection ownPath relevant
+                ]
+
+
+{-| A download belongs on this period's release page if its path names this
+period, or names no period at all (the two shared ledgers, carrying every
+period's rows). A path naming a _different_ known period — another
+period's panel or verdicts file — is excluded. `periods` is every period
+this index has ever published, read from the data rather than hardcoded, so
+a period string is recognised as a period without this module having to
+parse one out of a file name itself.
+-}
+relevantToPeriod : List String -> String -> Download -> Bool
+relevantToPeriod periods period download =
+    case String.contains period download.path of
+        True ->
+            True
+
+        False ->
+            not (List.any (\other -> other /= period && String.contains other download.path) periods)
 
 
 
