@@ -1,5 +1,5 @@
 {
-  "last_run_collector_version": "b4dd3c0",
+  "last_run_collector_version": "6b510c8",
   "observations": [
     {
       "attempts": 1,
@@ -3148,10 +3148,10 @@
     {
       "attempts": 1,
       "bytes": 1035,
-      "collector_version": "b4dd3c0",
+      "collector_version": "6b510c8",
       "content_type": "text/html",
       "domain": "eci.gov.in",
-      "fetched_at": "2026-10-05T09:00:06Z",
+      "fetched_at": "2026-10-05T17:00:07Z",
       "final_url": "https://www.eci.gov.in/robots.txt",
       "http_status": 406,
       "outcome": "ServerError",
@@ -3196,10 +3196,10 @@
     {
       "attempts": 3,
       "bytes": null,
-      "collector_version": "b4dd3c0",
+      "collector_version": "6b510c8",
       "content_type": null,
       "domain": "edna.ru",
-      "fetched_at": "2026-10-05T09:00:11Z",
+      "fetched_at": "2026-10-05T17:00:12Z",
       "final_url": null,
       "http_status": null,
       "outcome": "ConnectFailure",
@@ -4107,15 +4107,15 @@
     },
     {
       "attempts": 1,
-      "bytes": 146,
-      "collector_version": "b4dd3c0",
-      "content_type": "text/html; charset=utf-8",
+      "bytes": 1727,
+      "collector_version": "6b510c8",
+      "content_type": "text/plain; charset=utf-8",
       "domain": "globalsign.com",
-      "fetched_at": "2026-10-05T09:00:04Z",
-      "final_url": "https://globalsign.com/robots.txt",
-      "http_status": 403,
-      "outcome": "ServerError",
-      "sha256": null
+      "fetched_at": "2026-10-05T17:00:06Z",
+      "final_url": "https://www.globalsign.com/robots.txt",
+      "http_status": 200,
+      "outcome": "Fetched",
+      "sha256": "423bc5c8ae7d04cacf2c601e13b91d24fea217304e833ad2e3fa4742038000b3"
     },
     {
       "attempts": 1,
@@ -4732,10 +4732,10 @@
     {
       "attempts": 1,
       "bytes": 387837,
-      "collector_version": "b4dd3c0",
+      "collector_version": "6b510c8",
       "content_type": "text/html; charset=UTF-8",
       "domain": "hostgator.com",
-      "fetched_at": "2026-10-05T09:00:04Z",
+      "fetched_at": "2026-10-05T17:00:06Z",
       "final_url": "https://www.hostgator.com/robots.txt",
       "http_status": 403,
       "outcome": "Challenged",
@@ -5296,10 +5296,10 @@
     {
       "attempts": 1,
       "bytes": 1106543,
-      "collector_version": "b4dd3c0",
+      "collector_version": "6b510c8",
       "content_type": "text/html;charset=utf-8",
       "domain": "ioh.co.id",
-      "fetched_at": "2026-10-05T09:00:09Z",
+      "fetched_at": "2026-10-05T17:00:09Z",
       "final_url": "https://ioh.co.id/robots.txt",
       "http_status": 200,
       "outcome": "TooLarge",
@@ -9748,10 +9748,10 @@
     {
       "attempts": 3,
       "bytes": null,
-      "collector_version": "b4dd3c0",
+      "collector_version": "6b510c8",
       "content_type": null,
       "domain": "tbank.ru",
-      "fetched_at": "2026-10-05T09:00:10Z",
+      "fetched_at": "2026-10-05T17:00:12Z",
       "final_url": null,
       "http_status": null,
       "outcome": "ConnectFailure",
