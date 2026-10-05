@@ -15,6 +15,7 @@ module Data exposing
     , Operator
     , Panel
     , PanelConstruction
+    , PanelRow
     , Qualification
     , Row
     , Stances
@@ -520,12 +521,41 @@ downloadsFor indexId downloads =
     List.filter (\download -> download.indexId == "" || download.indexId == indexId) downloads
 
 
+{-| One row of the panel page's table: one panel domain, its Tranco rank, and
+what the most recent collection run learned about it. `blocked`/`tracked` are
+a count out of a count (e.g. "7 of 45 tracked crawlers"), not a rate, so no
+precision is lost rendering it. `blanket` is `""` when `robots.txt` could not
+be read at all — see `Data.humanBytes`-style callers for the general pattern
+of treating "" as absent evidence rather than "no".
+-}
+type alias PanelRow =
+    { domain : String
+    , rank : Int
+    , outcome : String
+    , blocked : Int
+    , tracked : Int
+    , blanket : String
+    }
+
+
+decodePanelRow : Decoder PanelRow
+decodePanelRow =
+    Decode.map6 PanelRow
+        (Decode.field "domain" Decode.string)
+        (Decode.field "rank" Decode.int)
+        (Decode.field "outcome" Decode.string)
+        (Decode.field "blocked" Decode.int)
+        (Decode.field "tracked" Decode.int)
+        (Decode.field "blanket" Decode.string)
+
+
 type alias Flags =
     { index : IndexInfo
     , prints : List Row
     , superseded : List Row
     , series : List Row
     , panel : Panel
+    , panelRows : List PanelRow
     , agents : Dict String Agent
     , operators : Dict String Operator
     , purposes : Dict String String
@@ -544,6 +574,7 @@ decodeFlags =
         |> andMap (Decode.field "superseded" (Decode.list decodeRow))
         |> andMap (Decode.field "series" (Decode.list decodeRow))
         |> andMap (Decode.field "panel" decodePanel)
+        |> andMap (Decode.field "panelRows" (Decode.list decodePanelRow))
         |> andMap (Decode.field "agents" (Decode.dict decodeAgent))
         |> andMap (Decode.field "operators" (Decode.dict decodeOperator))
         |> andMap (Decode.field "purposes" (Decode.dict Decode.string))

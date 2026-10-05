@@ -55,6 +55,7 @@ wellFormedFlags =
                   )
                 ]
           )
+        , ( "panelRows", Encode.list identity [] )
         , ( "agents", Encode.object [] )
         , ( "operators", Encode.object [] )
         , ( "purposes", Encode.object [] )
@@ -153,6 +154,7 @@ suite =
                             , "agent-accessibility-history/releases/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "agent-accessibility/methodology/index.html"
+                            , "agent-accessibility/panel/index.html"
                             , "agent-accessibility/releases/2026-09-14/index.html"
                             , "agent-accessibility-history/releases/2023-01/index.html"
                             , "about/index.html"

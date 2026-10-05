@@ -78,6 +78,8 @@ def _describe_period(root: Path, period: str, methodology_version: str) -> tuple
     return (
         [dict(row) for row in tables["verdicts"]],
         [dict(observation, period=period) for observation in tables["observations"]],
+        dict(tables["blanket"]),
+        list(agents),
     )
 
 
@@ -230,6 +232,49 @@ def load_crawler_data(root: Path) -> dict:
     }
 
 
+_BLOCKING_STANCES = frozenset({"FullBlock", "PartialBlock"})
+
+
+def load_panel_rows(
+    panel: dict, observations: list[dict], verdicts: list[dict],
+    blanket: dict[str, str], tracked: list[str],
+) -> list[dict]:
+    """One row per panel domain: what it is, and what it currently says.
+
+    Aggregated here rather than in the generator because the verdicts are ~45
+    rows per domain, and asking the generator to group forty-five thousand rows
+    to render a thousand is work done in the wrong place.
+
+    Every domain in the panel appears, including those we could not read. The
+    panel is the denominator of every published figure, so a list that quietly
+    omitted the domains we learned nothing about would misrepresent what the
+    figure is a share of.
+    """
+    ranks = panel.get("ranks", {})
+    outcomes = {o["domain"]: o.get("outcome", "") for o in observations}
+
+    blocked: dict[str, int] = collections.defaultdict(int)
+    for verdict in verdicts:
+        if verdict["stance"] in _BLOCKING_STANCES:
+            blocked[verdict["domain"]] += 1
+
+    rows = [
+        {
+            "domain": domain,
+            "rank": ranks.get(domain, 0),
+            "outcome": outcomes.get(domain, "NotCollected"),
+            "blocked": blocked.get(domain, 0),
+            "tracked": len(tracked),
+            # "" where we could not read the file, which is different from
+            # Allowed: one is an absence of evidence, the other is evidence of
+            # permission.
+            "blanket": blanket.get(domain, ""),
+        }
+        for domain in panel.get("domains", [])
+    ]
+    return sorted(rows, key=lambda r: (r["rank"] == 0, r["rank"], r["domain"]))
+
+
 def load_methodology_data(root: Path) -> dict:
     """The method as the code actually implements it, plus its changelog.
 
@@ -307,13 +352,13 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
     # headline the pages sit under.
     described = latest_prints[-1] if latest_prints else None
     if described is not None and manifest_path(root, described["period"]).exists():
-        verdicts, fetches = _describe_period(
+        verdicts, fetches, blanket, tracked = _describe_period(
             root, described["period"], described["methodology_version"]
         )
     else:
         # Nothing published, or its evidence is not in this checkout. Empty
         # sections rather than a failed build, as elsewhere in this module.
-        verdicts, fetches = [], []
+        verdicts, fetches, blanket, tracked = [], [], {}, []
 
     panel_path = root / "panel" / "2026.json"
     panel = json.loads(panel_path.read_text()) if panel_path.exists() else {}
@@ -330,6 +375,7 @@ def load_site_data(root: Path, *, index_id: str = INDEX_ID) -> dict:
         "history": load_history_data(root),
         "crawler": load_crawler_data(root),
         "methodology": load_methodology_data(root),
+        "panelRows": load_panel_rows(panel, fetches, verdicts, blanket, tracked),
         "panel": {
             "tranco_list_id": panel.get("tranco_list_id"),
             "captured": panel.get("captured"),

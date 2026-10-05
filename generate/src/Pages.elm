@@ -6,7 +6,7 @@ document to write there; `Site` collects them and sends them out its port.
 -}
 
 import Chart
-import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Download, Flags, History, HistoryPanel, Methodology, MethodologyParameters, MethodologyVersion, Operator, Panel, PanelConstruction, Qualification, Row, Stances)
+import Data exposing (Agent, Crawl, CrawlEndpoint, Crawler, DivergentDomain, Download, Flags, History, HistoryPanel, Methodology, MethodologyParameters, MethodologyVersion, Operator, Panel, PanelConstruction, PanelRow, Qualification, Row, Stances)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Json.Encode as Encode
@@ -36,6 +36,7 @@ pages flags =
           , historyReleasesIndexPage flags
           , agentsIndexPage flags
           , methodologyPage flags
+          , panelPage flags
           ]
         , agentPageList flags
         , releasePageList flags
@@ -224,6 +225,7 @@ indexPage flags =
                       , Html.main_ []
                             (List.concat
                                 [ headlineSection flags.panel flags.prints
+                                , [ panelLinkParagraph path ]
                                 , Chart.view { cadence = "weekly" } flags.prints flags.series
                                 , seriesSection flags.series period
                                 , [ Html.section [ Html.attribute "class" "history" ]
@@ -289,6 +291,19 @@ headlineSection panel prints =
                   ]
                 , [ biasCallout panel.qualification ]
                 ]
+
+
+{-| A link from the index page down to the full panel listing — the page a
+reader lands on if they want to check one specific domain, or simply see
+what the panel actually is, rather than take the headline's word for it.
+-}
+panelLinkParagraph : String -> Html
+panelLinkParagraph path =
+    Html.p []
+        [ Html.a [ Html.attribute "href" (rootRelativeHref path "agent-accessibility/panel/index.html") ]
+            [ Html.text "See every domain in the panel" ]
+        , Html.text ", searchable."
+        ]
 
 
 provisionalBadge : Row -> List Html
@@ -1993,6 +2008,230 @@ specsLink =
 
 
 
+-- The panel page (spec 7): the 1000 domains, searchable.
+--
+-- The spec describes this as a fetch of a ~50KB JSON file, with the table
+-- built up in JavaScript. This page does not do that, on purpose. This
+-- project's whole selling point is that its output is documents: a page
+-- whose content exists only after a successful fetch and a successful
+-- render is not a document, since it breaks with JS off and cannot be
+-- cited or archived. So every row is rendered into the HTML by Elm, same as
+-- every other table on this site, and JavaScript is added only to filter
+-- rows that are already there. The extra markup is cheap: a thousand
+-- near-identical rows are exactly what gzip is good at.
+
+
+panelPage : Flags -> Page
+panelPage flags =
+    let
+        path =
+            "agent-accessibility/panel/index.html"
+
+        total =
+            List.length flags.panelRows
+    in
+    { path = path
+    , content =
+        Html.document
+            { title = "The panel"
+            , description = "Every domain in Tallyhouse's panel, searchable: the denominator every published figure is a share of."
+            , head = [ stylesheet ]
+            , body =
+                List.concat
+                    [ [ pageHeader
+                            { title = "The panel"
+                            , subtitle = Just "The 1,000 domains behind every published figure, searchable."
+                            , homeHref = "../../index.html"
+                            }
+                      , Html.main_ []
+                            (List.concat
+                                [ panelIntro path total
+                                , [ panelSearchControl total ]
+                                , [ panelTable flags.panelRows ]
+                                , panelDownloadParagraph path flags.index.id flags.downloads
+                                ]
+                            )
+                      , panelScript
+                      ]
+                    , [ siteFooter ]
+                    ]
+            }
+    }
+
+
+panelIntro : String -> Int -> List Html
+panelIntro path total =
+    [ Html.p []
+        [ Html.text
+            (String.concat
+                [ "This is the panel for the current period: "
+                , String.fromInt total
+                , " domains, fixed for the year, and the denominator every figure this site publishes is a share of."
+                ]
+            )
+        ]
+    , Html.p []
+        [ Html.text "Every panel domain appears below, including those whose "
+        , Html.code [] [ Html.text "robots.txt" ]
+        , Html.text " could not be read. The panel is what a published figure is a share of, so leaving out the domains we learned nothing about would misrepresent what that share actually covers."
+        ]
+    , Html.p []
+        [ Html.text "How the panel was assembled is set out on "
+        , Html.a [ Html.attribute "href" (rootRelativeHref path methodologyPath) ] [ Html.text "the methodology page" ]
+        , Html.text "."
+        ]
+    ]
+
+
+{-| The search control, and the live count it updates. Shipped `hidden`:
+`panelScript` removes the attribute once it has confirmed the elements it
+needs are actually present, so a visitor with JavaScript disabled never sees
+an input box that does nothing — the control is strictly additive on top of
+the table below, which already carries every row.
+-}
+panelSearchControl : Int -> Html
+panelSearchControl total =
+    Html.div
+        [ Html.attribute "id" "panel-search"
+        , Html.attribute "class" "panel-search"
+        , Html.attribute "hidden" "hidden"
+        ]
+        [ Html.node "label" [ Html.attribute "for" "panel-search-input" ] [ Html.text "Search domains" ]
+        , Html.node "input"
+            [ Html.attribute "type" "search"
+            , Html.attribute "id" "panel-search-input"
+            , Html.attribute "placeholder" "e.g. example.com"
+            ]
+            []
+        , Html.p [ Html.attribute "id" "panel-search-count", Html.attribute "class" "meta" ]
+            [ Html.text (panelCountText total total) ]
+        ]
+
+
+{-| "Showing N of M" — shared between the server-rendered initial count and
+the string `panelScript` builds on every keystroke, so the two can never
+disagree about the wording.
+-}
+panelCountText : Int -> Int -> String
+panelCountText shown total =
+    String.concat [ "Showing ", String.fromInt shown, " of ", String.fromInt total ]
+
+
+panelTable : List PanelRow -> Html
+panelTable rows =
+    Html.div [ Html.attribute "class" "table-scroll" ]
+        [ Html.table [ Html.attribute "id" "panel-table" ]
+            [ Html.thead []
+                [ Html.tr []
+                    [ Html.th [] [ Html.text "Rank" ]
+                    , Html.th [] [ Html.text "Domain" ]
+                    , Html.th [] [ Html.text "Blocks" ]
+                    , Html.th [] [ Html.text "Blanket" ]
+                    , Html.th [] [ Html.text "Outcome" ]
+                    ]
+                ]
+            , Html.tbody [] (List.map panelTableRow rows)
+            ]
+        ]
+
+
+{-| `data-domain` is what `panelScript` filters on, lowercased once here
+rather than in JavaScript on every keystroke. Filtering on an attribute
+rather than scraping the domain cell's text keeps the script independent of
+the column layout — nothing about reordering these columns could ever break
+the search.
+-}
+panelTableRow : PanelRow -> Html
+panelTableRow row =
+    Html.tr [ Html.attribute "data-domain" (String.toLower row.domain) ]
+        [ Html.td [] [ Html.text (String.fromInt row.rank) ]
+        , Html.td [] [ Html.text row.domain ]
+        , Html.td [] [ Html.text (String.concat [ String.fromInt row.blocked, " of ", String.fromInt row.tracked ]) ]
+        , Html.td [] [ Html.text (blanketLabel row.blanket) ]
+        , Html.td [] [ Html.text row.outcome ]
+        ]
+
+
+{-| `blanket == ""` means `robots.txt` could not be read at all — an absence
+of evidence, not evidence of permission — so it must never render as
+"Allowed", nor as an empty cell that would read the same way to a skimming
+reader.
+-}
+blanketLabel : String -> String
+blanketLabel blanket =
+    case blanket of
+        "" ->
+            "not read"
+
+        other ->
+            other
+
+
+{-| The panel CSV for this index, if the downloads manifest carries one;
+omitted rather than linking to nothing when it does not. Filtered to this
+index first, since the historical index's own balanced-panel download also
+has "panel-" in its path and must never be offered here.
+-}
+panelDownloadParagraph : String -> String -> List Download -> List Html
+panelDownloadParagraph path indexId downloads =
+    case List.filter (\download -> String.contains "panel-" download.path) (Data.downloadsFor indexId downloads) of
+        [] ->
+            []
+
+        download :: _ ->
+            [ Html.p []
+                [ Html.text "The panel is also published as a "
+                , Html.a [ Html.attribute "href" (rootRelativeHref path download.path) ] [ Html.text download.label ]
+                , Html.text " CSV."
+                ]
+            ]
+
+
+{-| Removes `hidden` from the search control once it has confirmed every
+element it depends on actually exists, then filters the table already
+rendered by the server: on each keystroke it case-insensitively
+substring-matches the query against each row's `data-domain` and toggles
+that row's own `hidden` attribute, never touching the row's content.
+Defensive throughout — a missing element is treated as "nothing to enhance"
+rather than a thrown error, since this script's whole job is to be additive
+on top of a page that already works without it.
+-}
+panelScript : Html
+panelScript =
+    Html.node "script" [] [ Html.raw panelScriptSource ]
+
+
+panelScriptSource : String
+panelScriptSource =
+    String.concat
+        [ "(function () {"
+        , "var block = document.getElementById('panel-search');"
+        , "var input = document.getElementById('panel-search-input');"
+        , "var count = document.getElementById('panel-search-count');"
+        , "var rows = document.querySelectorAll('#panel-table tbody tr');"
+        , "if (!block || !input || !count || !rows.length) { return; }"
+        , "block.removeAttribute('hidden');"
+        , "function apply() {"
+        , "var query = input.value.toLowerCase();"
+        , "var shown = 0;"
+        , "for (var i = 0; i < rows.length; i++) {"
+        , "var row = rows[i];"
+        , "var domain = row.getAttribute('data-domain') || '';"
+        , "if (domain.indexOf(query) !== -1) {"
+        , "row.hidden = false;"
+        , "shown = shown + 1;"
+        , "} else {"
+        , "row.hidden = true;"
+        , "}"
+        , "}"
+        , "count.textContent = 'Showing ' + shown + ' of ' + rows.length;"
+        , "}"
+        , "input.addEventListener('input', apply);"
+        , "})();"
+        ]
+
+
+
 -- One page per tracked token.
 
 
@@ -2433,6 +2672,9 @@ css =
         , ".series-table { margin-bottom: 1.5rem; }"
         , ".operator { margin: 2rem 0; }"
         , ".table-scroll { overflow-x: auto; }"
+        , ".panel-search { margin: 1.5rem 0; }"
+        , ".panel-search label { font-weight: 700; display: block; margin-bottom: 0.3rem; }"
+        , ".panel-search input { font-size: 1rem; padding: 0.4rem 0.6rem; width: 100%; max-width: 20rem; box-sizing: border-box; }"
         , ".trend-chart { display: block; width: 100%; height: auto; margin-top: 0.5rem; }"
         , ".chart-axis-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; fill: #555; font-variant-numeric: tabular-nums; }"
         , ".chart-endpoint-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }"

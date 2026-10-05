@@ -1,6 +1,6 @@
 module PagesTest exposing (suite)
 
-import Data exposing (Agent, Download, Flags, History, Operator, Panel, Row, Stances)
+import Data exposing (Agent, Download, Flags, History, Operator, Panel, PanelRow, Row, Stances)
 import Dict
 import Expect
 import Json.Decode as Decode
@@ -38,6 +38,14 @@ basePanel =
         , rule = "first N domains of the Tranco list returning a conclusive robots.txt observation during the sweep"
         }
     }
+
+
+basePanelRows : List PanelRow
+basePanelRows =
+    [ { domain = "google.com", rank = 1, outcome = "Fetched", blocked = 0, tracked = 45, blanket = "Allowed" }
+    , { domain = "facebook.com", rank = 3, outcome = "Fetched", blocked = 7, tracked = 45, blanket = "FullBlock" }
+    , { domain = "example.com", rank = 9, outcome = "Challenged", blocked = 0, tracked = 45, blanket = "" }
+    ]
 
 
 baseStances : Stances
@@ -215,6 +223,7 @@ baseFlags =
         , { baseRow | value = "7.3000", seriesId = Just "agent:Claude-Web" }
         ]
     , panel = basePanel
+    , panelRows = basePanelRows
     , agents =
         Dict.fromList
             [ ( "GPTBot", gptBot )
@@ -394,6 +403,14 @@ aboutContent flags =
         |> String.concat
 
 
+panelContent : Flags -> String
+panelContent flags =
+    Pages.pages flags
+        |> List.filter (\page -> page.path == "agent-accessibility/panel/index.html")
+        |> List.map .content
+        |> String.concat
+
+
 methodologyContent : Flags -> String
 methodologyContent flags =
     Pages.pages flags
@@ -450,6 +467,7 @@ suite =
                             , "agent-accessibility-history/releases/index.html"
                             , "agent-accessibility/agents/index.html"
                             , "agent-accessibility/methodology/index.html"
+                            , "agent-accessibility/panel/index.html"
                             , "agent-accessibility/agents/claude-web/index.html"
                             , "agent-accessibility/agents/gptbot/index.html"
                             , "agent-accessibility/agents/google-extended/index.html"
@@ -1184,6 +1202,102 @@ suite =
                 \_ ->
                     methodologyContent baseFlags
                         |> String.contains "href=\"https://github.com/allanderek/tallyhouse/tree/main/docs/superpowers/specs\""
+                        |> Expect.equal True
+            ]
+        , describe "the panel page"
+            [ test "is present at agent-accessibility/panel/index.html" <|
+                \_ ->
+                    Pages.pages baseFlags
+                        |> List.map .path
+                        |> List.member "agent-accessibility/panel/index.html"
+                        |> Expect.equal True
+            , test "every fixture row's domain appears, each carrying its lowercased data-domain" <|
+                \_ ->
+                    let
+                        content =
+                            panelContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "google.com" >> Expect.equal True
+                        , String.contains "data-domain=\"google.com\"" >> Expect.equal True
+                        , String.contains "facebook.com" >> Expect.equal True
+                        , String.contains "data-domain=\"facebook.com\"" >> Expect.equal True
+                        , String.contains "example.com" >> Expect.equal True
+                        , String.contains "data-domain=\"example.com\"" >> Expect.equal True
+                        ]
+                        content
+            , test "an uppercase domain still carries a lowercased data-domain" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | panelRows = [ { domain = "Example.COM", rank = 1, outcome = "Fetched", blocked = 0, tracked = 45, blanket = "Allowed" } ] }
+                    in
+                    panelContent flags
+                        |> String.contains "data-domain=\"example.com\""
+                        |> Expect.equal True
+            , test "a row with no readable robots.txt renders \"not read\", never \"Allowed\"" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | panelRows = [ { domain = "example.com", rank = 9, outcome = "Challenged", blocked = 0, tracked = 45, blanket = "" } ] }
+
+                        content =
+                            panelContent flags
+                    in
+                    Expect.all
+                        [ String.contains "not read" >> Expect.equal True
+                        , String.contains "Allowed" >> Expect.equal False
+                        ]
+                        content
+            , test "the blocks cell shows blocked of tracked from the fixture" <|
+                \_ ->
+                    panelContent baseFlags
+                        |> String.contains "<td>7 of 45</td>"
+                        |> Expect.equal True
+            , test "the search control carries the hidden attribute" <|
+                \_ ->
+                    panelContent baseFlags
+                        |> String.contains "id=\"panel-search\" class=\"panel-search\" hidden=\"hidden\""
+                        |> Expect.equal True
+            , test "carries an inline script with no innerHTML assignment" <|
+                \_ ->
+                    let
+                        content =
+                            panelContent baseFlags
+                    in
+                    Expect.all
+                        [ String.contains "<script>" >> Expect.equal True
+                        , String.contains "innerHTML" >> Expect.equal False
+                        ]
+                        content
+            , test "links the panel CSV when one is in downloads" <|
+                \_ ->
+                    panelContent baseFlags
+                        |> String.contains "href=\"../../data/panel-2026-09-28.csv\""
+                        |> Expect.equal True
+            , test "omits the download sentence when no panel CSV is in downloads" <|
+                \_ ->
+                    let
+                        flags =
+                            { baseFlags | downloads = [ printsDownload, seriesDownload ] }
+                    in
+                    panelContent flags
+                        |> String.contains "also published as a"
+                        |> Expect.equal False
+            , test "links home two directories up" <|
+                \_ ->
+                    panelContent baseFlags
+                        |> String.contains "href=\"../../index.html\""
+                        |> Expect.equal True
+            , test "links to the methodology page" <|
+                \_ ->
+                    panelContent baseFlags
+                        |> String.contains "href=\"../../agent-accessibility/methodology/index.html\""
+                        |> Expect.equal True
+            , test "the index page links to the panel page" <|
+                \_ ->
+                    agentAccessibilityContent baseFlags
+                        |> String.contains "href=\"../agent-accessibility/panel/index.html\""
                         |> Expect.equal True
             ]
         , describe "links to the methodology page"

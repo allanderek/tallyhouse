@@ -399,9 +399,25 @@ how indices lose credibility.
 
 Downloads per index: `series.csv`, `panel-<period>.csv`, `verdicts-<period>.csv`.
 
-The only JavaScript shipped to the browser is panel search over a ~50KB JSON
-file. Everything else is documents. Per-domain pages have permanent URLs and
-work without JS.
+The only JavaScript shipped to the browser is panel search. Everything else is
+documents. Per-domain pages have permanent URLs and work without JS.
+
+### 7.1 Where the panel page departed from this
+
+Not "search over a ~50KB JSON file". The panel page renders all thousand rows
+into the HTML and the script only filters rows that are already present.
+
+Fetching JSON and building the table in the browser would have made the page's
+content conditional on a successful fetch and a successful render, and a page
+that is empty with JS off is not a document: it cannot be read without a
+scripting engine, cannot be archived by anything that does not run one, and
+cannot be cited. That is the opposite of what the rest of the site is for, to
+save perhaps a hundred kilobytes before compression on one page — and a
+thousand near-identical table rows are exactly what gzip handles well.
+
+The search control itself carries `hidden`, and the script removes it on load.
+A search box that silently does nothing is worse than no search box, so the
+control appears only once the thing that makes it work has run.
 
 ## 8. Testing
 

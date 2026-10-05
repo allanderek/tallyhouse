@@ -416,3 +416,60 @@ def test_methodology_without_its_changelog_file_still_reports_parameters(tmp_pat
 
     data = load_methodology_data(tmp_path)
     assert data["versions"] == [] and data["parameters"]["probePaths"]
+
+
+def test_every_panel_domain_appears_including_the_unreadable_ones(tmp_path):
+    """The panel is the denominator of every published figure.
+
+    A list that quietly omitted the domains we learned nothing about would
+    misrepresent what the figure is a share of, and would hide the blind spot
+    the unreadable series exists to publish.
+    """
+    from tallyhouse.site import load_panel_rows
+
+    panel = {"domains": ["a.com", "b.com", "c.com"],
+             "ranks": {"a.com": 3, "b.com": 1, "c.com": 2}}
+    observations = [
+        {"domain": "a.com", "outcome": "Fetched"},
+        {"domain": "b.com", "outcome": "Challenged"},
+        {"domain": "c.com", "outcome": "NoRobotsTxt"},
+    ]
+    verdicts = [
+        {"domain": "a.com", "agent": "GPTBot", "stance": "FullBlock"},
+        {"domain": "a.com", "agent": "CCBot", "stance": "PartialBlock"},
+        {"domain": "a.com", "agent": "Bytespider", "stance": "Unmentioned"},
+        {"domain": "c.com", "agent": "GPTBot", "stance": "Unmentioned"},
+    ]
+    blanket = {"a.com": "PartialBlock", "c.com": "Allowed"}
+    rows = load_panel_rows(panel, observations, verdicts, blanket,
+                           ["GPTBot", "CCBot", "Bytespider"])
+
+    assert [r["domain"] for r in rows] == ["b.com", "c.com", "a.com"]
+    by_domain = {r["domain"]: r for r in rows}
+    # FullBlock and PartialBlock both count as blocking; Unmentioned does not.
+    assert by_domain["a.com"]["blocked"] == 2
+    assert by_domain["a.com"]["tracked"] == 3
+    # Unreadable: present, with no blanket stance. An empty stance is not
+    # "Allowed" -- one is an absence of evidence, the other is evidence of
+    # permission.
+    assert by_domain["b.com"]["outcome"] == "Challenged"
+    assert by_domain["b.com"]["blanket"] == ""
+    assert by_domain["b.com"]["blocked"] == 0
+
+
+def test_panel_rows_are_ordered_by_rank(tmp_path):
+    from tallyhouse.site import load_panel_rows
+
+    panel = {"domains": ["z.com", "a.com"], "ranks": {"z.com": 1, "a.com": 9}}
+    rows = load_panel_rows(panel, [], [], {}, [])
+    assert [r["rank"] for r in rows] == [1, 9]
+
+
+def test_a_domain_with_no_recorded_rank_sorts_last_rather_than_first(tmp_path):
+    # Rank 0 would otherwise sort above rank 1 and claim to be the most popular
+    # site in the panel.
+    from tallyhouse.site import load_panel_rows
+
+    panel = {"domains": ["unranked.com", "a.com"], "ranks": {"a.com": 5}}
+    rows = load_panel_rows(panel, [], [], {}, [])
+    assert [r["domain"] for r in rows] == ["a.com", "unranked.com"]

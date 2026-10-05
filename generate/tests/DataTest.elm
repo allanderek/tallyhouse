@@ -37,6 +37,11 @@ sampleJson =
             , "rule": "first N domains of the Tranco list returning a conclusive robots.txt observation during the sweep"
             }
         }
+    , "panelRows":
+        [ { "domain": "google.com", "rank": 1, "outcome": "Fetched", "blocked": 0, "tracked": 45, "blanket": "Allowed" }
+        , { "domain": "facebook.com", "rank": 3, "outcome": "Fetched", "blocked": 7, "tracked": 45, "blanket": "FullBlock" }
+        , { "domain": "example.com", "rank": 9, "outcome": "Challenged", "blocked": 0, "tracked": 45, "blanket": "" }
+        ]
     , "agents":
         { "GPTBot":
             { "token": "GPTBot"
@@ -198,6 +203,21 @@ suite =
                     Decode.decodeString Data.decodeFlags sampleJson
                         |> Result.map (\flags -> flags.panel.size)
                         |> Expect.equal (Ok 1000)
+            , test "panelRows decode every domain, including one with an empty blanket" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.map .domain flags.panelRows)
+                        |> Expect.equal (Ok [ "google.com", "facebook.com", "example.com" ])
+            , test "a panelRow's numeric fields decode as integers, not strings" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.map (\row -> ( row.rank, row.blocked, row.tracked )) flags.panelRows)
+                        |> Expect.equal (Ok [ ( 1, 0, 45 ), ( 3, 7, 45 ), ( 9, 0, 45 ) ])
+            , test "a panelRow with an unreadable robots.txt decodes blanket as the empty string, not \"Allowed\"" <|
+                \_ ->
+                    Decode.decodeString Data.decodeFlags sampleJson
+                        |> Result.map (\flags -> List.filter (\row -> row.domain == "example.com") flags.panelRows |> List.map .blanket)
+                        |> Expect.equal (Ok [ "" ])
             , test "an agent's stance counts decode as integers" <|
                 \_ ->
                     Decode.decodeString Data.decodeFlags sampleJson
