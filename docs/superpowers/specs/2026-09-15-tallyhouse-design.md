@@ -509,7 +509,43 @@ self-verifying from DNS alone, without reference to any file we publish.
 Verified status does not oblige anyone to let us in. It means a site owner whose
 rule is "block all bots except verified ones" — a common default — can
 distinguish us from an unidentified scraper. The blind spot is expected to
-shrink rather than close, and `unreadable` stays a published series either way.
+shrink rather than close.
+
+### 9.3 When verification would actually show up, which is not where it looks
+
+Two different numbers get confused here, and it is worth being exact because the
+obvious reading is wrong.
+
+The **`unreadable` series** counts panel members whose server answered but
+withheld the file. It runs at 0.1–0.2% — one or two domains out of a thousand —
+because the panel was *qualified*: the sites that refuse us were never admitted
+to it. Verification will barely move this number, and watching it for an effect
+would be watching the wrong thing.
+
+The **9%** is 146 of the 1,600 candidates examined at qualification, excluded
+for `Challenged` or `ServerError`. Those domains are not in the panel at all, so
+they appear in no weekly series. Verification acts on *eligibility*, not on the
+weekly reading.
+
+So the payoff is deferred and arrives as a change in panel composition at the
+next annual qualification, not as a weekly improvement. The panel is frozen for
+the year precisely so that the denominator cannot move mid-series; re-qualifying
+early to capture the benefit would do the exact thing the freeze exists to
+prevent.
+
+**This creates a discontinuity that must be declared when it lands.** If
+verification succeeds, the 2027 panel will admit sites the 2026 panel could not
+read, and the evidence says those sites are more AI-hostile than average — the
+historical index, read through Common Crawl, reads several points higher on a
+panel that includes them. The headline will therefore rise partly because the
+panel became less biased, not because any site changed its mind. That is
+composition masquerading as behaviour, which is the confound the balanced panel
+was built to remove from the historical index, reappearing in the live one at
+the annual boundary.
+
+It must be handled the same way: say so at the join, publish both panels'
+readings for an overlapping period so the step can be measured rather than
+guessed at, and never present the jump as a change in behaviour.
 
 ## 10. Out of scope for v1
 
