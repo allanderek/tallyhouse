@@ -1,5 +1,5 @@
 {
-  "last_run_collector_version": "f9eeaac",
+  "last_run_collector_version": "ad91b09",
   "observations": [
     {
       "attempts": 1,
@@ -2078,15 +2078,15 @@
       "sha256": "18dbc421ee40d0fb18432460e1570eb045a1bfc6fb914425f2f94e081f4d2120"
     },
     {
-      "attempts": 3,
-      "bytes": null,
-      "collector_version": "f9eeaac",
-      "content_type": null,
+      "attempts": 1,
+      "bytes": 2427,
+      "collector_version": "ad91b09",
+      "content_type": "text/html",
       "domain": "chinamobile.com",
-      "fetched_at": "2026-10-12T01:01:57Z",
-      "final_url": null,
-      "http_status": null,
-      "outcome": "Timeout",
+      "fetched_at": "2026-10-12T09:01:36Z",
+      "final_url": "https://www.10086.cn/robots.txt",
+      "http_status": 404,
+      "outcome": "NoRobotsTxt",
       "sha256": null
     },
     {
@@ -3148,10 +3148,10 @@
     {
       "attempts": 1,
       "bytes": 1035,
-      "collector_version": "f9eeaac",
+      "collector_version": "ad91b09",
       "content_type": "text/html",
       "domain": "eci.gov.in",
-      "fetched_at": "2026-10-12T01:04:24Z",
+      "fetched_at": "2026-10-12T09:00:08Z",
       "final_url": "https://www.eci.gov.in/robots.txt",
       "http_status": 406,
       "outcome": "ServerError",
@@ -4107,15 +4107,15 @@
     },
     {
       "attempts": 1,
-      "bytes": 146,
-      "collector_version": "f9eeaac",
-      "content_type": "text/html; charset=utf-8",
+      "bytes": 1727,
+      "collector_version": "ad91b09",
+      "content_type": "text/plain; charset=utf-8",
       "domain": "globalsign.com",
-      "fetched_at": "2026-10-12T01:02:43Z",
-      "final_url": "https://globalsign.com/robots.txt",
-      "http_status": 403,
-      "outcome": "ServerError",
-      "sha256": null
+      "fetched_at": "2026-10-12T09:00:07Z",
+      "final_url": "https://www.globalsign.com/robots.txt",
+      "http_status": 200,
+      "outcome": "Fetched",
+      "sha256": "423bc5c8ae7d04cacf2c601e13b91d24fea217304e833ad2e3fa4742038000b3"
     },
     {
       "attempts": 1,
@@ -4732,10 +4732,10 @@
     {
       "attempts": 1,
       "bytes": 387837,
-      "collector_version": "f9eeaac",
+      "collector_version": "ad91b09",
       "content_type": "text/html; charset=UTF-8",
       "domain": "hostgator.com",
-      "fetched_at": "2026-10-12T01:00:39Z",
+      "fetched_at": "2026-10-12T09:00:07Z",
       "final_url": "https://www.hostgator.com/robots.txt",
       "http_status": 403,
       "outcome": "Challenged",
@@ -5296,10 +5296,10 @@
     {
       "attempts": 1,
       "bytes": 1106543,
-      "collector_version": "f9eeaac",
+      "collector_version": "ad91b09",
       "content_type": "text/html;charset=utf-8",
       "domain": "ioh.co.id",
-      "fetched_at": "2026-10-12T01:04:29Z",
+      "fetched_at": "2026-10-12T09:00:11Z",
       "final_url": "https://ioh.co.id/robots.txt",
       "http_status": 200,
       "outcome": "TooLarge",
@@ -7875,15 +7875,15 @@
     },
     {
       "attempts": 1,
-      "bytes": 902,
-      "collector_version": "f9eeaac",
-      "content_type": "text/html; charset=UTF-8",
+      "bytes": 4607,
+      "collector_version": "ad91b09",
+      "content_type": "text/plain; charset=windows-1251",
       "domain": "pikabu.ru",
-      "fetched_at": "2026-10-12T01:02:59Z",
+      "fetched_at": "2026-10-12T09:00:07Z",
       "final_url": "https://pikabu.ru/robots.txt",
-      "http_status": 403,
-      "outcome": "ServerError",
-      "sha256": null
+      "http_status": 200,
+      "outcome": "Fetched",
+      "sha256": "ffc58bede1a9269f23f769014f9afd25c59586695cf6c1428e4657bc243c1d02"
     },
     {
       "attempts": 1,
@@ -9748,10 +9748,10 @@
     {
       "attempts": 3,
       "bytes": null,
-      "collector_version": "f9eeaac",
+      "collector_version": "ad91b09",
       "content_type": null,
       "domain": "tbank.ru",
-      "fetched_at": "2026-10-12T01:03:06Z",
+      "fetched_at": "2026-10-12T09:00:13Z",
       "final_url": null,
       "http_status": null,
       "outcome": "ConnectFailure",
@@ -10502,16 +10502,16 @@
       "sha256": "1a90eb94d80776f80da593d687c6d1e61cd6c479568fc00b8bbb3b941eaa0c80"
     },
     {
-      "attempts": 3,
-      "bytes": 17,
-      "collector_version": "f9eeaac",
-      "content_type": null,
+      "attempts": 1,
+      "bytes": 8706,
+      "collector_version": "ad91b09",
+      "content_type": "text/plain",
       "domain": "unsplash.com",
-      "fetched_at": "2026-10-12T01:00:52Z",
+      "fetched_at": "2026-10-12T09:00:07Z",
       "final_url": "https://unsplash.com/robots.txt",
-      "http_status": 429,
-      "outcome": "ServerError",
-      "sha256": null
+      "http_status": 200,
+      "outcome": "Fetched",
+      "sha256": "48c47b9141d837ed6feeb4921b2f56b2995e48e5fef58b59af614b5f3eb61276"
     },
     {
       "attempts": 1,
@@ -10983,15 +10983,15 @@
     },
     {
       "attempts": 1,
-      "bytes": 379,
-      "collector_version": "f9eeaac",
-      "content_type": "text/html",
+      "bytes": 4824,
+      "collector_version": "ad91b09",
+      "content_type": "text/plain; charset=ISO-8859-1",
       "domain": "webex.com",
-      "fetched_at": "2026-10-12T01:00:20Z",
+      "fetched_at": "2026-10-12T09:00:08Z",
       "final_url": "https://www.webex.com/robots.txt",
-      "http_status": 403,
-      "outcome": "ServerError",
-      "sha256": null
+      "http_status": 200,
+      "outcome": "Fetched",
+      "sha256": "e3ac7fb45733967b53a0d50be18a9efcf1be411629e71c7123761a7222f6438b"
     },
     {
       "attempts": 1,
