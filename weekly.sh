@@ -29,7 +29,8 @@ log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 
 # Committing is part of the run, not an afterthought: a print that exists only
 # on one machine's disk is not published, and the ledger's promise is about
-# what is committed. Nothing is pushed -- that stays a human decision.
+# what is committed. Pushing is left to `publish` (see below): `collect` runs
+# three times a day and a push would deploy an unchanged site each time.
 commit_data() {
     local message="$1"
     if [ -z "$(git status --porcelain data/)" ]; then
@@ -59,7 +60,6 @@ case "${1:-}" in
         periods=$(python3 -m tallyhouse.cli due)
         if [ -z "$periods" ]; then
             log "nothing due"
-            exit 0
         fi
 
         # Oldest first, because each period's like-for-like change is computed
@@ -83,7 +83,17 @@ case "${1:-}" in
         # is re-derivable from committed data. Rendering locally as well would
         # write a directory nobody serves, and would report a missing compiler
         # as a failure when nothing has failed.
-        log "publish complete; push to deploy"
+        #
+        # The push is part of publishing for the same reason committing is: a
+        # print nobody can see is not published. It happens here rather than
+        # after every collect, and even when nothing was due, so the week's
+        # evidence leaves this machine once a week whether or not a print was
+        # made. A failed push costs only a delay: the next one carries every
+        # commit that is still unpushed. Note that it pushes whatever is on
+        # main, so unfinished work belongs on a branch.
+        log "pushing main"
+        git push -q origin main
+        log "publish complete; CI deploys from the pushed commit"
         ;;
 
     *)

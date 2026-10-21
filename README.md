@@ -61,7 +61,8 @@ python3 -m tallyhouse.cli generate                       # from committed data
 ```
 
 `weekly.sh collect` and `weekly.sh publish` are the scheduled entry points and
-set `PYTHONPATH` themselves. The `backfill` and `repair` subcommands read the
+set `PYTHONPATH` themselves. Both commit; `publish` also pushes `main`, which is
+what triggers the CI build and deploy. The `backfill` and `repair` subcommands read the
 Common Crawl archive for the historical index; `historical-print` publishes it.
 
 ## The crawler
